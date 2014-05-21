@@ -171,6 +171,8 @@ void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned p
       device = DEVICE_MOGA;
    else if (strstr(name_buf, "Sony Navigation Controller"))
       device = DEVICE_PSMOVE_NAVI;
+   else if (strstr(name_buf, "ipega"))
+      device = DEVICE_IPEGA_9025;
    else if (strstr(name_buf, "OUYA Game Controller"))
       device = DEVICE_OUYA;
    else if (strstr(name_buf, "adc joystick"))

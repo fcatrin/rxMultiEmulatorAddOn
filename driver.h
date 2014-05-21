@@ -295,6 +295,7 @@ enum input_devices
    DEVICE_MUCH_IREADGO_I5,
    DEVICE_WIKIPAD,
    DEVICE_FC30_GAMEPAD,
+   DEVICE_IPEGA_9025,
 #elif defined(GEKKO)
    DEVICE_GAMECUBE = 0,
 #ifdef HW_RVL
