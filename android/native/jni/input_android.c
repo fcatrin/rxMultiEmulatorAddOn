@@ -291,7 +291,7 @@ retobj:
 
 char *vStickNames[] = {"UP", "DOWN", "LEFT", "RIGHT",
 		"BTN_A", "BTN_B", "BTN_X", "BTN_Y",
-		"TL", "TR", "BTN_TL2", "BTN_TR2",
+		"TL", "TR", "TL2", "TR2",
 		"SELECT", "START", NULL};
 
 int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT,
