@@ -49,6 +49,7 @@ struct android_app
    char current_ime[PATH_MAX];
    jmethodID getIntent;
    jmethodID getStringExtra;
+   jmethodID getIntExtra;
    jmethodID clearPendingIntent;
    jmethodID hasPendingIntent;
    jmethodID getPendingIntentConfigPath;

@@ -289,6 +289,54 @@ retobj:
    return android;
 }
 
+char *vStickNames[] = {"UP", "DOWN", "LEFT", "RIGHT",
+		"BTN_A", "BTN_B", "BTN_X", "BTN_Y",
+		"TL", "TR", "BTN_TL2", "BTN_TR2",
+		"SELECT", "START", NULL};
+
+int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT,
+		RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_B, RETRO_DEVICE_ID_JOYPAD_X, RETRO_DEVICE_ID_JOYPAD_Y,
+		RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L2, RETRO_DEVICE_ID_JOYPAD_R2,
+		RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START};
+
+
+static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int defaultValue) {
+	struct android_app *android_app = (struct android_app*)g_android;
+    jstring iname = (*env)->NewStringUTF(env, key);
+    int var = (*env)->CallIntMethod(env, intent, android_app->getIntExtra, iname, defaultValue);
+    (*env)->DeleteLocalRef(env, iname);
+    return var;
+}
+
+static bool android_input_from_intent(android_input_t* android_input, unsigned shift) {
+   JNIEnv *env;
+   struct android_app *android_app = (struct android_app*)g_android;
+   jobject intent = NULL;
+   char sKey[200];
+
+   if (!android_app)
+	  return false;
+
+   env = jni_thread_getenv();
+   if (!env)
+	  return false;
+
+	CALL_OBJ_METHOD(env, intent, android_app->activity->clazz, android_app->getIntent);
+
+	bool hasIntentData = false;
+	int i = 0;
+	while (vStickNames[i]) {
+		sprintf(sKey, "j1%s", vStickNames[i]);
+		int keyCode = android_get_int_extra(env, intent, sKey, 0);
+		if (keyCode > 0) {
+			android_input->keycode_lut[keyCode]  |=  ((vStickIds[i]+1) << shift);
+			hasIntentData = true;
+		}
+		i++;
+	}
+	return hasIntentData;
+}
+
 int zeus_id = -1;
 int zeus_second_id = -1;
 unsigned zeus_port;
@@ -296,13 +344,16 @@ unsigned zeus_port;
 static void android_input_set_keybinds(void *data, unsigned device,
       unsigned port, unsigned id, unsigned keybind_action)
 {
-   android_input_t *android = (android_input_t*)data;
+    unsigned shift = 8 + (port * 8);
+
+    android_input_t *android = (android_input_t*)data;
+	if (android_input_from_intent(android, shift)) return;
+
 
    if (keybind_action & (1ULL << KEYBINDS_ACTION_SET_DEFAULT_BINDS))
    {
       /* eight 8-bit values are packed into one uint64_t
        * one for each of the 8 pads */
-      unsigned shift = 8 + (port * 8);
 
       // NOTE - we have to add '1' to the bit mask because
       // RETRO_DEVICE_ID_JOYPAD_B is 0

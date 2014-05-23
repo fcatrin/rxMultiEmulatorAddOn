@@ -626,6 +626,7 @@ static void system_init(void *data)
 
    GET_OBJECT_CLASS(env, class, obj);
    GET_METHOD_ID(env, android_app->getStringExtra, class, "getStringExtra", "(Ljava/lang/String;)Ljava/lang/String;");
+   GET_METHOD_ID(env, android_app->getIntExtra,    class, "getIntExtra", "(Ljava/lang/String;I)I");
 }
 
 static void system_deinit(void *data)
