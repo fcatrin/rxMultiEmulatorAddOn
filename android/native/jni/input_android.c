@@ -292,12 +292,12 @@ retobj:
 char *vStickNames[] = {"UP", "DOWN", "LEFT", "RIGHT",
 		"BTN_A", "BTN_B", "BTN_X", "BTN_Y",
 		"TL", "TR", "TL2", "TR2",
-		"SELECT", "START", NULL};
+		"TL3", "TR3", "SELECT", "START", NULL};
 
 int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT,
 		RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_B, RETRO_DEVICE_ID_JOYPAD_X, RETRO_DEVICE_ID_JOYPAD_Y,
 		RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L2, RETRO_DEVICE_ID_JOYPAD_R2,
-		RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START};
+		RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START};
 
 
 static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int defaultValue) {
@@ -1951,8 +1951,13 @@ static void android_input_poll(void *data)
                   int action  = AKeyEvent_getAction(event);
                   uint64_t *key = NULL;
 
-                  if (debug_enable)
+                  if (debug_enable) {
                      snprintf(msg, sizeof(msg), "Pad %d : %d, ac = %d, src = %d.\n", state_id, keycode, action, source);
+                  }
+
+                  // L3 = Load State, R3 = Save State
+                  if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_L3)) input_state = (1ULL << RARCH_LOAD_STATE_KEY);
+                  if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_R3)) input_state = (1ULL << RARCH_SAVE_STATE_KEY);
 
                   if (input_state < (1ULL << RARCH_FIRST_META_KEY))
                      key = &android->pad_state[state_id];
