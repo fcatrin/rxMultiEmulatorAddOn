@@ -63,13 +63,61 @@ static void input_autodetect_get_device_name(void *data, char *buf, size_t size,
    (*env)->ReleaseStringUTFChars(env, name, str);
 }
 
-void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned port, unsigned id, int source, bool *primary)
+static void input_autodetect_get_device_descriptor(void *data, char *buf, size_t size, int id)
+{
+   JNIEnv *env = jni_thread_getenv();
+   if (!env)
+	  return;
+
+   buf[0] = '\0';
+
+   jclass class = NULL;
+   FIND_CLASS(env, class, "android/view/InputDevice");
+   if (!class)
+	  return;
+
+   jmethodID method = NULL;
+   GET_STATIC_METHOD_ID(env, method, class, "getDevice", "(I)Landroid/view/InputDevice;");
+   if (!method)
+	  return;
+
+   jobject device = NULL;
+   CALL_OBJ_STATIC_METHOD_PARAM(env, device, class, method, (jint)id);
+   if (!device)
+   {
+	  RARCH_ERR("Failed to find device for ID: %d\n", id);
+	  return;
+   }
+
+   jmethodID getDescriptor = NULL;
+   GET_METHOD_ID(env, getDescriptor, class, "getDescriptor", "()Ljava/lang/String;");
+   if (!getDescriptor)
+	  return;
+
+   jobject descriptor = NULL;
+   CALL_OBJ_METHOD(env, descriptor, device, getDescriptor);
+   if (!descriptor)
+   {
+	  RARCH_ERR("Failed to find name for device ID: %d\n", id);
+	  return;
+   }
+
+   const char *str = (*env)->GetStringUTFChars(env, descriptor, 0);
+   if (str)
+	  strlcpy(buf, str, size);
+   (*env)->ReleaseStringUTFChars(env, descriptor, str);
+}
+
+
+void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned port, unsigned id, int source, bool *primary, char *primary_descriptor)
 {
    struct android_app *android_app = (struct android_app*)data;
  
    unsigned device;
    char name_buf[256];
    name_buf[0] = 0;
+   char descriptor_buf[256];
+   descriptor_buf[0] = 0;
 
    if (port > MAX_PADS)
    {
@@ -79,7 +127,13 @@ void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned p
 
    char *current_ime = android_app->current_ime;
    input_autodetect_get_device_name(android_app, name_buf, sizeof(name_buf), id);
-   RARCH_LOG("device name: %s\n", name_buf);
+
+   input_autodetect_get_device_descriptor(android_app, descriptor_buf, sizeof(descriptor_buf), id);
+   RARCH_LOG("device name: %s, desc: %s\n", name_buf, descriptor_buf);
+
+   if (primary_descriptor != NULL && !strcmp(primary_descriptor, descriptor_buf)) {
+	   *primary = true;
+   }
 
    /* Shitty hack put back in again */
    if (strstr(name_buf, "keypad-game-zeus") || strstr(name_buf, "keypad-zeus"))

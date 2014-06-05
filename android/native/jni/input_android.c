@@ -308,6 +308,17 @@ static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int def
     return var;
 }
 
+static void android_get_string_extra(JNIEnv *env, jobject intent, char *key, char *str, int size) {
+	struct android_app *android_app = (struct android_app*)g_android;
+    jstring iname = (*env)->NewStringUTF(env, key);
+    jstring var = (jstring)(*env)->CallObjectMethod(env, intent, android_app->getStringExtra, iname);
+    char *c_str = strdup((*env)->GetStringUTFChars(env, var, 0));
+    strncpy(str, c_str, size);
+    (*env)->ReleaseStringUTFChars(env, var, c_str);
+    (*env)->DeleteLocalRef(env, iname);
+}
+
+
 static bool android_input_from_intent(android_input_t* android_input, unsigned shift) {
    JNIEnv *env;
    struct android_app *android_app = (struct android_app*)g_android;
@@ -335,6 +346,26 @@ static bool android_input_from_intent(android_input_t* android_input, unsigned s
 		i++;
 	}
 	return hasIntentData;
+}
+
+static bool android_descriptor_from_intent(char *str, int n) {
+   JNIEnv *env;
+   struct android_app *android_app = (struct android_app*)g_android;
+   jobject intent = NULL;
+
+   if (!android_app)
+	  return false;
+
+   env = jni_thread_getenv();
+   if (!env)
+	  return false;
+
+	CALL_OBJ_METHOD(env, intent, android_app->activity->clazz, android_app->getIntent);
+
+	RARCH_LOG("Getting descriptor from intent");
+	android_get_string_extra(env, intent, "INPUT_DESCRIPTOR", str, n);
+	RARCH_LOG("Descriptor from intent %s", str);
+	return true;
 }
 
 int zeus_id = -1;
@@ -1834,8 +1865,11 @@ static void android_input_poll(void *data)
                   state_id = android->pads_connected;
                   if (g_settings.input.autodetect_enable)
                   {
+                	  char descriptor[300] = "";
+                	  android_descriptor_from_intent(descriptor, sizeof(descriptor));
+
                      bool primary = false;
-                     input_autodetect_setup(android_app, msg, sizeof(msg), state_id, id, source, &primary);
+                     input_autodetect_setup(android_app, msg, sizeof(msg), state_id, id, source, &primary, descriptor);
 
                      if (primary)
                      {
