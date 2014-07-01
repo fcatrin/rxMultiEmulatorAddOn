@@ -25,6 +25,7 @@
 #include "../../../performance.h"
 #include "../../../general.h"
 #include "../../../driver.h"
+#include "NativeActivityConnector.h"
 
 #define MAX_TOUCH 16
 #define PRESSED_UP(x, y)    ((y <= dzone_min))
@@ -300,10 +301,32 @@ int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO
 		RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START};
 
 
+#define SHORTCUT_LOAD_STATE 1
+#define SHORTCUT_SAVE_STATE 2
+
+JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActiviyFuture_processShortcut(JNIEnv *env, jclass cls, jint shortcut, jint pressed) {
+	uint64_t input_state = 0;
+	if (shortcut == SHORTCUT_SAVE_STATE) {
+		input_state = 1ULL << RARCH_SAVE_STATE_KEY;
+	} else if (shortcut == SHORTCUT_LOAD_STATE) {
+		input_state = 1ULL << RARCH_LOAD_STATE_KEY;
+	}
+	if (!input_state) return JNI_FALSE;
+
+	 uint64_t *key = &g_extern.lifecycle_state;
+
+	 if (pressed)
+		 *key |= input_state;
+	 else
+		 *key &= ~(input_state);
+
+	 return JNI_TRUE;
+}
+
 static int android_handle_shortcut(int state_id, int keyCode, int down) {
 	struct android_app *android_app = (struct android_app*)g_android;
 	JNIEnv *env = jni_thread_getenv();
-	int var = var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleShortcut, state_id, keyCode, down);
+	int var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleShortcut, state_id, keyCode, down);
 	return var;
 }
 

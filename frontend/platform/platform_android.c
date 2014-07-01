@@ -37,6 +37,9 @@ static void system_deinit(void *data);
 static void system_shutdown(bool unused);
 extern void android_app_entry(void *args);
 
+bool registerNativeCallbacks();
+extern JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActiviyFuture_processShortcut(JNIEnv *env, jclass cls, jint shortcut, jint pressed);
+
 void engine_handle_cmd(void *data)
 {
    struct android_app *android_app = (struct android_app*)g_android;
@@ -459,6 +462,8 @@ static void get_environment_settings(int argc, char *argv[], void *data)
 
    RARCH_LOG("Libretro path: [%s].\n", g_settings.libretro);
 
+   registerNativeCallbacks();
+
 }
 
 static void process_pending_intent(void *data)
@@ -651,6 +656,41 @@ static void system_shutdown(bool unused)
    // Should probably call ANativeActivity_finish(), but it's bugged, it will hang our app.
    exit(0);
 }
+
+static int registerNativeMethods(JNIEnv* env, JNINativeMethod* gMethods, int numMethods) {
+	struct android_app* android_app = (struct android_app*)g_android;
+    jclass clazz = (*env)->GetObjectClass(env, android_app->activity->clazz);
+
+    if (clazz == NULL) {
+        return JNI_FALSE;
+
+    } else  if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
+static JNINativeMethod methods[] = {
+
+    { "processShortcut", "(II)Z",
+                  (void *)Java_com_retroarch_browser_retroactivity_RetroActiviyFuture_processShortcut }
+
+};
+
+bool registerNativeCallbacks() {
+
+	struct android_app* android_app = (struct android_app*)g_android;
+    JNIEnv* env;
+    JavaVM* vm = android_app->activity->vm;
+    (*vm)->AttachCurrentThread(vm, &env, NULL);
+
+    int result = registerNativeMethods(env, methods, sizeof(methods) / sizeof(methods[0]));
+    (*vm)->DetachCurrentThread(vm);
+    return result == JNI_TRUE;
+}
+
+
 
 const frontend_ctx_driver_t frontend_ctx_android = {
    get_environment_settings,     /* get_environment_settings */
