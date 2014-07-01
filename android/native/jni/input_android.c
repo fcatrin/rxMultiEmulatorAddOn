@@ -300,6 +300,13 @@ int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO
 		RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START};
 
 
+static int android_handle_shortcut(int state_id, int keyCode, int down) {
+	struct android_app *android_app = (struct android_app*)g_android;
+	JNIEnv *env = jni_thread_getenv();
+	int var = var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleShortcut, state_id, keyCode, down);
+	return var;
+}
+
 static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int defaultValue) {
 	struct android_app *android_app = (struct android_app*)g_android;
     jstring iname = (*env)->NewStringUTF(env, key);
@@ -1836,7 +1843,7 @@ static void android_input_poll(void *data)
                int32_t handled = 1;
                int action = 0;
                char msg[128];
-               int source, id, keycode, type_event, state_id;
+               int source, id, keycode, type_event, state_id, ignore_start;
                int predispatched;
 
                msg[0] = 0;
@@ -1853,6 +1860,13 @@ static void android_input_poll(void *data)
 
                type_event = AInputEvent_getType(event);
                state_id = -1;
+
+               ignore_start = 0;
+               if ((keycode & 0xC000) == 0xC000) {
+            	   state_id = (keycode & 0xFF0000) >> 16; // reasign to origin port
+            	   keycode = keycode & 0x3FFF;
+            	   ignore_start = 1;
+               }
 
                if (source & (AINPUT_SOURCE_TOUCHSCREEN | AINPUT_SOURCE_MOUSE | AINPUT_SOURCE_TOUCHPAD))
                   state_id = 0; // touch overlay is always player 1
@@ -1993,27 +2007,29 @@ static void android_input_poll(void *data)
                      snprintf(msg, sizeof(msg), "Pad %d : %d, ac = %d, src = %d.\n", state_id, keycode, action, source);
                   }
 
-                  // L3 = Load State, R3 = Save State
-                  if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_L3)) input_state = (1ULL << RARCH_LOAD_STATE_KEY);
-                  if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_R3)) input_state = (1ULL << RARCH_SAVE_STATE_KEY);
+                  if (ignore_start || !android_handle_shortcut(state_id, input_state, action == AKEY_EVENT_ACTION_DOWN)) {
+					  // L3 = Load State, R3 = Save State
+					  //if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_L3)) input_state = (1ULL << RARCH_LOAD_STATE_KEY);
+					  //if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_R3)) input_state = (1ULL << RARCH_SAVE_STATE_KEY);
 
-                  if (input_state < (1ULL << RARCH_FIRST_META_KEY))
-                     key = &android->pad_state[state_id];
-                  else if (input_state/* && action == AKEY_EVENT_ACTION_DOWN*/)
-                     key = &g_extern.lifecycle_state;
+					  if (input_state < (1ULL << RARCH_FIRST_META_KEY))
+						 key = &android->pad_state[state_id];
+					  else if (input_state/* && action == AKEY_EVENT_ACTION_DOWN*/)
+						 key = &g_extern.lifecycle_state;
 
-                  if (key != NULL)
-                  {
-                     // some controllers send both the up and down events at once when the button is released for "special" buttons, like menu buttons
-                     // work around that by only using down events for meta keys (which get cleared every poll anyway)
-                     if (action == AKEY_EVENT_ACTION_UP && !(input_state & lifecycle_mask))
-                        *key &= ~(input_state);
-                     else if (action == AKEY_EVENT_ACTION_DOWN)
-                        *key |= input_state;
+					  if (key != NULL)
+					  {
+						 // some controllers send both the up and down events at once when the button is released for "special" buttons, like menu buttons
+						 // work around that by only using down events for meta keys (which get cleared every poll anyway)
+						 if (action == AKEY_EVENT_ACTION_UP && !(input_state & lifecycle_mask))
+							*key &= ~(input_state);
+						 else if (action == AKEY_EVENT_ACTION_DOWN)
+							*key |= input_state;
+					  }
+
+					  if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN) && android->keycode_lut[keycode] == 0)
+						 handled = 0;
                   }
-
-                  if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN) && android->keycode_lut[keycode] == 0)
-                     handled = 0;
                }
 
                if (msg[0] != 0)

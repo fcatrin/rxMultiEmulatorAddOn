@@ -56,6 +56,7 @@ struct android_app
    jmethodID getPendingIntentLibretroPath;
    jmethodID getPendingIntentFullPath;
    jmethodID getPendingIntentIME;
+   jmethodID handleShortcut;
 };
 
 enum {
