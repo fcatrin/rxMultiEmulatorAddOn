@@ -109,7 +109,7 @@ static void engine_handle_dpad_default(void *data, AInputEvent *event,
    }
 
    if (debug_enable)
-      snprintf(msg, msg_sizeof, "Pad %d : x = %.2f, y = %.2f, src %d.\n",
+      snprintf(msg, msg_sizeof, "PadA %d : x = %.2f, y = %.2f, src %d.\n",
             state_id, x, y, source);
 }
 
@@ -149,7 +149,7 @@ static void engine_handle_dpad_getaxisvalue(void *data, AInputEvent *event,
       *state_cur |= PRESSED_UP(hatx, haty)    ? (1ULL << RETRO_DEVICE_ID_JOYPAD_UP)    : 0;
       *state_cur |= PRESSED_DOWN(hatx, haty)  ? (1ULL << RETRO_DEVICE_ID_JOYPAD_DOWN)  : 0;
    }
-   else if (emulation == ANALOG_DPAD_LSTICK)
+   else if (emulation == ANALOG_DPAD_LSTICK || emulation == ANALOG_DPAD_DUALANALOG)
    {
       *state_cur |= PRESSED_LEFT(x, y)  ? (1ULL << RETRO_DEVICE_ID_JOYPAD_LEFT)  : 0;
       *state_cur |= PRESSED_RIGHT(x, y) ? (1ULL << RETRO_DEVICE_ID_JOYPAD_RIGHT) : 0;
@@ -171,7 +171,7 @@ static void engine_handle_dpad_getaxisvalue(void *data, AInputEvent *event,
    }
 
    if (debug_enable)
-      snprintf(msg, msg_sizeof, "Pad %d : x %.2f, y %.2f, z %.2f, rz %.2f, src %d.\n",
+      snprintf(msg, msg_sizeof, "PadB %d : x %.2f, y %.2f, z %.2f, rz %.2f, src %d.\n",
             state_id, x, y, z, rz, source);
 }
 
@@ -319,7 +319,7 @@ static void android_get_string_extra(JNIEnv *env, jobject intent, char *key, cha
 }
 
 
-static bool android_input_from_intent(android_input_t* android_input, unsigned shift) {
+static bool android_input_from_intent(android_input_t* android_input, unsigned shift, unsigned port) {
    JNIEnv *env;
    struct android_app *android_app = (struct android_app*)g_android;
    jobject intent = NULL;
@@ -345,6 +345,9 @@ static bool android_input_from_intent(android_input_t* android_input, unsigned s
 		}
 		i++;
 	}
+	if (hasIntentData) {
+		android_input->dpad_emulation[port] = ANALOG_DPAD_DUALANALOG;
+	}
 	return hasIntentData;
 }
 
@@ -365,6 +368,7 @@ static bool android_descriptor_from_intent(char *str, int n) {
 	RARCH_LOG("Getting descriptor from intent");
 	android_get_string_extra(env, intent, "INPUT_DESCRIPTOR", str, n);
 	RARCH_LOG("Descriptor from intent %s", str);
+
 	return true;
 }
 
@@ -378,7 +382,7 @@ static void android_input_set_keybinds(void *data, unsigned device,
     unsigned shift = 8 + (port * 8);
 
     android_input_t *android = (android_input_t*)data;
-	if (android_input_from_intent(android, shift)) return;
+	if (android_input_from_intent(android, shift, port)) return;
 
 
    if (keybind_action & (1ULL << KEYBINDS_ACTION_SET_DEFAULT_BINDS))
