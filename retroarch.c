@@ -1974,6 +1974,7 @@ void rarch_load_state(void)
 
    size_t size = pretro_serialize_size();
    char msg[512];
+   int reportFailure = 0;
 
    if (size)
    {
@@ -1984,15 +1985,21 @@ void rarch_load_state(void)
          else
             snprintf(msg, sizeof(msg), "Loaded state from slot #%d.", g_extern.state_slot);
       }
-      else
+      else {
          snprintf(msg, sizeof(msg), "Failed to load state from \"%s\".", load_path);
+         reportFailure = 1;
+      }
    }
-   else
+   else {
       strlcpy(msg, "Core does not support save states.", sizeof(msg));
+      reportFailure = 1;
+   }
 
-   msg_queue_clear(g_extern.msg_queue);
-   msg_queue_push(g_extern.msg_queue, msg, 2, 180);
-   RARCH_LOG("%s\n", msg);
+   if (reportFailure) {
+	   msg_queue_clear(g_extern.msg_queue);
+	   msg_queue_push(g_extern.msg_queue, msg, 2, 180);
+	   RARCH_LOG("%s\n", msg);
+   }
 }
 
 void rarch_save_state(void)
@@ -2011,6 +2018,7 @@ void rarch_save_state(void)
 
    size_t size = pretro_serialize_size();
    char msg[512];
+   int reportFailure = 0;
 
    if (size)
    {
@@ -2021,15 +2029,21 @@ void rarch_save_state(void)
          else
             snprintf(msg, sizeof(msg), "Saved state to slot #%u.", g_extern.state_slot);
       }
-      else
+      else {
          snprintf(msg, sizeof(msg), "Failed to save state to \"%s\".", save_path);
+         reportFailure = 1;
+      }
    }
-   else
+   else {
       strlcpy(msg, "Core does not support save states.", sizeof(msg));
+      reportFailure = 1;
+   }
 
-   msg_queue_clear(g_extern.msg_queue);
-   msg_queue_push(g_extern.msg_queue, msg, 2, 180);
-   RARCH_LOG("%s\n", msg);
+   if (reportFailure) {
+	   msg_queue_clear(g_extern.msg_queue);
+	   msg_queue_push(g_extern.msg_queue, msg, 2, 180);
+	   RARCH_LOG("%s\n", msg);
+   }
 }
 
 // Save or load state here.

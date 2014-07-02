@@ -25,7 +25,6 @@
 #include "../../../performance.h"
 #include "../../../general.h"
 #include "../../../driver.h"
-#include "NativeActivityConnector.h"
 
 #define MAX_TOUCH 16
 #define PRESSED_UP(x, y)    ((y <= dzone_min))
@@ -303,6 +302,7 @@ int vStickIds[] = {RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN, RETRO
 
 #define SHORTCUT_LOAD_STATE 1
 #define SHORTCUT_SAVE_STATE 2
+#define SHORTCUT_QUIT 5
 
 JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActiviyFuture_processShortcut(JNIEnv *env, jclass cls, jint shortcut, jint pressed) {
 	uint64_t input_state = 0;
@@ -310,6 +310,8 @@ JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActiviy
 		input_state = 1ULL << RARCH_SAVE_STATE_KEY;
 	} else if (shortcut == SHORTCUT_LOAD_STATE) {
 		input_state = 1ULL << RARCH_LOAD_STATE_KEY;
+	} else if (shortcut == SHORTCUT_QUIT) {
+		input_state = 1ULL << RARCH_QUIT_KEY;
 	}
 	if (!input_state) return JNI_FALSE;
 
@@ -330,6 +332,12 @@ static int android_handle_shortcut(int state_id, int keyCode, int down) {
 	return var;
 }
 
+static int android_handle_special_key(int keyCode, int down) {
+	struct android_app *android_app = (struct android_app*)g_android;
+	JNIEnv *env = jni_thread_getenv();
+	int var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleSpecialKey, keyCode, down);
+	return var;
+}
 static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int defaultValue) {
 	struct android_app *android_app = (struct android_app*)g_android;
     jstring iname = (*env)->NewStringUTF(env, key);
@@ -1930,7 +1938,10 @@ static void android_input_poll(void *data)
                   long_msg_enable = true;
                }
 
-               if (keycode == AKEYCODE_BACK)
+               RARCH_LOG("Keypress keyCode %i  BACK:%i MENU:%i TYPE:%i TYPE_KEY:%i", keycode, AKEYCODE_BACK, AKEYCODE_MENU, type_event, AINPUT_EVENT_TYPE_KEY);
+
+
+               if (0 && keycode == AKEYCODE_BACK) // anular procesamiento de BACK
                {
                   uint8_t unpacked = (android->keycode_lut[AKEYCODE_BACK] >> ((state_id+1) << 3)) - 1;
                   uint64_t input_state = (1ULL << unpacked);
@@ -2017,13 +2028,20 @@ static void android_input_poll(void *data)
                }
                else if (type_event == AINPUT_EVENT_TYPE_KEY)
                {
+
+                   int action  = AKeyEvent_getAction(event);
+
+                   if (android_handle_special_key(keycode, action == AKEY_EVENT_ACTION_DOWN)) {
+            		   AInputQueue_finishEvent(android_app->inputQueue, event, handled);
+            		   continue;
+            	   }
+
                   /* Hack - we have to decrease the unpacked value by 1
                    * because we 'added' 1 to each entry in the LUT -
                    * RETRO_DEVICE_ID_JOYPAD_B is 0
                    */
                   uint8_t unpacked = (android->keycode_lut[keycode] >> ((state_id+1) << 3)) - 1;
                   uint64_t input_state = (1ULL << unpacked);
-                  int action  = AKeyEvent_getAction(event);
                   uint64_t *key = NULL;
 
                   if (debug_enable) {
