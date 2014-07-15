@@ -272,7 +272,7 @@ void load_menu_game_prepare(void)
 
          fill_pathname_base(tmp, g_extern.fullpath, sizeof(tmp));
          snprintf(str, sizeof(str), "INFO - Loading %s ...", tmp);
-         msg_queue_push(g_extern.msg_queue, str, 1, 1);
+         //msg_queue_push(g_extern.msg_queue, str, 1, 1);
       }
 
 #ifdef RARCH_CONSOLE

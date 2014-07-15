@@ -311,6 +311,8 @@ void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned p
       driver.input->set_keybinds(driver.input_data, device, port, id,
             (1ULL << KEYBINDS_ACTION_SET_DEFAULT_BINDS));
 
+   /*
    if (name_buf[0] != 0)
       snprintf(msg, sizeof_msg, "Port %d: %s.\n", port, name_buf);
+      */
 }
