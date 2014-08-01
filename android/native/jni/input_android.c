@@ -338,6 +338,16 @@ static int android_handle_special_key(int keyCode, int down) {
 	int var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleSpecialKey, keyCode, down);
 	return var;
 }
+
+static void android_handle_motion(int pointer, int action, int x, int y) {
+	struct android_app *android_app = (struct android_app*)g_android;
+	RARCH_LOG("Handle motion pointerId:%i, action:%i, x:%i, y:%i", pointer, action, x, y);
+	JNIEnv *env = jni_thread_getenv();
+	(*env)->CallVoidMethod(env, android_app->activity->clazz, android_app->handleMotion, pointer, action, x, y);
+	RARCH_LOG("RETURN Handle motion pointerId:%i, action:%i, x:%i, y:%i", pointer, action, x, y);
+}
+
+
 static int android_get_int_extra(JNIEnv *env, jobject intent, char *key, int defaultValue) {
 	struct android_app *android_app = (struct android_app*)g_android;
     jstring iname = (*env)->NewStringUTF(env, key);
@@ -1992,8 +2002,12 @@ static void android_input_poll(void *data)
                   }
                   else
                   {
-                     float x = 0.0f;
-                     float y = 0.0f;
+                      float x = AMotionEvent_getX(event, motion_pointer);
+                      float y = AMotionEvent_getY(event, motion_pointer);
+                      int32_t pointerId = AMotionEvent_getPointerId( event, motion_pointer );
+
+                      android_handle_motion(pointerId, action, x, y);
+
                      bool keyup = (action == AMOTION_EVENT_ACTION_UP ||
                            action == AMOTION_EVENT_ACTION_CANCEL || action == AMOTION_EVENT_ACTION_POINTER_UP) ||
                         (source == AINPUT_SOURCE_MOUSE && action != AMOTION_EVENT_ACTION_DOWN);

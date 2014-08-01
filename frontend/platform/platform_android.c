@@ -616,6 +616,7 @@ static void system_init(void *data)
    GET_OBJECT_CLASS(env, class, android_app->activity->clazz);
    GET_METHOD_ID(env, android_app->handleShortcut, class, "handleShortcut", "(III)I");
    GET_METHOD_ID(env, android_app->handleSpecialKey, class, "handleSpecialKey", "(II)I");
+   GET_METHOD_ID(env, android_app->handleMotion, class, "handleMotion", "(IIII)V");
 
    GET_METHOD_ID(env, android_app->getIntent, class, "getIntent", "()Landroid/content/Intent;");
    CALL_OBJ_METHOD(env, obj, android_app->activity->clazz, android_app->getIntent);
