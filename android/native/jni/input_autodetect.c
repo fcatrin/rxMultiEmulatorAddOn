@@ -18,6 +18,11 @@
 #include "jni_macros.h"
 #include "input_autodetect.h"
 
+jclass inputDeviceClass = NULL;
+jmethodID inputDeviceGetDevice = NULL;
+jmethodID inputDeviceGetName = NULL;
+jmethodID inputDeviceGetDescriptor = NULL;
+
 static void input_autodetect_get_device_name(void *data, char *buf, size_t size, int id)
 {
    JNIEnv *env = jni_thread_getenv();
@@ -26,31 +31,34 @@ static void input_autodetect_get_device_name(void *data, char *buf, size_t size,
 
    buf[0] = '\0';
 
-   jclass class = NULL;
-   FIND_CLASS(env, class, "android/view/InputDevice");
-   if (!class)
-      return;
+   if (inputDeviceClass == NULL) {
+	   FIND_CLASS(env, inputDeviceClass, "android/view/InputDevice");
+	   if (!inputDeviceClass)
+		   return;
+   }
 
-   jmethodID method = NULL;
-   GET_STATIC_METHOD_ID(env, method, class, "getDevice", "(I)Landroid/view/InputDevice;");
-   if (!method)
-      return;
+   if (inputDeviceGetDevice == NULL) {
+	   GET_STATIC_METHOD_ID(env, inputDeviceGetDevice, inputDeviceClass, "getDevice", "(I)Landroid/view/InputDevice;");
+	   if (!inputDeviceGetDevice)
+		  return;
+   }
 
    jobject device = NULL;
-   CALL_OBJ_STATIC_METHOD_PARAM(env, device, class, method, (jint)id);
+   CALL_OBJ_STATIC_METHOD_PARAM(env, device, inputDeviceClass, inputDeviceGetDevice, (jint)id);
    if (!device)
    {
       RARCH_ERR("Failed to find device for ID: %d\n", id);
       return;
    }
 
-   jmethodID getName = NULL;
-   GET_METHOD_ID(env, getName, class, "getName", "()Ljava/lang/String;");
-   if (!getName)
-      return;
+   if (inputDeviceGetName == NULL) {
+	   GET_METHOD_ID(env, inputDeviceGetName, inputDeviceClass, "getName", "()Ljava/lang/String;");
+	   if (!inputDeviceGetName)
+		   return;
+   }
 
    jobject name = NULL;
-   CALL_OBJ_METHOD(env, name, device, getName);
+   CALL_OBJ_METHOD(env, name, device, inputDeviceGetName);
    if (!name)
    {
       RARCH_ERR("Failed to find name for device ID: %d\n", id);
@@ -61,9 +69,11 @@ static void input_autodetect_get_device_name(void *data, char *buf, size_t size,
    if (str)
       strlcpy(buf, str, size);
    (*env)->ReleaseStringUTFChars(env, name, str);
+   (*env)->DeleteLocalRef( env, name );
 }
 
-static void input_autodetect_get_device_descriptor(void *data, char *buf, size_t size, int id)
+
+void input_autodetect_get_device_descriptor(char *buf, size_t size, int id)
 {
    JNIEnv *env = jni_thread_getenv();
    if (!env)
@@ -71,31 +81,34 @@ static void input_autodetect_get_device_descriptor(void *data, char *buf, size_t
 
    buf[0] = '\0';
 
-   jclass class = NULL;
-   FIND_CLASS(env, class, "android/view/InputDevice");
-   if (!class)
-	  return;
+   if (inputDeviceClass == NULL) {
+	   FIND_CLASS(env, inputDeviceClass, "android/view/InputDevice");
+	   if (!inputDeviceClass)
+		  return;
+   }
 
-   jmethodID method = NULL;
-   GET_STATIC_METHOD_ID(env, method, class, "getDevice", "(I)Landroid/view/InputDevice;");
-   if (!method)
-	  return;
+   if (inputDeviceGetDevice == NULL) {
+	   GET_STATIC_METHOD_ID(env, inputDeviceGetDevice, inputDeviceClass, "getDevice", "(I)Landroid/view/InputDevice;");
+	   if (!inputDeviceGetDevice)
+		   return;
+   }
 
    jobject device = NULL;
-   CALL_OBJ_STATIC_METHOD_PARAM(env, device, class, method, (jint)id);
+   CALL_OBJ_STATIC_METHOD_PARAM(env, device, inputDeviceClass, inputDeviceGetDevice, (jint)id);
    if (!device)
    {
 	  RARCH_ERR("Failed to find device for ID: %d\n", id);
 	  return;
    }
 
-   jmethodID getDescriptor = NULL;
-   GET_METHOD_ID(env, getDescriptor, class, "getDescriptor", "()Ljava/lang/String;");
-   if (!getDescriptor)
-	  return;
+   if (inputDeviceGetDescriptor == NULL) {
+	   GET_METHOD_ID(env, inputDeviceGetDescriptor, inputDeviceClass, "getDescriptor", "()Ljava/lang/String;");
+	   if (!inputDeviceGetDescriptor)
+		   return;
+   }
 
    jobject descriptor = NULL;
-   CALL_OBJ_METHOD(env, descriptor, device, getDescriptor);
+   CALL_OBJ_METHOD(env, descriptor, device, inputDeviceGetDescriptor);
    if (!descriptor)
    {
 	  RARCH_ERR("Failed to find name for device ID: %d\n", id);
@@ -103,9 +116,12 @@ static void input_autodetect_get_device_descriptor(void *data, char *buf, size_t
    }
 
    const char *str = (*env)->GetStringUTFChars(env, descriptor, 0);
-   if (str)
+   if (str) {
 	  strlcpy(buf, str, size);
+   }
    (*env)->ReleaseStringUTFChars(env, descriptor, str);
+   (*env)->DeleteLocalRef( env, descriptor );
+   (*env)->DeleteLocalRef( env, device );
 }
 
 
@@ -128,7 +144,7 @@ void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned p
    char *current_ime = android_app->current_ime;
    input_autodetect_get_device_name(android_app, name_buf, sizeof(name_buf), id);
 
-   input_autodetect_get_device_descriptor(android_app, descriptor_buf, sizeof(descriptor_buf), id);
+   input_autodetect_get_device_descriptor(descriptor_buf, sizeof(descriptor_buf), id);
    RARCH_LOG("device name: %s, desc: %s\n", name_buf, descriptor_buf);
 
    if (primary_descriptor != NULL && !strcmp(primary_descriptor, descriptor_buf)) {

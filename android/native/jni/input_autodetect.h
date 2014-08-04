@@ -99,6 +99,7 @@ enum {
 #define LAST_KEYCODE AKEYCODE_ASSIST
 
 void input_autodetect_setup(void *data, char *msg, size_t sizeof_msg, unsigned port, unsigned id, int source, bool *primary, char *primary_descriptor);
+void input_autodetect_get_device_descriptor(char *buf, size_t size, int id);
 
 /* Xperia Play externs */
 extern unsigned zeus_port;

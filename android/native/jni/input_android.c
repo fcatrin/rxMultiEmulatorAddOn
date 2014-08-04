@@ -325,10 +325,12 @@ JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActiviy
 	 return JNI_TRUE;
 }
 
-static int android_handle_shortcut(int state_id, int keyCode, int down) {
+static int android_handle_shortcut(char *descriptor, int id, int keyCode, int down) {
 	struct android_app *android_app = (struct android_app*)g_android;
 	JNIEnv *env = jni_thread_getenv();
-	int var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleShortcut, state_id, keyCode, down);
+	jstring jDescriptor = (*env)->NewStringUTF(env, descriptor);
+	int var = (*env)->CallIntMethod(env, android_app->activity->clazz, android_app->handleShortcut, jDescriptor, id, keyCode, down);
+	(*env)->DeleteLocalRef(env, jDescriptor);
 	return var;
 }
 
@@ -341,10 +343,8 @@ static int android_handle_special_key(int keyCode, int down) {
 
 static void android_handle_motion(int pointer, int action, int x, int y) {
 	struct android_app *android_app = (struct android_app*)g_android;
-	RARCH_LOG("Handle motion pointerId:%i, action:%i, x:%i, y:%i", pointer, action, x, y);
 	JNIEnv *env = jni_thread_getenv();
 	(*env)->CallVoidMethod(env, android_app->activity->clazz, android_app->handleMotion, pointer, action, x, y);
-	RARCH_LOG("RETURN Handle motion pointerId:%i, action:%i, x:%i, y:%i", pointer, action, x, y);
 }
 
 
@@ -360,9 +360,14 @@ static void android_get_string_extra(JNIEnv *env, jobject intent, char *key, cha
 	struct android_app *android_app = (struct android_app*)g_android;
     jstring iname = (*env)->NewStringUTF(env, key);
     jstring var = (jstring)(*env)->CallObjectMethod(env, intent, android_app->getStringExtra, iname);
-    char *c_str = strdup((*env)->GetStringUTFChars(env, var, 0));
-    strncpy(str, c_str, size);
-    (*env)->ReleaseStringUTFChars(env, var, c_str);
+    if (var!=NULL) {
+    	char *c_str = strdup((*env)->GetStringUTFChars(env, var, 0));
+    	strncpy(str, c_str, size);
+    	(*env)->ReleaseStringUTFChars(env, var, c_str);
+    	(*env)->DeleteLocalRef(env, var);
+    } else {
+    	strcpy(str, "");
+    }
     (*env)->DeleteLocalRef(env, iname);
 }
 
@@ -385,7 +390,7 @@ static bool android_input_from_intent(android_input_t* android_input, unsigned s
 	bool hasIntentData = false;
 	int i = 0;
 	while (vStickNames[i]) {
-		sprintf(sKey, "j1%s", vStickNames[i]);
+		sprintf(sKey, "j%i%s", (port+1), vStickNames[i]);
 		int keyCode = android_get_int_extra(env, intent, sKey, 0);
 		if (keyCode > 0) {
 			android_input->keycode_lut[keyCode]  |=  ((vStickIds[i]+1) << shift);
@@ -399,7 +404,7 @@ static bool android_input_from_intent(android_input_t* android_input, unsigned s
 	return hasIntentData;
 }
 
-static bool android_descriptor_from_intent(char *str, int n) {
+static bool android_descriptor_from_intent(int player, char *str, int n) {
    JNIEnv *env;
    struct android_app *android_app = (struct android_app*)g_android;
    jobject intent = NULL;
@@ -413,10 +418,12 @@ static bool android_descriptor_from_intent(char *str, int n) {
 
 	CALL_OBJ_METHOD(env, intent, android_app->activity->clazz, android_app->getIntent);
 
-	RARCH_LOG("Getting descriptor from intent");
-	android_get_string_extra(env, intent, "INPUT_DESCRIPTOR", str, n);
-	RARCH_LOG("Descriptor from intent %s", str);
+	char intentName[300] = "";
+	sprintf(intentName, "j%iDESCRIPTOR", player);
 
+	android_get_string_extra(env, intent, intentName, str, n);
+
+	(*env)->DeleteLocalRef( env, intent );
 	return true;
 }
 
@@ -1924,11 +1931,13 @@ static void android_input_poll(void *data)
                   state_id = android->pads_connected;
                   if (g_settings.input.autodetect_enable)
                   {
-                	  char descriptor[300] = "";
-                	  android_descriptor_from_intent(descriptor, sizeof(descriptor));
+                	  char descriptor1[300] = "";
+                	  char descriptor2[300] = "";
+                	  android_descriptor_from_intent(1, descriptor1, sizeof(descriptor1));
+                	  android_descriptor_from_intent(2, descriptor2, sizeof(descriptor2));
 
                      bool primary = false;
-                     input_autodetect_setup(android_app, msg, sizeof(msg), state_id, id, source, &primary, descriptor);
+                     input_autodetect_setup(android_app, msg, sizeof(msg), state_id, id, source, &primary, descriptor1);
 
                      if (primary)
                      {
@@ -2062,7 +2071,10 @@ static void android_input_poll(void *data)
                      snprintf(msg, sizeof(msg), "Pad %d : %d, ac = %d, src = %d.\n", state_id, keycode, action, source);
                   }
 
-                  if (ignore_start || !android_handle_shortcut(state_id, input_state, action == AKEY_EVENT_ACTION_DOWN)) {
+                  char descriptor_buf[256] = "";
+                  input_autodetect_get_device_descriptor(descriptor_buf, sizeof(descriptor_buf), id);
+
+                  if (ignore_start || !android_handle_shortcut(descriptor_buf, id, input_state, action == AKEY_EVENT_ACTION_DOWN)) {
 					  // L3 = Load State, R3 = Save State
 					  //if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_L3)) input_state = (1ULL << RARCH_LOAD_STATE_KEY);
 					  //if (input_state == (1ULL << RETRO_DEVICE_ID_JOYPAD_R3)) input_state = (1ULL << RARCH_SAVE_STATE_KEY);

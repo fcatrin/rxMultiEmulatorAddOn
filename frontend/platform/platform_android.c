@@ -614,7 +614,7 @@ static void system_init(void *data)
       return;
 
    GET_OBJECT_CLASS(env, class, android_app->activity->clazz);
-   GET_METHOD_ID(env, android_app->handleShortcut, class, "handleShortcut", "(III)I");
+   GET_METHOD_ID(env, android_app->handleShortcut, class, "handleShortcut", "(Ljava/lang/String;III)I");
    GET_METHOD_ID(env, android_app->handleSpecialKey, class, "handleSpecialKey", "(II)I");
    GET_METHOD_ID(env, android_app->handleMotion, class, "handleMotion", "(IIII)V");
 
