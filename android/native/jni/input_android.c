@@ -1911,7 +1911,7 @@ static void android_input_poll(void *data)
 
                ignore_start = 0;
                if ((keycode & 0xC000) == 0xC000) {
-            	   state_id = (keycode & 0xFF0000) >> 16; // reasign to origin port
+            	   id = (keycode & 0xFF0000) >> 16; // reasign to origin port
             	   keycode = keycode & 0x3FFF;
             	   ignore_start = 1;
                }
@@ -1957,7 +1957,7 @@ static void android_input_poll(void *data)
                   long_msg_enable = true;
                }
 
-               RARCH_LOG("Keypress keyCode %i  BACK:%i MENU:%i TYPE:%i TYPE_KEY:%i", keycode, AKEYCODE_BACK, AKEYCODE_MENU, type_event, AINPUT_EVENT_TYPE_KEY);
+               //RARCH_LOG("Keypress keyCode %i  BACK:%i MENU:%i TYPE:%i TYPE_KEY:%i", keycode, AKEYCODE_BACK, AKEYCODE_MENU, type_event, AINPUT_EVENT_TYPE_KEY);
 
 
                if (0 && keycode == AKEYCODE_BACK) // anular procesamiento de BACK
@@ -2072,7 +2072,7 @@ static void android_input_poll(void *data)
                   }
 
                   char descriptor_buf[256] = "";
-                  input_autodetect_get_device_descriptor(descriptor_buf, sizeof(descriptor_buf), id);
+                  if (!ignore_start) input_autodetect_get_device_descriptor(descriptor_buf, sizeof(descriptor_buf), id);
 
                   if (ignore_start || !android_handle_shortcut(descriptor_buf, id, input_state, action == AKEY_EVENT_ACTION_DOWN)) {
 					  // L3 = Load State, R3 = Save State
