@@ -1,0 +1,69 @@
+#include "../gfx/drivers_wm/win32_resource.h"
+1                       ICON                    "retroarch-icon.ico"
+2                       24                      "rarch.manifest"
+
+IDR_MENU MENU
+BEGIN
+   POPUP "File"
+   BEGIN
+      MENUITEM "Load Core",      ID_M_LOAD_CORE
+      MENUITEM "Load Content",   ID_M_LOAD_CONTENT
+      MENUITEM SEPARATOR
+      MENUITEM "Close",         ID_M_QUIT
+   END
+   POPUP "Command"
+   BEGIN
+	  POPUP "Audio Options"
+	  BEGIN
+		MENUITEM "Audio Mute Toggle",	ID_M_MUTE_TOGGLE
+	  END
+      POPUP "Disk Options"
+      BEGIN
+         MENUITEM "Disk Eject Toggle",   ID_M_DISK_CYCLE
+         MENUITEM "Disk Previous",       ID_M_DISK_PREV
+         MENUITEM "Disk Next",           ID_M_DISK_NEXT
+      END
+      POPUP "Save State Options"
+      BEGIN
+		 POPUP "State Index"
+		 BEGIN
+			MENUITEM "-1 (Auto)", ID_M_STATE_INDEX_AUTO
+			MENUITEM "0", ID_M_STATE_INDEX_AUTO + 1
+			MENUITEM "1", ID_M_STATE_INDEX_AUTO + 2
+			MENUITEM "2", ID_M_STATE_INDEX_AUTO + 3
+			MENUITEM "3", ID_M_STATE_INDEX_AUTO + 4
+			MENUITEM "4", ID_M_STATE_INDEX_AUTO + 5
+			MENUITEM "5", ID_M_STATE_INDEX_AUTO + 6
+			MENUITEM "6", ID_M_STATE_INDEX_AUTO + 7
+			MENUITEM "7", ID_M_STATE_INDEX_AUTO + 8
+			MENUITEM "8", ID_M_STATE_INDEX_AUTO + 9
+			MENUITEM "9", ID_M_STATE_INDEX_AUTO + 10
+		 END
+         MENUITEM "Load State",   ID_M_LOAD_STATE
+         MENUITEM "Save State",   ID_M_SAVE_STATE
+      END
+      MENUITEM "Reset",                  ID_M_RESET
+      MENUITEM "Menu Toggle",            ID_M_MENU_TOGGLE
+      MENUITEM "Pause Toggle",           ID_M_PAUSE_TOGGLE
+	  MENUITEM "Mouse Grab Toggle",		 ID_M_MOUSE_GRAB
+	  MENUITEM "Take Screenshot",        ID_M_TAKE_SCREENSHOT
+   END
+   POPUP "Window"
+   BEGIN
+      POPUP "Windowed Scale"
+      BEGIN
+         MENUITEM "1x",         ID_M_WINDOW_SCALE_1X
+         MENUITEM "2x",         ID_M_WINDOW_SCALE_2X
+         MENUITEM "3x",         ID_M_WINDOW_SCALE_3X
+         MENUITEM "4x",         ID_M_WINDOW_SCALE_4X
+         MENUITEM "5x",         ID_M_WINDOW_SCALE_5X
+         MENUITEM "6x",         ID_M_WINDOW_SCALE_6X
+         MENUITEM "7x",         ID_M_WINDOW_SCALE_7X
+         MENUITEM "8x",         ID_M_WINDOW_SCALE_8X
+         MENUITEM "9x",         ID_M_WINDOW_SCALE_9X
+         MENUITEM "10x",         ID_M_WINDOW_SCALE_10X
+      END
+      MENUITEM "Toggle Exclusive Full Screen", ID_M_FULL_SCREEN
+      MENUITEM "Shader Parameters",            ID_M_SHADER_PARAMETERS
+   END
+END
