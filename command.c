@@ -1,6 +1,7 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
- * 
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
+ *
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
  *  ation, either version 3 of the License, or (at your option) any later version.
@@ -13,17 +14,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "command.h"
 
-#ifdef HAVE_NETWORK_CMD
-#include "netplay_compat.h"
-#include "netplay.h"
-#endif
-
-#include "driver.h"
-#include "general.h"
-#include "compat/strl.h"
-#include "compat/posix_string.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -31,6 +22,23 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif
+
+#include <compat/strl.h>
+#include <compat/posix_string.h>
+#include <file/file_path.h>
+#include <retro_miscellaneous.h>
+#include <net/net_compat.h>
+
+#include "msg_hash.h"
+
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
+#include "netplay.h"
+#endif
+
+#include "command.h"
+
+#include "general.h"
+#include "runloop.h"
 
 #define DEFAULT_NETWORK_CMD_PORT 55355
 #define STDIN_BUF_SIZE 4096
@@ -43,33 +51,27 @@ struct rarch_cmd
    size_t stdin_buf_ptr;
 #endif
 
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
    int net_fd;
 #endif
 
    bool state[RARCH_BIND_LIST_END];
 };
 
-static bool socket_nonblock(int fd)
-{
-#ifdef _WIN32
-   u_long mode = 1;
-   return ioctlsocket(fd, FIONBIO, &mode) == 0;
-#else
-   return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK) == 0;
-#endif
-}
-
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
 static bool cmd_init_network(rarch_cmd_t *handle, uint16_t port)
 {
-   if (!netplay_init_network())
+   struct addrinfo hints = {0};
+   char port_buf[16]     = {0};
+   struct addrinfo *res  = NULL;
+   int yes               = 1;
+
+   if (!network_init())
       return false;
 
-   RARCH_LOG("Bringing up command interface on port %hu.\n", (unsigned short)port);
+   RARCH_LOG("Bringing up command interface on port %hu.\n",
+         (unsigned short)port);
 
-   struct addrinfo hints, *res = NULL;
-   memset(&hints, 0, sizeof(hints));
 #if defined(_WIN32) || defined(HAVE_SOCKET_LEGACY)
    hints.ai_family   = AF_INET;
 #else
@@ -78,33 +80,33 @@ static bool cmd_init_network(rarch_cmd_t *handle, uint16_t port)
    hints.ai_socktype = SOCK_DGRAM;
    hints.ai_flags    = AI_PASSIVE;
 
-   char port_buf[16];
-   int yes = 1;
 
    snprintf(port_buf, sizeof(port_buf), "%hu", (unsigned short)port);
-   if (getaddrinfo(NULL, port_buf, &hints, &res) < 0)
+   if (getaddrinfo_rarch(NULL, port_buf, &hints, &res) < 0)
       goto error;
 
-   handle->net_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+   handle->net_fd = socket(res->ai_family,
+         res->ai_socktype, res->ai_protocol);
    if (handle->net_fd < 0)
       goto error;
 
    if (!socket_nonblock(handle->net_fd))
       goto error;
 
-   setsockopt(handle->net_fd, SOL_SOCKET, SO_REUSEADDR, CONST_CAST &yes, sizeof(int));
+   setsockopt(handle->net_fd, SOL_SOCKET,
+         SO_REUSEADDR, (const char*)&yes, sizeof(int));
    if (bind(handle->net_fd, res->ai_addr, res->ai_addrlen) < 0)
    {
       RARCH_ERR("Failed to bind socket.\n");
       goto error;
    }
 
-   freeaddrinfo(res);
+   freeaddrinfo_rarch(res);
    return true;
 
 error:
    if (res)
-      freeaddrinfo(res);
+      freeaddrinfo_rarch(res);
    return false;
 }
 #endif
@@ -113,8 +115,10 @@ error:
 static bool cmd_init_stdin(rarch_cmd_t *handle)
 {
 #ifndef _WIN32
+#ifdef HAVE_NETPLAY
    if (!socket_nonblock(STDIN_FILENO))
       return false;
+#endif
 #endif
 
    handle->stdin_enable = true;
@@ -122,13 +126,14 @@ static bool cmd_init_stdin(rarch_cmd_t *handle)
 }
 #endif
 
-rarch_cmd_t *rarch_cmd_new(bool stdin_enable, bool network_enable, uint16_t port)
+rarch_cmd_t *rarch_cmd_new(bool stdin_enable,
+      bool network_enable, uint16_t port)
 {
    rarch_cmd_t *handle = (rarch_cmd_t*)calloc(1, sizeof(*handle));
    if (!handle)
       return NULL;
 
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
    handle->net_fd = -1;
    if (network_enable && !cmd_init_network(handle, port))
       goto error;
@@ -154,9 +159,9 @@ error:
 
 void rarch_cmd_free(rarch_cmd_t *handle)
 {
-#ifdef HAVE_NETWORK_CMD
-   if (handle->net_fd >= 0)
-      close(handle->net_fd);
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
+   if (handle && handle->net_fd >= 0)
+      socket_close(handle->net_fd);
 #endif
 
    free(handle);
@@ -195,8 +200,8 @@ static const struct cmd_map map[] = {
    { "CHEAT_INDEX_MINUS",      RARCH_CHEAT_INDEX_MINUS },
    { "CHEAT_TOGGLE",           RARCH_CHEAT_TOGGLE },
    { "SCREENSHOT",             RARCH_SCREENSHOT },
-   { "DSP_CONFIG",             RARCH_DSP_CONFIG },
    { "MUTE",                   RARCH_MUTE },
+   { "OSK",                   RARCH_OSK },
    { "NETPLAY_FLIP",           RARCH_NETPLAY_FLIP },
    { "SLOWMOTION",             RARCH_SLOWMOTION },
    { "VOLUME_UP",              RARCH_VOLUME_UP },
@@ -204,49 +209,64 @@ static const struct cmd_map map[] = {
    { "OVERLAY_NEXT",           RARCH_OVERLAY_NEXT },
    { "DISK_EJECT_TOGGLE",      RARCH_DISK_EJECT_TOGGLE },
    { "DISK_NEXT",              RARCH_DISK_NEXT },
+   { "DISK_PREV",              RARCH_DISK_PREV },
    { "GRAB_MOUSE_TOGGLE",      RARCH_GRAB_MOUSE_TOGGLE },
    { "MENU_TOGGLE",            RARCH_MENU_TOGGLE },
+   { "MENU_UP",                RETRO_DEVICE_ID_JOYPAD_UP },
+   { "MENU_DOWN",              RETRO_DEVICE_ID_JOYPAD_DOWN },
+   { "MENU_LEFT",              RETRO_DEVICE_ID_JOYPAD_LEFT },
+   { "MENU_RIGHT",             RETRO_DEVICE_ID_JOYPAD_RIGHT },
+   { "MENU_A",                 RETRO_DEVICE_ID_JOYPAD_A },
+   { "MENU_B",                 RETRO_DEVICE_ID_JOYPAD_B },
 };
+
+#define COMMAND_EXT_GLSL      0x7c976537U
+#define COMMAND_EXT_GLSLP     0x0f840c87U
+#define COMMAND_EXT_CG        0x0059776fU
+#define COMMAND_EXT_CGP       0x0b8865bfU
 
 static bool cmd_set_shader(const char *arg)
 {
-   if (!driver.video->set_shader)
-      return false;
-
+   char msg[PATH_MAX_LENGTH]   = {0};
    enum rarch_shader_type type = RARCH_SHADER_NONE;
-   const char *ext = strrchr(arg, '.');
+   const char             *ext = path_get_extension(arg);
+   uint32_t ext_hash           = msg_hash_calculate(ext);
 
-   if (ext)
+   switch (ext_hash)
    {
-      if (strcmp(ext, ".shader") == 0)
+      case COMMAND_EXT_GLSL:
+      case COMMAND_EXT_GLSLP:
          type = RARCH_SHADER_GLSL;
-      else if (strcmp(ext, ".cg") == 0 || strcmp(ext, ".cgp") == 0)
+         break;
+      case COMMAND_EXT_CG:
+      case COMMAND_EXT_CGP:
          type = RARCH_SHADER_CG;
+         break;
+      default:
+         return false;
    }
 
-   if (type == RARCH_SHADER_NONE)
-      return false;
-
-   msg_queue_clear(g_extern.msg_queue);
-
-   char msg[PATH_MAX];
    snprintf(msg, sizeof(msg), "Shader: \"%s\"", arg);
-   msg_queue_push(g_extern.msg_queue, msg, 1, 120);
-   RARCH_LOG("Applying shader \"%s\".\n", arg);
+   rarch_main_msg_queue_push(msg, 1, 120, true);
+   RARCH_LOG("%s \"%s\".\n",
+         msg_hash_to_str(MSG_APPLYING_SHADER),
+         arg);
 
-   return video_set_shader_func(type, arg);
+   return video_driver_set_shader(type, arg);
 }
 
 static const struct cmd_action_map action_map[] = {
    { "SET_SHADER", cmd_set_shader, "<shader path>" },
 };
 
-static bool command_get_arg(const char *tok, const char **arg, unsigned *index)
+static bool command_get_arg(const char *tok,
+      const char **arg, unsigned *index)
 {
    unsigned i;
+
    for (i = 0; i < ARRAY_SIZE(map); i++)
    {
-      if (strcmp(tok, map[i].str) == 0)
+      if (!strcmp(tok, map[i].str))
       {
          if (arg)
             *arg = NULL;
@@ -296,13 +316,17 @@ static void parse_sub_msg(rarch_cmd_t *handle, const char *tok)
          handle->state[map[index].id] = true;
    }
    else
-      RARCH_WARN("Unrecognized command \"%s\" received.\n", tok);
+      RARCH_WARN("%s \"%s\" %s.\n",
+            msg_hash_to_str(MSG_UNRECOGNIZED_COMMAND),
+            tok,
+            msg_hash_to_str(MSG_RECEIVED));
 }
 
 static void parse_msg(rarch_cmd_t *handle, char *buf)
 {
-   char *save;
+   char *save = NULL;
    const char *tok = strtok_r(buf, "\n", &save);
+
    while (tok)
    {
       parse_sub_msg(handle, tok);
@@ -321,18 +345,19 @@ bool rarch_cmd_get(rarch_cmd_t *handle, unsigned id)
    return id < RARCH_BIND_LIST_END && handle->state[id];
 }
 
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
 static void network_cmd_poll(rarch_cmd_t *handle)
 {
+   fd_set fds;
+   struct timeval tmp_tv = {0};
+
    if (handle->net_fd < 0)
       return;
 
-   fd_set fds;
    FD_ZERO(&fds);
    FD_SET(handle->net_fd, &fds);
 
-   struct timeval tmp_tv = {0};
-   if (select(handle->net_fd + 1, &fds, NULL, NULL, &tmp_tv) <= 0)
+   if (socket_select(handle->net_fd + 1, &fds, NULL, NULL, &tmp_tv) <= 0)
       return;
 
    if (!FD_ISSET(handle->net_fd, &fds))
@@ -341,7 +366,9 @@ static void network_cmd_poll(rarch_cmd_t *handle)
    for (;;)
    {
       char buf[1024];
-      ssize_t ret = recvfrom(handle->net_fd, buf, sizeof(buf) - 1, 0, NULL, NULL);
+      ssize_t ret = recvfrom(handle->net_fd, buf,
+            sizeof(buf) - 1, 0, NULL, NULL);
+
       if (ret <= 0)
          break;
 
@@ -354,43 +381,47 @@ static void network_cmd_poll(rarch_cmd_t *handle)
 #ifdef HAVE_STDIN_CMD
 
 #ifdef _WIN32
-// Oh you, Win32 ... <_<
 static size_t read_stdin(char *buf, size_t size)
 {
    DWORD i;
+   DWORD has_read = 0;
+   DWORD avail = 0;
+   bool echo = false;
    HANDLE hnd = GetStdHandle(STD_INPUT_HANDLE);
+
    if (hnd == INVALID_HANDLE_VALUE)
       return 0;
 
-   // Check first if we're a pipe
-   // (not console).
-   DWORD avail = 0;
-   bool echo = false;
+   /* Check first if we're a pipe
+    * (not console). */
 
-   // If not a pipe, check if we're running in a console.
+   /* If not a pipe, check if we're running in a console. */
    if (!PeekNamedPipe(hnd, NULL, 0, NULL, &avail, NULL))
    {
-      DWORD mode = 0;
+      INPUT_RECORD recs[256];
+      bool has_key = false;
+      DWORD mode = 0, has_read = 0;
+
       if (!GetConsoleMode(hnd, &mode))
          return 0;
 
       if ((mode & (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT))
-            && !SetConsoleMode(hnd, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT)))
+            && !SetConsoleMode(hnd,
+               mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT)))
          return 0;
 
-      // Win32, Y U NO SANE NONBLOCK READ!?
-      DWORD has_read = 0;
-      INPUT_RECORD recs[256];
-      if (!PeekConsoleInput(hnd, recs, sizeof(recs) / sizeof(recs[0]), &has_read))
+      /* Win32, Y U NO SANE NONBLOCK READ!? */
+      if (!PeekConsoleInput(hnd, recs,
+               sizeof(recs) / sizeof(recs[0]), &has_read))
          return 0;
 
-      bool has_key = false;
       for (i = 0; i < has_read; i++)
       {
-         // Very crude, but should get the job done ...
+         /* Very crude, but should get the job done. */
          if (recs[i].EventType == KEY_EVENT &&
                recs[i].Event.KeyEvent.bKeyDown &&
-               (isgraph(recs[i].Event.KeyEvent.wVirtualKeyCode) || recs[i].Event.KeyEvent.wVirtualKeyCode == VK_RETURN))
+               (isgraph(recs[i].Event.KeyEvent.wVirtualKeyCode) ||
+                recs[i].Event.KeyEvent.wVirtualKeyCode == VK_RETURN))
          {
             has_key = true;
             echo    = true;
@@ -412,7 +443,6 @@ static size_t read_stdin(char *buf, size_t size)
    if (avail > size)
       avail = size;
 
-   DWORD has_read = 0;
    if (!ReadFile(hnd, buf, avail, &has_read, NULL))
       return 0;
 
@@ -420,7 +450,8 @@ static size_t read_stdin(char *buf, size_t size)
       if (buf[i] == '\r')
          buf[i] = '\n';
 
-   // Console won't echo for us while in non-line mode, so do it manually ...
+   /* Console won't echo for us while in non-line mode,
+    * so do it manually ... */
    if (echo)
    {
       HANDLE hnd_out = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -434,6 +465,7 @@ static size_t read_stdin(char *buf, size_t size)
    return has_read;
 }
 #else
+
 static size_t read_stdin(char *buf, size_t size)
 {
    size_t has_read = 0;
@@ -455,21 +487,27 @@ static size_t read_stdin(char *buf, size_t size)
 
 static void stdin_cmd_poll(rarch_cmd_t *handle)
 {
+   char *last_newline;
+   ssize_t ret;
+   ptrdiff_t msg_len;
+
    if (!handle->stdin_enable)
       return;
 
-   size_t ret = read_stdin(handle->stdin_buf + handle->stdin_buf_ptr, STDIN_BUF_SIZE - handle->stdin_buf_ptr - 1);
+   ret = read_stdin(handle->stdin_buf + handle->stdin_buf_ptr,
+         STDIN_BUF_SIZE - handle->stdin_buf_ptr - 1);
    if (ret == 0)
       return;
 
    handle->stdin_buf_ptr += ret;
    handle->stdin_buf[handle->stdin_buf_ptr] = '\0';
 
-   char *last_newline = strrchr(handle->stdin_buf, '\n');
+   last_newline = strrchr(handle->stdin_buf, '\n');
+
    if (!last_newline)
    {
-      // We're receiving bogus data in pipe (no terminating newline),
-      // flush out the buffer.
+      /* We're receiving bogus data in pipe
+       * (no terminating newline), flush out the buffer. */
       if (handle->stdin_buf_ptr + 1 >= STDIN_BUF_SIZE)
       {
          handle->stdin_buf_ptr = 0;
@@ -480,11 +518,12 @@ static void stdin_cmd_poll(rarch_cmd_t *handle)
    }
 
    *last_newline++ = '\0';
-   ptrdiff_t msg_len = last_newline - handle->stdin_buf;
+   msg_len = last_newline - handle->stdin_buf;
 
    parse_msg(handle, handle->stdin_buf);
 
-   memmove(handle->stdin_buf, last_newline, handle->stdin_buf_ptr - msg_len);
+   memmove(handle->stdin_buf, last_newline,
+         handle->stdin_buf_ptr - msg_len);
    handle->stdin_buf_ptr -= msg_len;
 }
 #endif
@@ -493,7 +532,7 @@ void rarch_cmd_poll(rarch_cmd_t *handle)
 {
    memset(handle->state, 0, sizeof(handle->state));
 
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
    network_cmd_poll(handle);
 #endif
 
@@ -502,11 +541,17 @@ void rarch_cmd_poll(rarch_cmd_t *handle)
 #endif
 }
 
-#ifdef HAVE_NETWORK_CMD
-static bool send_udp_packet(const char *host, uint16_t port, const char *msg)
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
+static bool send_udp_packet(const char *host,
+      uint16_t port, const char *msg)
 {
-   struct addrinfo hints, *res = NULL;
-   memset(&hints, 0, sizeof(hints));
+   char port_buf[16]           = {0};
+   struct addrinfo hints       = {0};
+   struct addrinfo *res        = NULL;
+   const struct addrinfo *tmp  = NULL;
+   int fd                      = -1;
+   bool ret                    = true;
+
 #if defined(_WIN32) || defined(HAVE_SOCKET_LEGACY)
    hints.ai_family   = AF_INET;
 #else
@@ -514,19 +559,17 @@ static bool send_udp_packet(const char *host, uint16_t port, const char *msg)
 #endif
    hints.ai_socktype = SOCK_DGRAM;
 
-   int fd = -1;
-   bool ret = true;
-   char port_buf[16];
-
    snprintf(port_buf, sizeof(port_buf), "%hu", (unsigned short)port);
-   if (getaddrinfo(host, port_buf, &hints, &res) < 0)
+   if (getaddrinfo_rarch(host, port_buf, &hints, &res) < 0)
       return false;
 
-   // Send to all possible targets.
-   // "localhost" might resolve to several different IPs.
-   const struct addrinfo *tmp = res;
+   /* Send to all possible targets.
+    * "localhost" might resolve to several different IPs. */
+   tmp = (const struct addrinfo*)res;
    while (tmp)
    {
+      ssize_t len, ret_len;
+
       fd = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
       if (fd < 0)
       {
@@ -534,33 +577,35 @@ static bool send_udp_packet(const char *host, uint16_t port, const char *msg)
          goto end;
       }
 
-      ssize_t len = strlen(msg);
-      ssize_t ret_len = sendto(fd, msg, len, 0, tmp->ai_addr, tmp->ai_addrlen);
+      len = strlen(msg);
+      ret_len = sendto(fd, msg, len, 0, tmp->ai_addr, tmp->ai_addrlen);
+
       if (ret_len < len)
       {
          ret = false;
          goto end;
       }
 
-      close(fd);
+      socket_close(fd);
       fd = -1;
       tmp = tmp->ai_next;
    }
 
 end:
-   freeaddrinfo(res);
+   freeaddrinfo_rarch(res);
    if (fd >= 0)
-      close(fd);
+      socket_close(fd);
    return ret;
 }
 
 static bool verify_command(const char *cmd)
 {
    unsigned i;
+
    if (command_get_arg(cmd, NULL, NULL))
       return true;
 
-   RARCH_ERR("Command \"%s\" is not recognized by RetroArch.\n", cmd);
+   RARCH_ERR("Command \"%s\" is not recognized by the program.\n", cmd);
    RARCH_ERR("\tValid commands:\n");
    for (i = 0; i < sizeof(map) / sizeof(map[0]); i++)
       RARCH_ERR("\t\t%s\n", map[i].str);
@@ -573,22 +618,24 @@ static bool verify_command(const char *cmd)
 
 bool network_cmd_send(const char *cmd_)
 {
-   if (!netplay_init_network())
-      return NULL;
+   bool ret;
+   char *command       = NULL;
+   char *save          = NULL;
+   const char *cmd     = NULL;
+   const char *host    = NULL;
+   const char *port_   = NULL;
+   global_t *global    = global_get_ptr();
+   bool old_verbose    = global ? global->verbosity : false;
+   uint16_t port       = DEFAULT_NETWORK_CMD_PORT;
 
-   char *command = strdup(cmd_);
-   if (!command)
+   if (!network_init())
       return false;
 
-   bool old_verbose = g_extern.verbose;
-   g_extern.verbose = true;
+   if (!(command = strdup(cmd_)))
+      return false;
 
-   const char *cmd = NULL;
-   const char *host = NULL;
-   const char *port_ = NULL;
-   uint16_t port = DEFAULT_NETWORK_CMD_PORT;
+   global->verbosity = true;
 
-   char *save;
    cmd = strtok_r(command, ";", &save);
    if (cmd)
       host = strtok_r(NULL, ";", &save);
@@ -607,14 +654,14 @@ bool network_cmd_send(const char *cmd_)
    if (port_)
       port = strtoul(port_, NULL, 0);
 
-   RARCH_LOG("Sending command: \"%s\" to %s:%hu\n", cmd, host, (unsigned short)port);
+   RARCH_LOG("%s: \"%s\" to %s:%hu\n",
+         msg_hash_to_str(MSG_SENDING_COMMAND),
+         cmd, host, (unsigned short)port);
 
-   bool ret = verify_command(cmd) && send_udp_packet(host, port, cmd);
+   ret = verify_command(cmd) && send_udp_packet(host, port, cmd);
    free(command);
 
-   g_extern.verbose = old_verbose;
+   global->verbosity = old_verbose;
    return ret;
 }
 #endif
-
-

@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -14,5 +15,7 @@
  */
 
 #include "git_version.h"
-const char rarch_git_version[] = GIT_VERSION;
+#define STR_(x) #x
+#define STR(x) STR_(x)
+const char rarch_git_version[] = STR(GIT_VERSION);
 

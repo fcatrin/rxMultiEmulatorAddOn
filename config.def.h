@@ -1,6 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
- *  Copyright (C) 2011-2014 - Daniel De Matteis
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -14,24 +14,16 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// Config header for RetroArch
-//
-//
-
 #ifndef __CONFIG_DEF_H
 #define __CONFIG_DEF_H
 
-#include "boolean.h"
+#include <boolean.h>
 #include "libretro.h"
 #include "driver.h"
-#include "gfx/gfx_common.h"
+#include "gfx/video_viewport.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
-
-#ifdef HW_RVL
-#include "gx/gx_input.h"
 #endif
 
 enum 
@@ -39,16 +31,21 @@ enum
    VIDEO_GL = 0,
    VIDEO_XVIDEO,
    VIDEO_SDL,
+   VIDEO_SDL2,
    VIDEO_EXT,
    VIDEO_WII,
    VIDEO_XENON360,
    VIDEO_XDK_D3D,
    VIDEO_PSP1,
    VIDEO_VITA,
+   VIDEO_CTR,
    VIDEO_D3D9,
    VIDEO_VG,
    VIDEO_NULL,
    VIDEO_OMAP,
+   VIDEO_EXYNOS,
+   VIDEO_SUNXI,
+   VIDEO_DISPMANX,
 
    AUDIO_RSOUND,
    AUDIO_OSS,
@@ -59,6 +56,7 @@ enum
    AUDIO_SL,
    AUDIO_JACK,
    AUDIO_SDL,
+   AUDIO_SDL2,
    AUDIO_XAUDIO,
    AUDIO_PULSE,
    AUDIO_EXT,
@@ -69,35 +67,68 @@ enum
    AUDIO_WII,
    AUDIO_RWEBAUDIO,
    AUDIO_PSP1,
+   AUDIO_CTR,
    AUDIO_NULL,
+
+   AUDIO_RESAMPLER_CC,
+   AUDIO_RESAMPLER_SINC,
+   AUDIO_RESAMPLER_NEAREST,
 
    INPUT_ANDROID,
    INPUT_SDL,
+   INPUT_SDL2,
    INPUT_X,
+   INPUT_WAYLAND,
    INPUT_DINPUT,
    INPUT_PS3,
    INPUT_PSP,
+   INPUT_CTR,
    INPUT_XENON360,
    INPUT_WII,
    INPUT_XINPUT,
    INPUT_UDEV,
    INPUT_LINUXRAW,
-   INPUT_APPLE,
+   INPUT_COCOA,
    INPUT_QNX,
    INPUT_RWEBINPUT,
    INPUT_NULL,
 
+   JOYPAD_PS3,
+   JOYPAD_XINPUT,
+   JOYPAD_GX,
+   JOYPAD_XDK,
+   JOYPAD_PSP,
+   JOYPAD_CTR,
+   JOYPAD_DINPUT,
+   JOYPAD_UDEV,
+   JOYPAD_LINUXRAW,
+   JOYPAD_ANDROID,
+   JOYPAD_SDL,
+   JOYPAD_HID,
+   JOYPAD_QNX,
+   JOYPAD_NULL,
+
    CAMERA_V4L2,
    CAMERA_RWEBCAM,
    CAMERA_ANDROID,
-   CAMERA_IOS,
+   CAMERA_AVFOUNDATION,
    CAMERA_NULL,
 
    LOCATION_ANDROID,
-   LOCATION_APPLE,
+   LOCATION_CORELOCATION,
+   LOCATION_NULL,
 
    OSK_PS3,
    OSK_NULL,
+
+   MENU_RGUI,
+   MENU_RMENU,
+   MENU_RMENU_XUI,
+   MENU_GLUI,
+   MENU_XMB,
+
+   RECORD_FFMPEG,
+   RECORD_NULL
 };
 
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) || defined(__CELLOS_LV2__)
@@ -108,7 +139,7 @@ enum
 #define VIDEO_DEFAULT_DRIVER VIDEO_XENON360
 #elif (defined(_XBOX1) || defined(_XBOX360)) && (defined(HAVE_D3D8) || defined(HAVE_D3D9))
 #define VIDEO_DEFAULT_DRIVER VIDEO_XDK_D3D
-#elif defined(HAVE_WIN32_D3D9)
+#elif defined(HAVE_D3D9)
 #define VIDEO_DEFAULT_DRIVER VIDEO_D3D9
 #elif defined(HAVE_VG)
 #define VIDEO_DEFAULT_DRIVER VIDEO_VG
@@ -116,10 +147,14 @@ enum
 #define VIDEO_DEFAULT_DRIVER VIDEO_VITA
 #elif defined(PSP)
 #define VIDEO_DEFAULT_DRIVER VIDEO_PSP1
+#elif defined(_3DS)
+#define VIDEO_DEFAULT_DRIVER VIDEO_CTR
 #elif defined(HAVE_XVIDEO)
 #define VIDEO_DEFAULT_DRIVER VIDEO_XVIDEO
 #elif defined(HAVE_SDL)
 #define VIDEO_DEFAULT_DRIVER VIDEO_SDL
+#elif defined(HAVE_SDL2)
+#define VIDEO_DEFAULT_DRIVER VIDEO_SDL2
 #elif defined(HAVE_DYLIB) && !defined(ANDROID)
 #define VIDEO_DEFAULT_DRIVER VIDEO_EXT
 #else
@@ -134,6 +169,8 @@ enum
 #define AUDIO_DEFAULT_DRIVER AUDIO_WII
 #elif defined(PSP)
 #define AUDIO_DEFAULT_DRIVER AUDIO_PSP1
+#elif defined(_3DS)
+#define AUDIO_DEFAULT_DRIVER AUDIO_CTR
 #elif defined(HAVE_ALSA) && defined(HAVE_VIDEOCORE)
 #define AUDIO_DEFAULT_DRIVER AUDIO_ALSATHREAD
 #elif defined(HAVE_ALSA)
@@ -156,6 +193,8 @@ enum
 #define AUDIO_DEFAULT_DRIVER AUDIO_RWEBAUDIO
 #elif defined(HAVE_SDL)
 #define AUDIO_DEFAULT_DRIVER AUDIO_SDL
+#elif defined(HAVE_SDL2)
+#define AUDIO_DEFAULT_DRIVER AUDIO_SDL2
 #elif defined(HAVE_XAUDIO)
 #define AUDIO_DEFAULT_DRIVER AUDIO_XAUDIO
 #elif defined(HAVE_RSOUND)
@@ -168,20 +207,34 @@ enum
 #define AUDIO_DEFAULT_DRIVER AUDIO_NULL
 #endif
 
+#ifdef PSP
+#define AUDIO_DEFAULT_RESAMPLER_DRIVER  AUDIO_RESAMPLER_CC
+#else
+#define AUDIO_DEFAULT_RESAMPLER_DRIVER  AUDIO_RESAMPLER_SINC
+#endif
+
+#if defined(HAVE_FFMPEG)
+#define RECORD_DEFAULT_DRIVER RECORD_FFMPEG
+#else
+#define RECORD_DEFAULT_DRIVER RECORD_NULL
+#endif
+
 #if defined(XENON)
 #define INPUT_DEFAULT_DRIVER INPUT_XENON360
 #elif defined(_XBOX360) || defined(_XBOX) || defined(HAVE_XINPUT2) || defined(HAVE_XINPUT_XBOX1)
 #define INPUT_DEFAULT_DRIVER INPUT_XINPUT
 #elif defined(ANDROID)
 #define INPUT_DEFAULT_DRIVER INPUT_ANDROID
-#elif defined(_WIN32)
-#define INPUT_DEFAULT_DRIVER INPUT_DINPUT
 #elif defined(EMSCRIPTEN)
 #define INPUT_DEFAULT_DRIVER INPUT_RWEBINPUT
+#elif defined(_WIN32)
+#define INPUT_DEFAULT_DRIVER INPUT_DINPUT
 #elif defined(__CELLOS_LV2__)
 #define INPUT_DEFAULT_DRIVER INPUT_PS3
 #elif (defined(SN_TARGET_PSP2) || defined(PSP))
 #define INPUT_DEFAULT_DRIVER INPUT_PSP
+#elif defined(_3DS)
+#define INPUT_DEFAULT_DRIVER INPUT_CTR
 #elif defined(GEKKO)
 #define INPUT_DEFAULT_DRIVER INPUT_WII
 #elif defined(HAVE_UDEV)
@@ -190,14 +243,48 @@ enum
 #define INPUT_DEFAULT_DRIVER INPUT_LINUXRAW
 #elif defined(HAVE_X11)
 #define INPUT_DEFAULT_DRIVER INPUT_X
-#elif defined(IOS) || defined(OSX)
-#define INPUT_DEFAULT_DRIVER INPUT_APPLE
-#elif defined(__BLACKBERRY_QNX__)
+#elif defined(HAVE_WAYLAND)
+#define INPUT_DEFAULT_DRIVER INPUT_WAYLAND
+#elif defined(HAVE_COCOA) || defined(HAVE_COCOATOUCH)
+#define INPUT_DEFAULT_DRIVER INPUT_COCOA
+#elif defined(__QNX__)
 #define INPUT_DEFAULT_DRIVER INPUT_QNX
 #elif defined(HAVE_SDL)
 #define INPUT_DEFAULT_DRIVER INPUT_SDL
+#elif defined(HAVE_SDL2)
+#define INPUT_DEFAULT_DRIVER INPUT_SDL2
 #else
 #define INPUT_DEFAULT_DRIVER INPUT_NULL
+#endif
+
+#if defined(__CELLOS_LV2__)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_PS3
+#elif defined(HAVE_XINPUT)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_XINPUT
+#elif defined(GEKKO)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_GX
+#elif defined(_XBOX)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_XDK
+#elif defined(PSP)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_PSP
+#elif defined(_3DS)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_CTR
+#elif defined(HAVE_DINPUT)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_DINPUT
+#elif defined(HAVE_UDEV)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_UDEV
+#elif defined(__linux) && !defined(ANDROID)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_LINUXRAW
+#elif defined(ANDROID)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_ANDROID
+#elif defined(HAVE_SDL) || defined(HAVE_SDL2)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_SDL
+#elif defined(HAVE_HID)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_HID
+#elif defined(__QNX__)
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_QNX
+#else
+#define JOYPAD_DEFAULT_DRIVER JOYPAD_NULL
 #endif
 
 #if defined(HAVE_V4L2)
@@ -206,16 +293,18 @@ enum
 #define CAMERA_DEFAULT_DRIVER CAMERA_RWEBCAM
 #elif defined(ANDROID)
 #define CAMERA_DEFAULT_DRIVER CAMERA_ANDROID
-#elif defined(IOS)
-#define CAMERA_DEFAULT_DRIVER CAMERA_IOS
+#elif defined(HAVE_AVFOUNDATION) && (defined(HAVE_COCOA) || defined(HAVE_COCOATOUCH))
+#define CAMERA_DEFAULT_DRIVER CAMERA_AVFOUNDATION
 #else
 #define CAMERA_DEFAULT_DRIVER CAMERA_NULL
 #endif
 
 #if defined(ANDROID)
 #define LOCATION_DEFAULT_DRIVER LOCATION_ANDROID
-#elif defined(IOS) || defined(OSX)
-#define LOCATION_DEFAULT_DRIVER LOCATION_APPLE
+#elif defined(HAVE_CORELOCATION) && (defined(HAVE_COCOA) || defined(HAVE_COCOATOUCH))
+#define LOCATION_DEFAULT_DRIVER LOCATION_CORELOCATION
+#else
+#define LOCATION_DEFAULT_DRIVER LOCATION_NULL
 #endif
 
 #if defined(__CELLOS_LV2__)
@@ -224,17 +313,47 @@ enum
 #define OSK_DEFAULT_DRIVER OSK_NULL
 #endif
 
+#if defined(HAVE_RMENU)
+#define MENU_DEFAULT_DRIVER MENU_RMENU
+#elif defined(HAVE_RMENU_XUI)
+#define MENU_DEFAULT_DRIVER MENU_RMENU_XUI
+#elif defined(MAC_OS_X_VERSION_10_6)
+#define MENU_DEFAULT_DRIVER MENU_XMB
+#elif defined(IOS) || defined(ANDROID) || defined(__CELLOS_LV2__)
+#define MENU_DEFAULT_DRIVER MENU_GLUI
+#else
+#define MENU_DEFAULT_DRIVER MENU_RGUI
+#endif
+
 #if defined(XENON) || defined(_XBOX360) || defined(__CELLOS_LV2__)
 #define DEFAULT_ASPECT_RATIO 1.7778f
-#elif defined(_XBOX1) || defined(GEKKO) || defined(ANDROID) || defined(__BLACKBERRY_QNX__)
+#elif defined(_XBOX1) || defined(GEKKO) || defined(ANDROID) || defined(__QNX__)
 #define DEFAULT_ASPECT_RATIO 1.3333f
 #else
 #define DEFAULT_ASPECT_RATIO -1.0f
 #endif
 
-////////////////
-// Video
-////////////////
+#ifdef RARCH_MOBILE
+static const bool pointer_enable = true;
+#else
+static const bool pointer_enable = false;
+#endif
+
+/* Certain platforms might have assets stored in the bundle that
+ * we need to extract to a user-writable directory on first boot.
+ *
+ * Examples include: Android, iOS/OSX) */
+#if defined(ANDROID)
+static bool bundle_assets_extract_enable = true;
+#else
+static bool bundle_assets_extract_enable = false;
+#endif
+
+static const bool def_history_list_enable = true;
+
+static const unsigned int def_user_language = 0;
+
+/* VIDEO */
 
 #if defined(_XBOX360)
 #define DEFAULT_GAMMA 1
@@ -242,106 +361,147 @@ enum
 #define DEFAULT_GAMMA 0
 #endif
 
-// Windowed
-static const float xscale = 3.0; // Real x res = aspect * base_size * xscale
-static const float yscale = 3.0; // Real y res = base_size * yscale
+/* Windowed
+ * Real x resolution = aspect * base_size * x scale
+ * Real y resolution = base_size * y scale
+ */
+static const float scale = 3.0;
 
-// Fullscreen
-static const bool fullscreen = false;  // To start in Fullscreen or not.
-static const bool windowed_fullscreen = true;  // To use windowed mode or not when going fullscreen.
-static const unsigned monitor_index = 0; // Which monitor to prefer. 0 is any monitor, 1 and up selects specific monitors, 1 being the first monitor.
-static const unsigned fullscreen_x = 0; // Fullscreen resolution. A value of 0 uses the desktop resolution.
+/* Fullscreen */
+
+/* To start in Fullscreen, or not. */
+static const bool fullscreen = false;
+
+/* To use windowed mode or not when going fullscreen. */
+static const bool windowed_fullscreen = true; 
+
+/* Which monitor to prefer. 0 is any monitor, 1 and up selects
+ * specific monitors, 1 being the first monitor. */
+static const unsigned monitor_index = 0;
+
+/* Fullscreen resolution. A value of 0 uses the desktop
+ * resolution. */
+static const unsigned fullscreen_x = 0;
 static const unsigned fullscreen_y = 0;
 
-// Forcibly disable composition. Only valid on Windows Vista/7 for now.
+#if defined(RARCH_CONSOLE) || defined(__APPLE__)
+static const bool load_dummy_on_core_shutdown = false;
+#else
+static const bool load_dummy_on_core_shutdown = true;
+#endif
+
+/* Forcibly disable composition.
+ * Only valid on Windows Vista/7/8 for now. */
 static const bool disable_composition = false;
 
-// Video VSYNC (recommended)
+/* Video VSYNC (recommended) */
 static const bool vsync = true;
 
-// Attempts to hard-synchronize CPU and GPU. Can reduce latency at cost of performance.
+/* Attempts to hard-synchronize CPU and GPU.
+ * Can reduce latency at cost of performance. */
 static const bool hard_sync = false;
-// Configures how many frames the GPU can run ahead of CPU.
-// 0: Syncs to GPU immediately.
-// 1: Syncs to previous frame.
-// 2: Etc ...
+
+/* Configures how many frames the GPU can run ahead of CPU.
+ * 0: Syncs to GPU immediately.
+ * 1: Syncs to previous frame.
+ * 2: Etc ...
+ */
 static const unsigned hard_sync_frames = 0;
 
-// Inserts a black frame inbetween frames.
-// Useful for 120 Hz monitors who want to play 60 Hz material with eliminated ghosting. video_refresh_rate should still be configured as if it is a 60 Hz monitor (divide refresh rate by 2).
+/* Sets how many milliseconds to delay after VSync before running the core.
+ * Can reduce latency at cost of higher risk of stuttering.
+ */
+static const unsigned frame_delay = 0;
+
+/* Inserts a black frame inbetween frames.
+ * Useful for 120 Hz monitors who want to play 60 Hz material with eliminated 
+ * ghosting. video_refresh_rate should still be configured as if it 
+ * is a 60 Hz monitor (divide refresh rate by 2).
+ */
 static bool black_frame_insertion = false;
 
-// Uses a custom swap interval for VSync.
-// Set this to effectively halve monitor refresh rate.
+/* Uses a custom swap interval for VSync.
+ * Set this to effectively halve monitor refresh rate.
+ */
 static unsigned swap_interval = 1;
 
-// Threaded video. Will possibly increase performance significantly at cost of worse synchronization and latency.
+/* Threaded video. Will possibly increase performance significantly 
+ * at the cost of worse synchronization and latency.
+ */
 static const bool video_threaded = false;
 
-// Smooths picture
+#if defined(HAVE_THREADS)
+#if defined(GEKKO) || defined(PSP) || defined(_3DS) || defined(_XBOX1)
+/* For single-core consoles right now it's better to have this be disabled. */
+static const bool threaded_data_runloop_enable = false;
+#else
+static const bool threaded_data_runloop_enable = true;
+#endif
+#else
+static const bool threaded_data_runloop_enable = false;
+#endif
+
+/* Set to true if HW render cores should get their private context. */
+static const bool video_shared_context = false;
+
+/* Sets GC/Wii screen width. */
+static const unsigned video_viwidth = 640;
+
+/* Removes 480i flicker, smooths picture a little. */
+static const bool video_vfilter = true;
+
+/* Smooths picture. */
 static const bool video_smooth = true;
 
-// On resize and fullscreen, rendering area will stay 4:3
+/* On resize and fullscreen, rendering area will stay 4:3 */
 static const bool force_aspect = true; 
 
-// Enable use of shaders.
+/* Enable use of shaders. */
 #ifdef RARCH_CONSOLE
 static const bool shader_enable = true;
 #else
 static const bool shader_enable = false;
 #endif
 
-// Only scale in integer steps.
-// The base size depends on system-reported geometry and aspect ratio.
-// If video_force_aspect is not set, X/Y will be integer scaled independently.
+/* Only scale in integer steps.
+ * The base size depends on system-reported geometry and aspect ratio.
+ * If video_force_aspect is not set, X/Y will be integer scaled independently.
+ */
 static const bool scale_integer = false;
 
-// Controls aspect ratio handling.
-static const float aspect_ratio = DEFAULT_ASPECT_RATIO; // Automatic
-static const bool aspect_ratio_auto = false; // 1:1 PAR
+/* Controls aspect ratio handling. */
+
+/* Automatic */
+static const float aspect_ratio = DEFAULT_ASPECT_RATIO;
+
+/* 1:1 PAR */
+static const bool aspect_ratio_auto = false;
 
 #if defined(__CELLOS_LV2) || defined(_XBOX360)
 static unsigned aspect_ratio_idx = ASPECT_RATIO_16_9;
+#elif defined(PSP)
+static unsigned aspect_ratio_idx = ASPECT_RATIO_CORE;
 #elif defined(RARCH_CONSOLE)
 static unsigned aspect_ratio_idx = ASPECT_RATIO_4_3;
 #else
-static unsigned aspect_ratio_idx = ASPECT_RATIO_CONFIG; // Use g_settings.video.aspect_ratio.
+static unsigned aspect_ratio_idx = ASPECT_RATIO_CONFIG;
 #endif
 
-// Save configuration file on exit
+/* Save configuration file on exit. */
 static bool config_save_on_exit = true;
 
-#ifdef HAVE_OVERLAY
-// Default overlay directory
-#if defined(__QNX__)
-static const char *default_overlay_dir = "app/native/overlays/";
-#elif defined(ANDROID)
-static const char *default_overlay_dir = "/data/data/com.retroarch/overlays/";
-#elif defined(IOS)
-static const char *default_overlay_dir = ":/overlays";
-#else
-static const char *default_overlay_dir = NULL;
-#endif
-#endif
+static const bool default_overlay_enable = false;
 
-#if defined(__QNX__)
-static const char *default_shader_dir = "/app/native/shaders_glsl/";
-#elif defined(ANDROID)
-static const char *default_shader_dir = "/data/data/com.retroarch/shaders_glsl/";
-#elif defined(IOS)
-static const char *default_shader_dir = ":/shaders_glsl/";
-#else
-static const char *default_shader_dir = NULL;
-#endif
-
-#if defined(__QNX__)
-static const char *default_config_path = "app/native/retroarch.cfg";
-#else
-static const char *default_config_path = NULL;
-#endif
+static const bool overlay_hide_in_menu = true;
 
 #ifdef HAVE_MENU
 static bool default_block_config_read = true;
+
+static bool collapse_subgroups_enable = true;
+static bool show_advanced_settings    = true;
+static const uint32_t menu_entry_normal_color = 0xffffffff;
+static const uint32_t menu_entry_hover_color  = 0xff64ff64;
+static const uint32_t menu_title_color        = 0xff64ff64;
 #else
 static bool default_block_config_read = false;
 #endif
@@ -352,339 +512,286 @@ static bool default_core_specific_config = true;
 static bool default_core_specific_config = false;
 #endif
 
-#if defined(ANDROID)
-static const char *default_libretro_info_path = "/data/data/com.retroarch/info/";
-#elif defined(__QNX__)
-static const char *default_libretro_info_path = "/app/native/info/";
-#elif defined(_XBOX1)
-static const char *default_libretro_info_path = "D:";
-#elif defined(_XBOX360)
-static const char *default_libretro_info_path = "game:";
+static bool default_auto_overrides_enable = false;
+static bool default_auto_remaps_enable = false;
+
+static bool default_sort_savefiles_enable = false;
+static bool default_sort_savestates_enable = false;
+
+static unsigned default_menu_btn_ok          = RETRO_DEVICE_ID_JOYPAD_A;
+static unsigned default_menu_btn_cancel      = RETRO_DEVICE_ID_JOYPAD_B;
+static unsigned default_menu_btn_search      = RETRO_DEVICE_ID_JOYPAD_X;
+static unsigned default_menu_btn_default     = RETRO_DEVICE_ID_JOYPAD_START;
+static unsigned default_menu_btn_info        = RETRO_DEVICE_ID_JOYPAD_SELECT;
+static unsigned default_menu_btn_scroll_down = RETRO_DEVICE_ID_JOYPAD_R;
+static unsigned default_menu_btn_scroll_up   = RETRO_DEVICE_ID_JOYPAD_L;
+
+#if defined(__CELLOS_LV2__) || defined(_XBOX1) || defined(_XBOX360)
+static unsigned menu_toggle_gamepad_combo    = 2;
 #else
-static const char *default_libretro_info_path = NULL;
+static unsigned menu_toggle_gamepad_combo    = 0;
 #endif
 
-#if defined(ANDROID)
-static const char *default_libretro_path = "/data/data/com.retroarch/cores/";
-#elif defined(__QNX__)
-static const char *default_libretro_path = "/app/native/lib/";
-#elif defined(_XBOX1)
-static const char *default_libretro_path = "D:";
-#elif defined(_XBOX360)
-static const char *default_libretro_path = "game:";
-#else
-static const char *default_libretro_path = NULL;
+#ifdef ANDROID
+static bool back_as_menu_toggle_enable = true;
 #endif
 
-// Crop overscanned frames.
+/* Crop overscanned frames. */
 static const bool crop_overscan = true;
 
-// Font size for on-screen messages.
-#if defined(HAVE_RMENU)
+/* Font size for on-screen messages. */
+#if defined(HAVE_LIBDBGFONT)
 static const float font_size = 1.0f;
 #else
-static const float font_size = 48;
+static const float font_size = 32;
 #endif
-// Attempt to scale the font size.
-// The scale factor will be window_size / desktop_size.
-static const bool font_scale = true;
 
-// Offset for where messages will be placed on-screen. Values are in range [0.0, 1.0].
+/* Offset for where messages will be placed on-screen. 
+ * Values are in range [0.0, 1.0]. */
 static const float message_pos_offset_x = 0.05;
+#if defined(_XBOX1)
+static const float message_pos_offset_y = 0.90;
+#else
 static const float message_pos_offset_y = 0.05;
-// Color of the message.
-static const uint32_t message_color = 0xffff00; // RGB hex value.
+#endif
 
-// Record post-filtered (CPU filter) video rather than raw game output.
+/* Color of the message.
+ * RGB hex value. */
+static const uint32_t message_color = 0xffff00;
+
+/* Record post-filtered (CPU filter) video,
+ * rather than raw game output. */
 static const bool post_filter_record = false;
 
-// Screenshots post-shaded GPU output if available.
+/* Screenshots post-shaded GPU output if available. */
 static const bool gpu_screenshot = true;
 
-// Record post-shaded GPU output instead of raw game footage if available.
+/* Record post-shaded GPU output instead of raw game footage if available. */
 static const bool gpu_record = false;
 
-// OSD-messages
+/* OSD-messages. */
 static const bool font_enable = true;
 
-// The accurate refresh rate of your monitor (Hz).
-// This is used to calculate audio input rate with the formula:
-// audio_input_rate = game_input_rate * display_refresh_rate / game_refresh_rate.
-// If the implementation does not report any values,
-// SNES NTSC defaults will be assumed for compatibility.
-// This value should stay close to 60Hz to avoid large pitch changes.
-// If your monitor does not run at 60Hz, or something close to it, disable VSync,
-// and leave this at its default.
-#if defined(__QNX__)
-static const float refresh_rate = 59.98;
-#elif defined(RARCH_CONSOLE)
+/* The accurate refresh rate of your monitor (Hz).
+ * This is used to calculate audio input rate with the formula:
+ * audio_input_rate = game_input_rate * display_refresh_rate / 
+ * game_refresh_rate.
+ *
+ * If the implementation does not report any values,
+ * NTSC defaults will be assumed for compatibility.
+ * This value should stay close to 60Hz to avoid large pitch changes.
+ * If your monitor does not run at 60Hz, or something close to it, 
+ * disable VSync, and leave this at its default. */
+#if defined(RARCH_CONSOLE)
 static const float refresh_rate = 60/1.001; 
 #else
 static const float refresh_rate = 59.95; 
 #endif
 
-// Allow games to set rotation. If false, rotation requests are honored, but ignored.
-// Used for setups where one manually rotates the monitor.
+/* Allow games to set rotation. If false, rotation requests are 
+ * honored, but ignored.
+ * Used for setups where one manually rotates the monitor. */
 static const bool allow_rotate = true;
 
-////////////////
-// Audio
-////////////////
+/* AUDIO */
 
-// Will enable audio or not.
+/* Will enable audio or not. */
 static const bool audio_enable = true;
 
-// Output samplerate
+/* Output samplerate. */
 static const unsigned out_rate = 48000;
 
-// Audio device (e.g. hw:0,0 or /dev/audio). If NULL, will use defaults.
+/* Audio device (e.g. hw:0,0 or /dev/audio). If NULL, will use defaults. */
 static const char *audio_device = NULL;
 
-// Desired audio latency in milliseconds. Might not be honored if driver can't provide given latency.
+/* Desired audio latency in milliseconds. Might not be honored 
+ * if driver can't provide given latency. */
 static const int out_latency = 64;
 
-// Will sync audio. (recommended) 
+/* Will sync audio. (recommended) */
 static const bool audio_sync = true;
 
-// Default resampler
-#if defined(PSP)
-static const char *audio_resampler = "CC";
-#else
-static const char *audio_resampler = "sinc";
-#endif
-
-// Experimental rate control
-#if defined(GEKKO) || !defined(RARCH_CONSOLE)
+/* Audio rate control. */
+#if !defined(RARCH_CONSOLE)
 static const bool rate_control = true;
 #else
 static const bool rate_control = false;
 #endif
 
-// Rate control delta. Defines how much rate_control is allowed to adjust input rate.
-#if defined(__QNX__)
-static const float rate_control_delta = 0.000;
-#else
+/* Rate control delta. Defines how much rate_control 
+ * is allowed to adjust input rate. */
 static const float rate_control_delta = 0.005;
-#endif
 
-// Default audio volume in dB. (0.0 dB == unity gain).
+/* Maximum timing skew. Defines how much adjust_system_rates
+ * is allowed to adjust input rate. */
+static const float max_timing_skew = 0.05;
+
+/* Default audio volume in dB. (0.0 dB == unity gain). */
 static const float audio_volume = 0.0;
 
-//////////////
-// Misc
-//////////////
+/* MISC */
 
-// Enables use of rewind. This will incur some memory footprint depending on the save state buffer.
+/* Enables displaying the current frames per second. */
+static const bool fps_show = false;
+
+/* Enables use of rewind. This will incur some memory footprint 
+ * depending on the save state buffer. */
 static const bool rewind_enable = false;
 
-// The buffer size for the rewind buffer. This needs to be about 15-20MB per minute. Very game dependant.
-static const unsigned rewind_buffer_size = 20 << 20; // 20MiB
+/* The buffer size for the rewind buffer. This needs to be about 
+ * 15-20MB per minute. Very game dependant. */
+static const unsigned rewind_buffer_size = 20 << 20; /* 20MiB */
 
-// How many frames to rewind at a time.
+/* How many frames to rewind at a time. */
 static const unsigned rewind_granularity = 1;
 
-// Pause gameplay when gameplay loses focus.
+/* Pause gameplay when gameplay loses focus. */
 static const bool pause_nonactive = false;
 
-// Saves non-volatile SRAM at a regular interval. It is measured in seconds. A value of 0 disables autosave.
+/* Saves non-volatile SRAM at a regular interval.
+ * It is measured in seconds. A value of 0 disables autosave. */
 static const unsigned autosave_interval = 0;
 
-// When being client over netplay, use keybinds for player 1 rather than player 2.
+/* When being client over netplay, use keybinds for 
+ * user 1 rather than user 2. */
 static const bool netplay_client_swap_input = true;
 
-// On save state load, block SRAM from being overwritten.
-// This could potentially lead to buggy games.
+/* On save state load, block SRAM from being overwritten.
+ * This could potentially lead to buggy games. */
 static const bool block_sram_overwrite = false;
 
-// When saving savestates, state index is automatically incremented before saving.
-// When the ROM is loaded, state index will be set to the highest existing value.
+/* When saving savestates, state index is automatically 
+ * incremented before saving.
+ * When the content is loaded, state index will be set 
+ * to the highest existing value. */
 static const bool savestate_auto_index = false;
 
-// Automatically saves a savestate at the end of RetroArch's lifetime.
-// The path is $SRAM_PATH.auto.
-// RetroArch will automatically load any savestate with this path on startup if savestate_auto_load is set.
+/* Automatically saves a savestate at the end of RetroArch's lifetime.
+ * The path is $SRAM_PATH.auto.
+ * RetroArch will automatically load any savestate with this path on 
+ * startup if savestate_auto_load is set. */
 static const bool savestate_auto_save = false;
-static const bool savestate_auto_load = true;
+static const bool savestate_auto_load = false;
 
-// Slowmotion ratio.
+/* Slowmotion ratio. */
 static const float slowmotion_ratio = 3.0;
 
-// Maximum fast forward ratio (Negative => no limit).
-static const float fastforward_ratio = -1.0;
+/* Maximum fast forward ratio. */
+static const float fastforward_ratio = 1.0;
 
-// Enable stdin/network command interface
+/* Throttle fast forward. */
+static const bool fastforward_ratio_throttle_enable = false;
+
+/* Enable stdin/network command interface. */
 static const bool network_cmd_enable = false;
 static const uint16_t network_cmd_port = 55355;
 static const bool stdin_cmd_enable = false;
 
-// Number of entries that will be kept in ROM history file.
-static const unsigned game_history_size = 100;
+/* Number of entries that will be kept in content history playlist file. */
+static const unsigned default_content_history_size = 100;
 
-// Show RGUI start-up screen on boot.
-static const bool rgui_show_start_screen = true;
+/* Show Menu start-up screen on boot. */
+static const bool menu_show_start_screen = true;
 
-// Log level for libretro cores (GET_LOG_INTERFACE).
+#ifdef RARCH_MOBILE
+static const bool menu_dpi_override_enable = false;
+#else
+static const bool menu_dpi_override_enable = true;
+#endif
+
+#ifdef RARCH_MOBILE
+static const unsigned menu_dpi_override_value = 72;
+#else
+static const unsigned menu_dpi_override_value = 200;
+#endif
+
+/* Log level for libretro cores (GET_LOG_INTERFACE). */
 static const unsigned libretro_log_level = 0;
 
+#ifndef RARCH_DEFAULT_PORT
+#define RARCH_DEFAULT_PORT 55435
+#endif
 
-////////////////////
-// Keybinds, Joypad
-////////////////////
+/* KEYBINDS, JOYPAD */
 
-// Axis threshold (between 0.0 and 1.0)
-// How far an axis must be tilted to result in a button press
+/* Axis threshold (between 0.0 and 1.0)
+ * How far an axis must be tilted to result in a button press. */
 static const float axis_threshold = 0.5;
 
-// Describes speed of which turbo-enabled buttons toggle.
+/* Describes speed of which turbo-enabled buttons toggle. */
 static const unsigned turbo_period = 6;
 static const unsigned turbo_duty_cycle = 3;
 
-// Enable input debugging output.
-static const bool input_debug_enable = false;
-
-// Enable input auto-detection. Will attempt to autoconfigure
-// gamepads, plug-and-play style.
+/* Enable input auto-detection. Will attempt to autoconfigure
+ * gamepads, plug-and-play style. */
 static const bool input_autodetect_enable = true;
 
-#ifndef IS_SALAMANDER
+/* Show the input descriptors set by the core instead 
+ * of the default ones. */
+static const bool input_descriptor_label_show = true;
 
-#if defined(__CELLOS_LV2__)
-#define RETRO_DEF_JOYPAD_B RETRO_DEVICE_ID_JOYPAD_B
-#define RETRO_DEF_JOYPAD_Y RETRO_DEVICE_ID_JOYPAD_Y
-#define RETRO_DEF_JOYPAD_SELECT RETRO_DEVICE_ID_JOYPAD_SELECT
-#define RETRO_DEF_JOYPAD_START RETRO_DEVICE_ID_JOYPAD_START
-#define RETRO_DEF_JOYPAD_UP RETRO_DEVICE_ID_JOYPAD_UP
-#define RETRO_DEF_JOYPAD_DOWN RETRO_DEVICE_ID_JOYPAD_DOWN
-#define RETRO_DEF_JOYPAD_LEFT RETRO_DEVICE_ID_JOYPAD_LEFT
-#define RETRO_DEF_JOYPAD_RIGHT RETRO_DEVICE_ID_JOYPAD_RIGHT
-#define RETRO_DEF_JOYPAD_A RETRO_DEVICE_ID_JOYPAD_A
-#define RETRO_DEF_JOYPAD_X RETRO_DEVICE_ID_JOYPAD_X
-#define RETRO_DEF_JOYPAD_L RETRO_DEVICE_ID_JOYPAD_L
-#define RETRO_DEF_JOYPAD_R RETRO_DEVICE_ID_JOYPAD_R
-#define RETRO_DEF_JOYPAD_L2 RETRO_DEVICE_ID_JOYPAD_L2
-#define RETRO_DEF_JOYPAD_R2 RETRO_DEVICE_ID_JOYPAD_R2
-#define RETRO_DEF_JOYPAD_L3 RETRO_DEVICE_ID_JOYPAD_L3
-#define RETRO_DEF_JOYPAD_R3 RETRO_DEVICE_ID_JOYPAD_R3
-#elif defined(PSP)
-#define RETRO_DEF_JOYPAD_B RETRO_DEVICE_ID_JOYPAD_B
-#define RETRO_DEF_JOYPAD_Y RETRO_DEVICE_ID_JOYPAD_Y
-#define RETRO_DEF_JOYPAD_SELECT RETRO_DEVICE_ID_JOYPAD_SELECT
-#define RETRO_DEF_JOYPAD_START RETRO_DEVICE_ID_JOYPAD_START
-#define RETRO_DEF_JOYPAD_UP RETRO_DEVICE_ID_JOYPAD_UP
-#define RETRO_DEF_JOYPAD_DOWN RETRO_DEVICE_ID_JOYPAD_DOWN
-#define RETRO_DEF_JOYPAD_LEFT RETRO_DEVICE_ID_JOYPAD_LEFT
-#define RETRO_DEF_JOYPAD_RIGHT RETRO_DEVICE_ID_JOYPAD_RIGHT
-#define RETRO_DEF_JOYPAD_A RETRO_DEVICE_ID_JOYPAD_A
-#define RETRO_DEF_JOYPAD_X RETRO_DEVICE_ID_JOYPAD_X
-#define RETRO_DEF_JOYPAD_L RETRO_DEVICE_ID_JOYPAD_L
-#define RETRO_DEF_JOYPAD_R RETRO_DEVICE_ID_JOYPAD_R
-#define RETRO_DEF_JOYPAD_L2 NO_BTN
-#define RETRO_DEF_JOYPAD_R2 NO_BTN
-#define RETRO_DEF_JOYPAD_L3 NO_BTN
-#define RETRO_DEF_JOYPAD_R3 NO_BTN
+static const bool input_descriptor_hide_unbound = false;
+
+static const unsigned input_max_users = 5;
+
+#if defined(ANDROID)
+#if defined(ANDROID_ARM)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/android/latest/armeabi-v7a/";
+#elif defined(ANDROID_X86)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/android/latest/x86/";
 #else
-#define RETRO_DEF_JOYPAD_B NO_BTN
-#define RETRO_DEF_JOYPAD_Y NO_BTN
-#define RETRO_DEF_JOYPAD_SELECT NO_BTN
-#define RETRO_DEF_JOYPAD_START NO_BTN
-#define RETRO_DEF_JOYPAD_UP NO_BTN
-#define RETRO_DEF_JOYPAD_DOWN NO_BTN
-#define RETRO_DEF_JOYPAD_LEFT NO_BTN
-#define RETRO_DEF_JOYPAD_RIGHT NO_BTN
-#define RETRO_DEF_JOYPAD_A NO_BTN
-#define RETRO_DEF_JOYPAD_X NO_BTN
-#define RETRO_DEF_JOYPAD_L NO_BTN
-#define RETRO_DEF_JOYPAD_R NO_BTN
-#define RETRO_DEF_JOYPAD_L2 NO_BTN
-#define RETRO_DEF_JOYPAD_R2 NO_BTN
-#define RETRO_DEF_JOYPAD_L3 NO_BTN
-#define RETRO_DEF_JOYPAD_R3 NO_BTN
-#define RETRO_DEF_ANALOGL_DPAD_LEFT NO_BTN
-#define RETRO_DEF_ANALOGL_DPAD_RIGHT NO_BTN
-#define RETRO_DEF_ANALOGL_DPAD_UP NO_BTN
-#define RETRO_DEF_ANALOGL_DPAD_DOWN NO_BTN
-#define RETRO_DEF_ANALOGR_DPAD_LEFT NO_BTN
-#define RETRO_DEF_ANALOGR_DPAD_RIGHT NO_BTN
-#define RETRO_DEF_ANALOGR_DPAD_UP NO_BTN
-#define RETRO_DEF_ANALOGR_DPAD_DOWN NO_BTN
+static char buildbot_server_url[] = "";
+#endif
+#elif defined(IOS)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/ios/latest/";
+#elif defined(OSX)
+#if defined(__x86_64__)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/osx-x86_64/latest/";
+#elif defined(__i386__) || defined(__i486__) || defined(__i686__)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/osx-i386/latest/";
+#else
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/osx-ppc/latest/";
+#endif
+#elif defined(_WIN32) && !defined(_XBOX)
+#if defined(__x86_64__)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/win-x86_64/latest/";
+#elif defined(__i386__) || defined(__i486__) || defined(__i686__)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/win-x86/latest/";
+#endif
+#elif defined(__linux__)
+#if defined(__x86_64__)
+static char buildbot_server_url[] = "http://buildbot.libretro.com/nightly/linux/x86_64/latest/";
+#else
+static char buildbot_server_url[] = "";
+#endif
+#else
+static char buildbot_server_url[] = "";
 #endif
 
-#define RETRO_LBL_JOYPAD_B "RetroPad B Button"
-#define RETRO_LBL_JOYPAD_Y "RetroPad Y Button"
-#define RETRO_LBL_JOYPAD_SELECT "RetroPad Select Button"
-#define RETRO_LBL_JOYPAD_START "RetroPad Start Button"
-#define RETRO_LBL_JOYPAD_UP "RetroPad D-Pad Up"
-#define RETRO_LBL_JOYPAD_DOWN "RetroPad D-Pad Down"
-#define RETRO_LBL_JOYPAD_LEFT "RetroPad D-Pad Left"
-#define RETRO_LBL_JOYPAD_RIGHT "RetroPad D-Pad Right"
-#define RETRO_LBL_JOYPAD_A "RetroPad A Button"
-#define RETRO_LBL_JOYPAD_X "RetroPad X Button"
-#define RETRO_LBL_JOYPAD_L "RetroPad L Button"
-#define RETRO_LBL_JOYPAD_R "RetroPad R Button"
-#define RETRO_LBL_JOYPAD_L2 "RetroPad L2 Button"
-#define RETRO_LBL_JOYPAD_R2 "RetroPad R2 Button"
-#define RETRO_LBL_JOYPAD_L3 "RetroPad L3 Button"
-#define RETRO_LBL_JOYPAD_R3 "RetroPad R3 Button"
-#define RETRO_LBL_TURBO_ENABLE "Turbo Enable"
-#define RETRO_LBL_ANALOG_LEFT_X_PLUS "Left Analog X +"
-#define RETRO_LBL_ANALOG_LEFT_X_MINUS "Left Analog X -"
-#define RETRO_LBL_ANALOG_LEFT_Y_PLUS "Left Analog Y +"
-#define RETRO_LBL_ANALOG_LEFT_Y_MINUS "Left Analog Y -"
-#define RETRO_LBL_ANALOG_RIGHT_X_PLUS "Right Analog X +"
-#define RETRO_LBL_ANALOG_RIGHT_X_MINUS "Right Analog X -"
-#define RETRO_LBL_ANALOG_RIGHT_Y_PLUS "Right Analog Y +"
-#define RETRO_LBL_ANALOG_RIGHT_Y_MINUS "Right Analog Y -"
-#define RETRO_LBL_FAST_FORWARD_KEY "Fast Forward"
-#define RETRO_LBL_FAST_FORWARD_HOLD_KEY "Fast Forward Hold"
-#define RETRO_LBL_LOAD_STATE_KEY "Load State"
-#define RETRO_LBL_SAVE_STATE_KEY "Save State"
-#define RETRO_LBL_FULLSCREEN_TOGGLE_KEY "Fullscreen Toggle"
-#define RETRO_LBL_QUIT_KEY "Quit Key"
-#define RETRO_LBL_STATE_SLOT_PLUS "State Slot Plus"
-#define RETRO_LBL_STATE_SLOT_MINUS "State Slot Minus"
-#define RETRO_LBL_REWIND "Rewind"
-#define RETRO_LBL_MOVIE_RECORD_TOGGLE "Movie Record Toggle"
-#define RETRO_LBL_PAUSE_TOGGLE "Pause Toggle"
-#define RETRO_LBL_FRAMEADVANCE "Frame Advance"
-#define RETRO_LBL_RESET "Reset"
-#define RETRO_LBL_SHADER_NEXT "Next Shader"
-#define RETRO_LBL_SHADER_PREV "Previous Shader"
-#define RETRO_LBL_CHEAT_INDEX_PLUS "Cheat Index Plus"
-#define RETRO_LBL_CHEAT_INDEX_MINUS "Cheat Index Minus"
-#define RETRO_LBL_CHEAT_TOGGLE "Cheat Toggle"
-#define RETRO_LBL_SCREENSHOT "Screenshot"
-#define RETRO_LBL_DSP_CONFIG "DSP Config"
-#define RETRO_LBL_MUTE "Mute Audio"
-#define RETRO_LBL_NETPLAY_FLIP "Netplay Flip Players"
-#define RETRO_LBL_SLOWMOTION "Slowmotion"
-#define RETRO_LBL_ENABLE_HOTKEY "Enable Hotkey"
-#define RETRO_LBL_VOLUME_UP "Volume Up"
-#define RETRO_LBL_VOLUME_DOWN "Volume Down"
-#define RETRO_LBL_OVERLAY_NEXT "Next Overlay"
-#define RETRO_LBL_DISK_EJECT_TOGGLE "Disk Eject Toggle"
-#define RETRO_LBL_DISK_NEXT "Disk Swap Next"
-#define RETRO_LBL_GRAB_MOUSE_TOGGLE "Grab mouse toggle"
-#define RETRO_LBL_MENU_TOGGLE "Menu toggle"
+static char buildbot_assets_server_url[] = "http://buildbot.libretro.com/assets/";
 
-// Player 1
+#ifndef IS_SALAMANDER
+#include "intl/intl.h"
+
+/* User 1 */
 static const struct retro_keybind retro_keybinds_1[] = {
-    //     | RetroPad button            | desc                           | keyboard key  | js btn |     js axis   |
-   { true, RETRO_DEVICE_ID_JOYPAD_B,      RETRO_LBL_JOYPAD_B,              RETROK_z,       RETRO_DEF_JOYPAD_B,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_Y,      RETRO_LBL_JOYPAD_Y,              RETROK_a,       RETRO_DEF_JOYPAD_Y,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_LBL_JOYPAD_SELECT,         RETROK_RSHIFT,  RETRO_DEF_JOYPAD_SELECT, 0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_START,  RETRO_LBL_JOYPAD_START,          RETROK_RETURN,  RETRO_DEF_JOYPAD_START,  0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_UP,     RETRO_LBL_JOYPAD_UP,             RETROK_UP,      RETRO_DEF_JOYPAD_UP,     0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_DOWN,   RETRO_LBL_JOYPAD_DOWN,           RETROK_DOWN,    RETRO_DEF_JOYPAD_DOWN,   0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_LEFT,   RETRO_LBL_JOYPAD_LEFT,           RETROK_LEFT,    RETRO_DEF_JOYPAD_LEFT,   0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_RIGHT,  RETRO_LBL_JOYPAD_RIGHT,          RETROK_RIGHT,   RETRO_DEF_JOYPAD_RIGHT,  0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_A,      RETRO_LBL_JOYPAD_A,              RETROK_x,       RETRO_DEF_JOYPAD_A,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_X,      RETRO_LBL_JOYPAD_X,              RETROK_s,       RETRO_DEF_JOYPAD_X,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L,      RETRO_LBL_JOYPAD_L,              RETROK_q,       RETRO_DEF_JOYPAD_L,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R,      RETRO_LBL_JOYPAD_R,              RETROK_w,       RETRO_DEF_JOYPAD_R,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L2,     RETRO_LBL_JOYPAD_L2,             RETROK_UNKNOWN, RETRO_DEF_JOYPAD_L2,     0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R2,     RETRO_LBL_JOYPAD_R2,             RETROK_UNKNOWN, RETRO_DEF_JOYPAD_R2,     0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L3,     RETRO_LBL_JOYPAD_L3,             RETROK_UNKNOWN, RETRO_DEF_JOYPAD_L3,     0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R3,     RETRO_LBL_JOYPAD_R3,             RETROK_UNKNOWN, RETRO_DEF_JOYPAD_R3,     0, AXIS_NONE },
+    /*     | RetroPad button            | desc                           | keyboard key  | js btn |     js axis   | */
+   { true, RETRO_DEVICE_ID_JOYPAD_B,      RETRO_LBL_JOYPAD_B,              RETROK_z,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_Y,      RETRO_LBL_JOYPAD_Y,              RETROK_a,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_LBL_JOYPAD_SELECT,         RETROK_RSHIFT,  NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_START,  RETRO_LBL_JOYPAD_START,          RETROK_RETURN,  NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_UP,     RETRO_LBL_JOYPAD_UP,             RETROK_UP,      NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_DOWN,   RETRO_LBL_JOYPAD_DOWN,           RETROK_DOWN,    NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_LEFT,   RETRO_LBL_JOYPAD_LEFT,           RETROK_LEFT,    NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_RIGHT,  RETRO_LBL_JOYPAD_RIGHT,          RETROK_RIGHT,   NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_A,      RETRO_LBL_JOYPAD_A,              RETROK_x,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_X,      RETRO_LBL_JOYPAD_X,              RETROK_s,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_L,      RETRO_LBL_JOYPAD_L,              RETROK_q,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_R,      RETRO_LBL_JOYPAD_R,              RETROK_w,       NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_L2,     RETRO_LBL_JOYPAD_L2,             RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_R2,     RETRO_LBL_JOYPAD_R2,             RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_L3,     RETRO_LBL_JOYPAD_L3,             RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
+   { true, RETRO_DEVICE_ID_JOYPAD_R3,     RETRO_LBL_JOYPAD_R3,             RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
 
    { true, RARCH_ANALOG_LEFT_X_PLUS,      RETRO_LBL_ANALOG_LEFT_X_PLUS,    RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_ANALOG_LEFT_X_MINUS,     RETRO_LBL_ANALOG_LEFT_X_MINUS,   RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
@@ -695,7 +802,7 @@ static const struct retro_keybind retro_keybinds_1[] = {
    { true, RARCH_ANALOG_RIGHT_Y_PLUS,     RETRO_LBL_ANALOG_RIGHT_Y_PLUS,   RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_ANALOG_RIGHT_Y_MINUS,    RETRO_LBL_ANALOG_RIGHT_Y_MINUS,  RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
 
-   { true, RARCH_TURBO_ENABLE,             RETRO_LBL_TURBO_ENABLE,          RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
+   { true, RARCH_TURBO_ENABLE,             RETRO_LBL_TURBO_ENABLE,         RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_FAST_FORWARD_KEY,         RETRO_LBL_FAST_FORWARD_KEY,     RETROK_SPACE,   NO_BTN, 0, AXIS_NONE },
    { true, RARCH_FAST_FORWARD_HOLD_KEY,    RETRO_LBL_FAST_FORWARD_HOLD_KEY,RETROK_l,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_LOAD_STATE_KEY,           RETRO_LBL_LOAD_STATE_KEY,       RETROK_F4,      NO_BTN, 0, AXIS_NONE },
@@ -715,8 +822,8 @@ static const struct retro_keybind retro_keybinds_1[] = {
    { true, RARCH_CHEAT_INDEX_MINUS,        RETRO_LBL_CHEAT_INDEX_MINUS,    RETROK_t,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_CHEAT_TOGGLE,             RETRO_LBL_CHEAT_TOGGLE,         RETROK_u,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_SCREENSHOT,               RETRO_LBL_SCREENSHOT,           RETROK_F8,      NO_BTN, 0, AXIS_NONE },
-   { true, RARCH_DSP_CONFIG,               RETRO_LBL_DSP_CONFIG,           RETROK_c,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_MUTE,                     RETRO_LBL_MUTE,                 RETROK_F9,      NO_BTN, 0, AXIS_NONE },
+   { true, RARCH_OSK,                      RETRO_LBL_OSK,                  RETROK_F12,      NO_BTN, 0, AXIS_NONE },
    { true, RARCH_NETPLAY_FLIP,             RETRO_LBL_NETPLAY_FLIP,         RETROK_i,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_SLOWMOTION,               RETRO_LBL_SLOWMOTION,           RETROK_e,       NO_BTN, 0, AXIS_NONE },
    { true, RARCH_ENABLE_HOTKEY,            RETRO_LBL_ENABLE_HOTKEY,        RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
@@ -725,77 +832,14 @@ static const struct retro_keybind retro_keybinds_1[] = {
    { true, RARCH_OVERLAY_NEXT,             RETRO_LBL_OVERLAY_NEXT,         RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_DISK_EJECT_TOGGLE,        RETRO_LBL_DISK_EJECT_TOGGLE,    RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_DISK_NEXT,                RETRO_LBL_DISK_NEXT,            RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
+   { true, RARCH_DISK_PREV,                RETRO_LBL_DISK_PREV,            RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RARCH_GRAB_MOUSE_TOGGLE,        RETRO_LBL_GRAB_MOUSE_TOGGLE,    RETROK_F11,     NO_BTN, 0, AXIS_NONE },
-#ifdef HAVE_RGUI
    { true, RARCH_MENU_TOGGLE,              RETRO_LBL_MENU_TOGGLE,          RETROK_F1,      NO_BTN, 0, AXIS_NONE },
-#endif
 };
 
-#ifdef RARCH_CONSOLE
-static const struct retro_keybind retro_keybinds_menu[] = {
-   { true, RETRO_DEVICE_ID_JOYPAD_B,      RETRO_LBL_JOYPAD_B,              RETROK_UNKNOWN, CONSOLE_MENU_B,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_Y,      RETRO_LBL_JOYPAD_Y,              RETROK_UNKNOWN, CONSOLE_MENU_Y,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_LBL_JOYPAD_SELECT,         RETROK_UNKNOWN, CONSOLE_MENU_SELECT,     0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_START,  RETRO_LBL_JOYPAD_START,          RETROK_UNKNOWN, CONSOLE_MENU_START,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_UP,     RETRO_LBL_JOYPAD_UP,             RETROK_UNKNOWN, CONSOLE_MENU_UP,         0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_DOWN,   RETRO_LBL_JOYPAD_DOWN,           RETROK_UNKNOWN, CONSOLE_MENU_DOWN,       0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_LEFT,   RETRO_LBL_JOYPAD_LEFT,           RETROK_UNKNOWN, CONSOLE_MENU_LEFT,       0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_RIGHT,  RETRO_LBL_JOYPAD_RIGHT,          RETROK_UNKNOWN, CONSOLE_MENU_RIGHT,      0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_A,      RETRO_LBL_JOYPAD_A,              RETROK_UNKNOWN, CONSOLE_MENU_A,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_X,      RETRO_LBL_JOYPAD_X,              RETROK_UNKNOWN, CONSOLE_MENU_X,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L,      RETRO_LBL_JOYPAD_L,              RETROK_UNKNOWN, CONSOLE_MENU_L,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R,      RETRO_LBL_JOYPAD_R,              RETROK_UNKNOWN, CONSOLE_MENU_R,          0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L2,     RETRO_LBL_JOYPAD_L2,             RETROK_UNKNOWN, CONSOLE_MENU_L2,         0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R2,     RETRO_LBL_JOYPAD_R2,             RETROK_UNKNOWN, CONSOLE_MENU_R2,         0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_L3,     RETRO_LBL_JOYPAD_L3,             RETROK_UNKNOWN, CONSOLE_MENU_L3,         0, AXIS_NONE },
-   { true, RETRO_DEVICE_ID_JOYPAD_R3,     RETRO_LBL_JOYPAD_R3,             RETROK_UNKNOWN, CONSOLE_MENU_R3,         0, AXIS_NONE },
-   { true, RARCH_ANALOG_LEFT_X_PLUS,      RETRO_LBL_ANALOG_LEFT_X_PLUS,    RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_LEFT_X_MINUS,     RETRO_LBL_ANALOG_LEFT_X_MINUS,   RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_LEFT_Y_PLUS,      RETRO_LBL_ANALOG_LEFT_Y_PLUS,    RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_LEFT_Y_MINUS,     RETRO_LBL_ANALOG_LEFT_Y_MINUS,   RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_RIGHT_X_PLUS,     RETRO_LBL_ANALOG_RIGHT_X_PLUS,   RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_RIGHT_X_MINUS,    RETRO_LBL_ANALOG_RIGHT_X_MINUS,  RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_RIGHT_Y_PLUS,     RETRO_LBL_ANALOG_RIGHT_Y_PLUS,   RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ANALOG_RIGHT_Y_MINUS,    RETRO_LBL_ANALOG_RIGHT_Y_MINUS,  RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-
-   { true, RARCH_TURBO_ENABLE,             RETRO_LBL_TURBO_ENABLE,         RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_FAST_FORWARD_KEY,         RETRO_LBL_FAST_FORWARD_KEY,     RETROK_SPACE,   NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_FAST_FORWARD_HOLD_KEY,    RETRO_LBL_FAST_FORWARD_HOLD_KEY,RETROK_l,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_LOAD_STATE_KEY,           RETRO_LBL_LOAD_STATE_KEY,       RETROK_F4,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_SAVE_STATE_KEY,           RETRO_LBL_SAVE_STATE_KEY,       RETROK_F2,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_FULLSCREEN_TOGGLE_KEY,    RETRO_LBL_FULLSCREEN_TOGGLE_KEY,RETROK_f,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_QUIT_KEY,                 RETRO_LBL_QUIT_KEY,             RETROK_ESCAPE,  NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_STATE_SLOT_PLUS,          RETRO_LBL_STATE_SLOT_PLUS,      RETROK_F7,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_STATE_SLOT_MINUS,         RETRO_LBL_STATE_SLOT_MINUS,     RETROK_F6,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_REWIND,                   RETRO_LBL_REWIND,               RETROK_r,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_MOVIE_RECORD_TOGGLE,      RETRO_LBL_MOVIE_RECORD_TOGGLE,  RETROK_o,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_PAUSE_TOGGLE,             RETRO_LBL_PAUSE_TOGGLE,         RETROK_p,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_FRAMEADVANCE,             RETRO_LBL_FRAMEADVANCE,         RETROK_k,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_RESET,                    RETRO_LBL_RESET,                RETROK_h,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_SHADER_NEXT,              RETRO_LBL_SHADER_NEXT,          RETROK_m,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_SHADER_PREV,              RETRO_LBL_SHADER_PREV,          RETROK_n,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_CHEAT_INDEX_PLUS,         RETRO_LBL_CHEAT_INDEX_PLUS,     RETROK_y,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_CHEAT_INDEX_MINUS,        RETRO_LBL_CHEAT_INDEX_MINUS,    RETROK_t,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_CHEAT_TOGGLE,             RETRO_LBL_CHEAT_TOGGLE,         RETROK_u,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_SCREENSHOT,               RETRO_LBL_SCREENSHOT,           RETROK_F8,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_DSP_CONFIG,               RETRO_LBL_DSP_CONFIG,           RETROK_c,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_MUTE,                     RETRO_LBL_MUTE,                 RETROK_F9,      NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_NETPLAY_FLIP,             RETRO_LBL_NETPLAY_FLIP,         RETROK_i,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_SLOWMOTION,               RETRO_LBL_SLOWMOTION,           RETROK_e,       NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_ENABLE_HOTKEY,            RETRO_LBL_ENABLE_HOTKEY,        RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_VOLUME_UP,                RETRO_LBL_VOLUME_UP,            RETROK_KP_PLUS, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_VOLUME_DOWN,              RETRO_LBL_VOLUME_DOWN,          RETROK_KP_MINUS,NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_OVERLAY_NEXT,             RETRO_LBL_OVERLAY_NEXT,         RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_DISK_EJECT_TOGGLE,        RETRO_LBL_DISK_EJECT_TOGGLE,    RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_DISK_NEXT,                RETRO_LBL_DISK_NEXT,            RETROK_UNKNOWN, NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_GRAB_MOUSE_TOGGLE,        RETRO_LBL_GRAB_MOUSE_TOGGLE,    RETROK_F11,     NO_BTN,                  0, AXIS_NONE },
-   { true, RARCH_MENU_TOGGLE,              RETRO_LBL_MENU_TOGGLE,          RETROK_UNKNOWN, CONSOLE_MENU_HOME,       0, AXIS_NONE },
-};
-#endif
-
-// Player 2-5
+/* Users 2 to MAX_USERS */
 static const struct retro_keybind retro_keybinds_rest[] = {
-    //     | RetroPad button            | desc                           | keyboard key  | js btn |     js axis   |
+    /*     | RetroPad button            | desc                           | keyboard key  | js btn |     js axis   | */
    { true, RETRO_DEVICE_ID_JOYPAD_B,      RETRO_LBL_JOYPAD_B,              RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RETRO_DEVICE_ID_JOYPAD_Y,      RETRO_LBL_JOYPAD_Y,              RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },
    { true, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_LBL_JOYPAD_SELECT,         RETROK_UNKNOWN, NO_BTN, 0, AXIS_NONE },

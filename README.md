@@ -14,16 +14,15 @@ A libretro core written in portable C or C++ can run seamlessly on many platform
 While RetroArch is the reference frontend for libretro, several other projects have used the libretro
 interface to include support for emulators and/or game engines. libretro is completely open and free for anyone to use.
 
-[libretro API header](https://github.com/Themaister/RetroArch/blob/master/libretro.h)
+[libretro API header](https://github.com/libretro/RetroArch/blob/master/libretro.h)
 
 ## Binaries
 
-Latest Windows binaries are currently hosted on Themaister's [homepage](http://themaister.net/retroarch.html).
-Builds can also be found on the [forum](http://forum.themaister.net/).
+Latest Windows binaries are currently hosted on the buildbot -(http://buildbot.libretro.com/).
 
 ## Support
 
-To reach developers, either make an issue here on Github, make a thread on the [forum](http://forum.themaister.net/),
+To reach developers, either make an issue here on Github, make a thread on the [forum](http://www.libretro.com/forums/),
 or visit our IRC channel: #retroarch @ irc.freenode.org.
 
 ## Documentation
@@ -33,19 +32,18 @@ More developer-centric stuff is found [here](https://github.com/libretro/libretr
 
 ## Related projects
 
-   - Cg/HLSL shaders: [common-shaders](https://github.com/twinaphex/common-shaders)
-   - More Cg shaders: [Emulator-Shader-Pack](https://github.com/Themaister/Emulator-Shader-Pack)
+   - Cg/HLSL shaders: [common-shaders](https://github.com/libretro/common-shaders)
    - Helper scripts to build libretro implementations: [libretro-super](https://github.com/libretro/libretro-super)
 
 ## Philosophy
 
 RetroArch attempts to be small and lean,
-while still having all the useful core features expected from an emulator. 
-It is designed to be very portable and features a gamepad-centric UI called RGUI.
+while still having all the useful core features expected from an emulator.
+It is designed to be very portable and features a gamepad-centric UI.
 It also has a full-featured command-line interface.
 
 In some areas, RetroArch goes beyond and emphasizes on not-so-common technical features such as multi-pass shader support,
-real-time rewind (Braid-style), FFmpeg video recording, etc.
+real-time rewind (Braid-style), video recording (using FFmpeg), etc.
 
 RetroArch also emphasizes on being easy to integrate into various launcher frontends.
 
@@ -104,14 +102,42 @@ anything other than what the respective SDKs provide.
 The default configuration is defined in config.def.h.
 It is not recommended to change this unless you know what you're doing.
 These can later be tweaked by using a config file.
-A sample configuration file is installed to /etc/retroarch.cfg. This is the system-wide config file. 
+A sample configuration file is installed to /etc/retroarch.cfg. This is the system-wide config file.
 
 RetroArch will on startup create a config file in $XDG\_CONFIG\_HOME/retroarch/retroarch.cfg if doesn't exist.
 Users only need to configure a certain option if the desired value deviates from the value defined in config.def.h.
 
-To configure joypads, use RGUI or the <tt>retroarch-joyconfig</tt> command-line tool.
+To configure joypads, use the built-in menu or the <tt>retroarch-joyconfig</tt> command-line tool.
 
 ## Compiling and installing
+<b>Linux</b><br/>
+- Prerequisites:
+```bash
+sudo apt-get install -y make git-core curl g++ pkg-config libglu1-mesa-dev freeglut3-dev mesa-common-dev libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
+```
+- Compiling:
+```bash
+./configure
+make
+```
+
+<b>Mac</b><br/>
+- Prerequisites: [XCode](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CB4QFjAA&url=https%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fxcode%2Fid497799835%3Fmt%3D12&ei=ZmfeVNPtIILVoASBnoCYBw&usg=AFQjCNGrxKmVtXUdvUU3MhqZhP4MHT6Gtg&sig2=RIXKsWQ79YTQBt_lK5fdKA&bvm=bv.85970519,d.cGU), [Cg](https://developer.nvidia.com/cg-toolkit-download).
+- You can open the project (**apple/RetroArch.xcodeproj**) in the Xcode IDE and build (**&#8984;-B**) and run (**&#8984;-R**) it there. Or you can use the command line...
+- Debug:
+```bash
+# Build
+xcodebuild -target RetroArch -configuration Debug -project apple/RetroArch.xcodeproj
+# Run
+open ./apple/build/Debug/RetroArch.app/
+```
+- Release:
+```bash
+# Build
+xcodebuild -target RetroArch -configuration Release -project apple/RetroArch.xcodeproj
+# Run
+open ./apple/build/Release/RetroArch.app/
+```
 
 <b>PC</b><br/>
 Instructions for compiling on PC can be found in the [wiki](https://github.com/Themaister/RetroArch/wiki).
@@ -180,4 +206,3 @@ You will need to have the libogc libraries and a working Devkit PPC toolchain in
 <tt>make -f Makefile.wii</tt>
 
 NOTE: A pre-existing libretro library needs to be present in the root directory in order to link RetroArch Wii. This file needs to be called <em><b>`libretro_wii.a`</b></em>.
-

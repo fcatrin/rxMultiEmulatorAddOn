@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -13,15 +14,15 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RARCH_COMMAND_H__
-#define RARCH_COMMAND_H__
+#ifndef COMMAND_H__
+#define COMMAND_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <stdint.h>
-#include "boolean.h"
+#include <boolean.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,14 +30,18 @@ extern "C" {
 
 typedef struct rarch_cmd rarch_cmd_t;
 
-rarch_cmd_t *rarch_cmd_new(bool stdin_enable, bool network_enable, uint16_t port);
+rarch_cmd_t *rarch_cmd_new(bool stdin_enable,
+      bool network_enable, uint16_t port);
+
 void rarch_cmd_free(rarch_cmd_t *handle);
 
 void rarch_cmd_poll(rarch_cmd_t *handle);
+
 void rarch_cmd_set(rarch_cmd_t *handle, unsigned id);
+
 bool rarch_cmd_get(rarch_cmd_t *handle, unsigned id);
 
-#ifdef HAVE_NETWORK_CMD
+#if defined(HAVE_NETWORK_CMD) && defined(HAVE_NETPLAY)
 bool network_cmd_send(const char *cmd);
 #endif
 

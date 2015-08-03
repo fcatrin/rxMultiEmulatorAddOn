@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -14,318 +15,217 @@
  */
 
 #include "cheats.h"
-#include "hash.h"
-#include "dynamic.h"
 #include "general.h"
-#include "compat/strl.h"
-#include "compat/posix_string.h"
+#include "runloop.h"
+#include "dynamic.h"
+#include <file/config_file.h>
+#include <file/file_path.h>
+#include <compat/strl.h>
+#include <compat/posix_string.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "conf/config_file.h"
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
-#ifdef HAVE_LIBXML2
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#else
-#define RXML_LIBXML2_COMPAT
-#include "compat/rxml/rxml.h"
-#endif
-
-struct cheat
+void cheat_manager_apply_cheats(cheat_manager_t *handle)
 {
-   char *desc;
-   bool state;
-   char *code;
-};
+   unsigned i, idx = 0;
 
-struct cheat_manager
-{
-   struct cheat *cheats;
-   unsigned ptr;
-   unsigned size;
-   unsigned buf_size;
-};
+   if (!handle)
+      return;
 
-static char *strcat_alloc(char *dest, const char *input)
-{
-   size_t dest_len = dest ? strlen(dest) : 0;
-   size_t input_len = strlen(input);
-   size_t required_len = dest_len + input_len + 1;
-
-   char *output = (char*)realloc(dest, required_len);
-   if (!output)
-      return NULL;
-
-   if (dest)
-      strlcat(output, input, required_len);
-   else
-      strlcpy(output, input, required_len);
-
-   return output;
-}
-
-static bool xml_grab_cheat(struct cheat *cht, xmlNodePtr ptr)
-{
-   if (!ptr)
-      return false;
-
-   memset(cht, 0, sizeof(struct cheat));
-   bool first = true;
-
-   for (; ptr; ptr = ptr->next)
-   {
-      if (strcmp((const char*)ptr->name, "description") == 0)
-      {
-         cht->desc = (char*)xmlNodeGetContent(ptr);
-      }
-      else if (strcmp((const char*)ptr->name, "code") == 0)
-      {
-         if (!first)
-         {
-            cht->code = strcat_alloc(cht->code, "+");
-            if (!cht->code)
-               return false;
-         }
-
-         xmlChar *code = xmlNodeGetContent(ptr);
-         if (!code)
-            return false;
-
-         cht->code = strcat_alloc(cht->code, (const char*)code);
-         xmlFree(code);
-         if (!cht->code)
-            return false;
-
-         first = false;
-      }
-   }
-
-   return true;
-}
-
-static bool xml_grab_cheats(cheat_manager_t *handle, xmlNodePtr ptr)
-{
-   for (; ptr; ptr = ptr->next)
-   {
-      if (strcmp((const char*)ptr->name, "name") == 0)
-      {
-         xmlChar *name = xmlNodeGetContent(ptr);
-         if (name)
-         {
-            RARCH_LOG("Found cheat for game: \"%s\"\n", name);
-            xmlFree(name);
-         }
-      }
-      else if (strcmp((const char*)ptr->name, "cheat") == 0)
-      {
-         if (handle->size == handle->buf_size)
-         {
-            handle->buf_size *= 2;
-            handle->cheats = (struct cheat*)realloc(handle->cheats, handle->buf_size * sizeof(struct cheat));
-            if (!handle->cheats)
-               return false;
-         }
-
-         if (xml_grab_cheat(&handle->cheats[handle->size], ptr->children))
-            handle->size++;
-      }
-   }
-
-   return true;
-}
-
-static void cheat_manager_apply_cheats(cheat_manager_t *handle)
-{
-   unsigned i, index;
-   index = 0;
    pretro_cheat_reset();
+
    for (i = 0; i < handle->size; i++)
    {
       if (handle->cheats[i].state)
-         pretro_cheat_set(index++, true, handle->cheats[i].code);
+         pretro_cheat_set(idx++, true, handle->cheats[i].code);
    }
 }
 
-static void cheat_manager_load_config(cheat_manager_t *handle, const char *path, const char *sha256)
+/**
+ * cheat_manager_save:
+ * @path                      : Path to cheats file (relative path).
+ *
+ * Saves cheats to file on disk.
+ *
+ * Returns: true (1) if successful, otherwise false (0).
+ **/
+bool cheat_manager_save(cheat_manager_t *handle, const char *path)
 {
-   if (!(*path))
-      return;
+   bool ret;
+   unsigned i;
+   config_file_t *conf               = NULL;
+   char buf[PATH_MAX_LENGTH]         = {0};
+   char cheats_file[PATH_MAX_LENGTH] = {0};
+   settings_t              *settings = config_get_ptr();
 
-   config_file_t *conf = config_file_new(path);
-   if (!conf)
-      return;
+   fill_pathname_join(buf, settings->cheat_database,
+         path, sizeof(buf));
 
-   char *str = NULL;
-   if (!config_get_string(conf, sha256, &str))
-   {
-      config_file_free(conf);
-      return;
-   }
+   fill_pathname_noext(cheats_file, buf, ".cht", sizeof(cheats_file));
+   
+   conf = config_file_new(cheats_file);
 
-   char *save;
-   const char *num = strtok_r(str, ";", &save);
-   while (num)
-   {
-      unsigned index = strtoul(num, NULL, 0);
-      if (index < handle->size)
-         handle->cheats[index].state = true;
-
-      num = strtok_r(NULL, ";", &save);
-   }
-
-   free(str);
-   config_file_free(conf);
-
-   cheat_manager_apply_cheats(handle);
-}
-
-static void cheat_manager_save_config(cheat_manager_t *handle, const char *path, const char *sha256)
-{
-   if (!(*path))
-      return;
-
-   config_file_t *conf = config_file_new(path);
    if (!conf)
       conf = config_file_new(NULL);
 
    if (!conf)
+      return false;
+
+   if (!handle)
    {
-      RARCH_ERR("Cannot save XML cheat settings.\n");
-      return;
+      config_file_free(conf);
+      return false;
    }
 
-   unsigned i;
-   char conf_str[512] = {0};
-   char tmp[32] = {0};
+   config_set_int(conf, "cheats", handle->size);
 
    for (i = 0; i < handle->size; i++)
    {
-      if (handle->cheats[i].state)
-      {
-         snprintf(tmp, sizeof(tmp), "%u;", i);
-         strlcat(conf_str, tmp, sizeof(conf_str));
-      }
+      char key[64]         = {0};
+      char desc_key[256]   = {0};
+      char code_key[256]   = {0};
+      char enable_key[256] = {0};
+
+      snprintf(key, sizeof(key), "cheat%u", i);
+      snprintf(desc_key, sizeof(desc_key), "cheat%u_desc", i);
+      snprintf(code_key, sizeof(code_key), "cheat%u_code", i);
+      snprintf(enable_key, sizeof(enable_key), "cheat%u_enable", i);
+
+      if (handle->cheats[i].desc)
+         config_set_string(conf, desc_key, handle->cheats[i].desc);
+      else
+         config_set_string(conf, desc_key, handle->cheats[i].code);
+      config_set_string(conf, code_key, handle->cheats[i].code);
+      config_set_bool(conf, enable_key, handle->cheats[i].state);
    }
 
-   if (*conf_str)
-      conf_str[strlen(conf_str) - 1] = '\0'; // Remove the trailing ';'
-
-   config_set_string(conf, sha256, conf_str);
-
-   if (!config_file_write(conf, path))
-      RARCH_ERR("Failed to write XML cheat settings to \"%s\". Check permissions.\n", path);
-
+   ret = config_file_write(conf, cheats_file);
    config_file_free(conf);
+
+   return ret;
 }
 
-cheat_manager_t *cheat_manager_new(const char *path)
+cheat_manager_t *cheat_manager_load(const char *path)
 {
-   LIBXML_TEST_VERSION;
+   unsigned cheats = 0, i;
+   cheat_manager_t *cheat = NULL;
+   config_file_t *conf = config_file_new(path);
 
-   pretro_cheat_reset();
+   if (!conf)
+      return NULL;
 
-   xmlParserCtxtPtr ctx = NULL;
-   xmlDocPtr doc = NULL;
-   cheat_manager_t *handle = (cheat_manager_t*)calloc(1, sizeof(struct cheat_manager));
+   config_get_uint(conf, "cheats", &cheats);
+
+   if (cheats == 0)
+      return NULL;
+
+   cheat = cheat_manager_new(cheats);
+
+   if (!cheat)
+      return NULL;
+
+   for (i = 0; i < cheats; i++)
+   {
+      char key[64]         = {0};
+      char desc_key[256]   = {0};
+      char code_key[256]   = {0};
+      char enable_key[256] = {0};
+      char *tmp            = NULL;
+      bool tmp_bool        = false;
+
+      snprintf(key, sizeof(key), "cheat%u", i);
+      snprintf(desc_key, sizeof(desc_key), "cheat%u_desc", i);
+      snprintf(code_key, sizeof(code_key), "cheat%u_code", i);
+      snprintf(enable_key, sizeof(enable_key), "cheat%u_enable", i);
+
+      if (config_get_string(conf, desc_key, &tmp))
+         cheat->cheats[i].desc   = strdup(tmp);
+
+      if (config_get_string(conf, code_key, &tmp))
+         cheat->cheats[i].code   = strdup(tmp);
+
+      if (config_get_bool(conf, enable_key, &tmp_bool))
+         cheat->cheats[i].state  = tmp_bool;
+
+      if (tmp)
+         free(tmp);
+   }
+
+   config_file_free(conf);
+
+   return cheat;
+}
+
+cheat_manager_t *cheat_manager_new(unsigned size)
+{
+   unsigned i;
+   cheat_manager_t *handle = (cheat_manager_t*)
+      calloc(1, sizeof(struct cheat_manager));
+
    if (!handle)
       return NULL;
 
-   xmlNodePtr head = NULL;
-   xmlNodePtr cur = NULL;
+   handle->buf_size = size;
+   handle->size     = size;
+   handle->cheats   = (struct item_cheat*)
+      calloc(handle->buf_size, sizeof(struct item_cheat));
 
-   handle->buf_size = 1;
-   handle->cheats = (struct cheat*)calloc(handle->buf_size, sizeof(struct cheat));
    if (!handle->cheats)
    {
       handle->buf_size = 0;
-      goto error;
+      handle->size = 0;
+      handle->cheats = NULL;
+      return handle;
    }
 
-   ctx = xmlNewParserCtxt();
-   if (!ctx)
-      goto error;
-
-   doc = xmlCtxtReadFile(ctx, path, NULL, 0);
-   if (!doc)
+   for (i = 0; i < handle->size; i++)
    {
-      RARCH_ERR("Failed to parse XML file: %s\n", path);
-      goto error;
+      handle->cheats[i].desc   = NULL;
+      handle->cheats[i].code   = NULL;
+      handle->cheats[i].state  = false;
    }
 
-#ifdef HAVE_LIBXML2
-   if (ctx->valid == 0)
-   {
-      RARCH_ERR("Cannot validate XML file: %s\n", path);
-      goto error;
-   }
-#endif
-
-   head = xmlDocGetRootElement(doc);
-   for (cur = head; cur; cur = cur->next)
-   {
-      if (cur->type == XML_ELEMENT_NODE && strcmp((const char*)cur->name, "database") == 0)
-         break;
-   }
-
-   if (!cur)
-      goto error;
-
-   for (cur = cur->children; cur; cur = cur->next)
-   {
-      if (cur->type != XML_ELEMENT_NODE)
-         continue;
-
-      if (strcmp((const char*)cur->name, "cartridge") == 0)
-      {
-         xmlChar *sha256 = xmlGetProp(cur, (const xmlChar*)"sha256");
-         if (!sha256)
-            continue;
-
-         if (*g_extern.sha256 && strcmp((const char*)sha256, g_extern.sha256) == 0)
-         {
-            xmlFree(sha256);
-            break;
-         }
-
-         xmlFree(sha256);
-      }
-   }
-
-   if (!cur)
-      goto error;
-
-   if (!xml_grab_cheats(handle, cur->children))
-   {
-      RARCH_ERR("Failed to grab cheats. This should not happen.\n");
-      goto error;
-   }
-
-   if (handle->size == 0)
-   {
-      RARCH_ERR("Did not find any cheats in XML file: %s\n", path);
-      goto error;
-   }
-
-   cheat_manager_load_config(handle, g_settings.cheat_settings_path, g_extern.sha256);
-
-   xmlFreeDoc(doc);
-   xmlFreeParserCtxt(ctx);
    return handle;
+}
 
-error:
-   cheat_manager_free(handle);
-   if (doc)
-      xmlFreeDoc(doc);
-   if (ctx)
-      xmlFreeParserCtxt(ctx);
-   return NULL;
+bool cheat_manager_realloc(cheat_manager_t *handle, unsigned new_size)
+{
+   unsigned i;
+
+   if (!handle)
+      return false;
+
+   if (!handle->cheats)
+      handle->cheats = (struct item_cheat*)
+         calloc(new_size, sizeof(struct item_cheat));
+   else
+      handle->cheats = (struct item_cheat*)
+         realloc(handle->cheats, new_size * sizeof(struct item_cheat));
+
+   if (!handle->cheats)
+   {
+      handle->buf_size = handle->size = 0;
+      handle->cheats = NULL;
+      return false;
+   }
+
+   handle->buf_size = new_size;
+   handle->size     = new_size;
+
+   for (i = 0; i < handle->size; i++)
+   {
+      handle->cheats[i].desc    = NULL;
+      handle->cheats[i].code    = NULL;
+      handle->cheats[i].state   = false;
+   }
+
+   return true;
 }
 
 void cheat_manager_free(cheat_manager_t *handle)
@@ -336,10 +236,9 @@ void cheat_manager_free(cheat_manager_t *handle)
 
    if (handle->cheats)
    {
-      cheat_manager_save_config(handle, g_settings.cheat_settings_path, g_extern.sha256);
       for (i = 0; i < handle->size; i++)
       {
-         xmlFree(handle->cheats[i].desc);
+         free(handle->cheats[i].desc);
          free(handle->cheats[i].code);
       }
 
@@ -349,36 +248,51 @@ void cheat_manager_free(cheat_manager_t *handle)
    free(handle);
 }
 
-static void cheat_manager_update(cheat_manager_t *handle)
+void cheat_manager_update(cheat_manager_t *handle, unsigned handle_idx)
 {
-   msg_queue_clear(g_extern.msg_queue);
-   char msg[256];
-   snprintf(msg, sizeof(msg), "Cheat: #%u [%s]: %s", handle->ptr, handle->cheats[handle->ptr].state ? "ON" : "OFF", handle->cheats[handle->ptr].desc);
-   msg_queue_push(g_extern.msg_queue, msg, 1, 180);
+   char msg[256] = {0};
+
+   if (!handle)
+      return;
+
+   snprintf(msg, sizeof(msg), "Cheat: #%u [%s]: %s",
+         handle_idx, handle->cheats[handle_idx].state ? "ON" : "OFF",
+         (handle->cheats[handle_idx].desc) ? 
+         (handle->cheats[handle_idx].desc) : (handle->cheats[handle_idx].code)
+         );
+   rarch_main_msg_queue_push(msg, 1, 180, true);
    RARCH_LOG("%s\n", msg);
 }
 
 
 void cheat_manager_toggle(cheat_manager_t *handle)
 {
+   if (!handle)
+      return;
+
    handle->cheats[handle->ptr].state ^= true;
    cheat_manager_apply_cheats(handle);
-   cheat_manager_update(handle);
+   cheat_manager_update(handle, handle->ptr);
 }
 
 void cheat_manager_index_next(cheat_manager_t *handle)
 {
+   if (!handle)
+      return;
+
    handle->ptr = (handle->ptr + 1) % handle->size;
-   cheat_manager_update(handle);
+   cheat_manager_update(handle, handle->ptr);
 }
 
 void cheat_manager_index_prev(cheat_manager_t *handle)
 {
+   if (!handle)
+      return;
+
    if (handle->ptr == 0)
       handle->ptr = handle->size - 1;
    else
       handle->ptr--;
 
-   cheat_manager_update(handle);
+   cheat_manager_update(handle, handle->ptr);
 }
-

@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  *
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -14,9 +15,9 @@
  */
 
 #include "autosave.h"
-#include "thread.h"
+#include <rthreads/rthreads.h>
 #include <stdlib.h>
-#include "boolean.h"
+#include <boolean.h>
 #include <string.h>
 #include <stdio.h>
 #include "general.h"
@@ -37,37 +38,71 @@ struct autosave
    unsigned interval;
 };
 
+/**
+ * autosave_lock:
+ * @handle          : pointer to autosave object
+ *
+ * Locks autosave.
+ **/
+static void autosave_lock(autosave_t *handle)
+{
+   slock_lock(handle->lock);
+}
+
+/**
+ * autosave_unlock:
+ * @handle          : pointer to autosave object
+ *
+ * Unlocks autosave.
+ **/
+static void autosave_unlock(autosave_t *handle)
+{
+   slock_unlock(handle->lock);
+}
+
+/**
+ * autosave_thread:
+ * @data            : pointer to autosave object
+ *
+ * Callback function for (threaded) autosave.
+ **/
 static void autosave_thread(void *data)
 {
-   autosave_t *save = (autosave_t*)data;
-
    bool first_log = true;
+   autosave_t *save = (autosave_t*)data;
 
    while (!save->quit)
    {
+      bool differ = false;
+
       autosave_lock(save);
-      bool differ = memcmp(save->buffer, save->retro_buffer, save->bufsize) != 0;
+      differ = memcmp(save->buffer, save->retro_buffer,
+            save->bufsize) != 0;
       if (differ)
          memcpy(save->buffer, save->retro_buffer, save->bufsize);
       autosave_unlock(save);
 
       if (differ)
       {
-         // Should probably deal with this more elegantly.
+         /* Should probably deal with this more elegantly. */
          FILE *file = fopen(save->path, "wb");
+
          if (file)
          {
-            // Avoid spamming down stderr ... :)
+            bool failed = false;
+
+            /* Avoid spamming down stderr ... */
             if (first_log)
             {
-               RARCH_LOG("Autosaving SRAM to \"%s\", will continue to check every %u seconds ...\n", save->path, save->interval);
+               RARCH_LOG("Autosaving SRAM to \"%s\", will continue to check every %u seconds ...\n",
+                     save->path, save->interval);
                first_log = false;
             }
             else
                RARCH_LOG("SRAM changed ... autosaving ...\n");
 
-            bool failed = false;
-            failed |= fwrite(save->buffer, 1, save->bufsize, file) != save->bufsize;
+            failed |= fwrite(save->buffer, 1, save->bufsize, file)
+               != save->bufsize;
             failed |= fflush(file) != 0;
             failed |= fclose(file) != 0;
             if (failed)
@@ -76,22 +111,38 @@ static void autosave_thread(void *data)
       }
 
       slock_lock(save->cond_lock);
+
       if (!save->quit)
-         scond_wait_timeout(save->cond, save->cond_lock, save->interval * 1000000LL);
+         scond_wait_timeout(save->cond, save->cond_lock,
+               save->interval * 1000000LL);
+
       slock_unlock(save->cond_lock);
    }
 }
 
-autosave_t *autosave_new(const char *path, const void *data, size_t size, unsigned interval)
+/**
+ * autosave_new:
+ * @path            : path to autosave file
+ * @data            : pointer to buffer
+ * @size            : size of @data buffer
+ * @interval        : interval at which saves should be performed.
+ *
+ * Create and initialize autosave object.
+ *
+ * Returns: pointer to new autosave_t object if successful, otherwise
+ * NULL.
+ **/
+autosave_t *autosave_new(const char *path, const void *data, size_t size,
+      unsigned interval)
 {
    autosave_t *handle = (autosave_t*)calloc(1, sizeof(*handle));
    if (!handle)
       return NULL;
 
-   handle->bufsize = size;
-   handle->interval = interval;
-   handle->path = path;
-   handle->buffer = malloc(size);
+   handle->bufsize      = size;
+   handle->interval     = interval;
+   handle->path         = path;
+   handle->buffer       = malloc(size);
    handle->retro_buffer = data;
 
    if (!handle->buffer)
@@ -101,27 +152,26 @@ autosave_t *autosave_new(const char *path, const void *data, size_t size, unsign
    }
    memcpy(handle->buffer, handle->retro_buffer, handle->bufsize);
 
-   handle->lock = slock_new();
-   handle->cond_lock = slock_new();
-   handle->cond = scond_new();
+   handle->lock         = slock_new();
+   handle->cond_lock    = slock_new();
+   handle->cond         = scond_new();
 
-   handle->thread = sthread_create(autosave_thread, handle);
+   handle->thread       = sthread_create(autosave_thread, handle);
 
    return handle;
 }
 
-void autosave_lock(autosave_t *handle)
-{
-   slock_lock(handle->lock);
-}
-
-void autosave_unlock(autosave_t *handle)
-{
-   slock_unlock(handle->lock);
-}
-
+/**
+ * autosave_free:
+ * @handle          : pointer to autosave object
+ *
+ * Frees autosave object.
+ **/
 void autosave_free(autosave_t *handle)
 {
+   if (!handle)
+      return;
+
    slock_lock(handle->cond_lock);
    handle->quit = true;
    slock_unlock(handle->cond_lock);
@@ -136,23 +186,37 @@ void autosave_free(autosave_t *handle)
    free(handle);
 }
 
+/**
+ * lock_autosave:
+ *
+ * Lock autosave.
+ **/
 void lock_autosave(void)
 {
    unsigned i;
-   for (i = 0; i < ARRAY_SIZE(g_extern.autosave); i++)
+   global_t *global = global_get_ptr();
+
+   for (i = 0; i < global->num_autosave; i++)
    {
-      if (g_extern.autosave[i])
-         autosave_lock(g_extern.autosave[i]);
+      if (global->autosave[i])
+         autosave_lock(global->autosave[i]);
    }
 }
 
+/**
+ * unlock_autosave:
+ *
+ * Unlocks autosave.
+ **/
 void unlock_autosave(void)
 {
    unsigned i;
-   for (i = 0; i < ARRAY_SIZE(g_extern.autosave); i++)
+   global_t *global = global_get_ptr();
+
+   for (i = 0; i < global->num_autosave; i++)
    {
-      if (g_extern.autosave[i])
-         autosave_unlock(g_extern.autosave[i]);
+      if (global->autosave[i])
+         autosave_unlock(global->autosave[i]);
    }
 }
 

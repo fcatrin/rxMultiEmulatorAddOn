@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -14,9 +15,12 @@
  */
 
 #include "core_options.h"
-#include "general.h"
-#include "file.h"
-#include "compat/posix_string.h"
+#include <string.h>
+#include <file/config_file.h>
+#include <file/dir_list.h>
+#include <compat/posix_string.h>
+#include <compat/strl.h>
+#include <retro_miscellaneous.h>
 
 struct core_option
 {
@@ -29,16 +33,23 @@ struct core_option
 struct core_option_manager
 {
    config_file_t *conf;
-   char conf_path[PATH_MAX];
+   char conf_path[PATH_MAX_LENGTH];
 
    struct core_option *opts;
    size_t size;
    bool updated;
 };
 
+/**
+ * core_option_free:
+ * @opt              : options manager handle
+ *
+ * Frees core option manager handle.
+ **/
 void core_option_free(core_option_manager_t *opt)
 {
    size_t i;
+
    if (!opt)
       return;
 
@@ -58,10 +69,15 @@ void core_option_free(core_option_manager_t *opt)
 void core_option_get(core_option_manager_t *opt, struct retro_variable *var)
 {
    size_t i;
+
+   if (!opt)
+      return;
+
    opt->updated = false;
+
    for (i = 0; i < opt->size; i++)
    {
-      if (strcmp(opt->opts[i].key, var->key) == 0)
+      if (!strcmp(opt->opts[i].key, var->key))
       {
          var->value = core_option_get_val(opt, i);
          return;
@@ -71,14 +87,22 @@ void core_option_get(core_option_manager_t *opt, struct retro_variable *var)
    var->value = NULL;
 }
 
-static bool parse_variable(core_option_manager_t *opt, size_t index, const struct retro_variable *var)
+static bool parse_variable(core_option_manager_t *opt, size_t idx,
+      const struct retro_variable *var)
 {
    size_t i;
-   struct core_option *option = &opt->opts[index];
-   option->key = strdup(var->key);
+   const char *val_start      = NULL;
+   char *value                = NULL;
+   char *desc_end             = NULL;
+   char *config_val           = NULL;
+   struct core_option *option = (struct core_option*)&opt->opts[idx];
 
-   char *value = strdup(var->value);
-   char *desc_end = strstr(value, "; ");
+   if (!option)
+      return false;
+
+   option->key = strdup(var->key);
+   value       = strdup(var->value);
+   desc_end    = strstr(value, "; ");
 
    if (!desc_end)
    {
@@ -86,10 +110,10 @@ static bool parse_variable(core_option_manager_t *opt, size_t index, const struc
       return false;
    }
 
-   *desc_end = '\0';
+   *desc_end    = '\0';
    option->desc = strdup(value);
 
-   const char *val_start = desc_end + 2;
+   val_start    = desc_end + 2;
    option->vals = string_split(val_start, "|");
 
    if (!option->vals)
@@ -98,12 +122,11 @@ static bool parse_variable(core_option_manager_t *opt, size_t index, const struc
       return false;
    }
 
-   char *config_val = NULL;
    if (config_get_string(opt->conf, option->key, &config_val))
    {
       for (i = 0; i < option->vals->size; i++)
       {
-         if (strcmp(option->vals->elems[i].data, config_val) == 0)
+         if (!strcmp(option->vals->elems[i].data, config_val))
          {
             option->index = i;
             break;
@@ -115,25 +138,28 @@ static bool parse_variable(core_option_manager_t *opt, size_t index, const struc
 
    free(value);
 
-   RARCH_LOG("Core option:\n");
-   RARCH_LOG("\tDescription: %s\n", option->desc);
-   RARCH_LOG("\tKey: %s\n", option->key);
-   RARCH_LOG("\tCurrent value: %s\n", core_option_get_val(opt, index));
-   RARCH_LOG("\tPossible values:\n");
-   for (i = 0; i < option->vals->size; i++)
-      RARCH_LOG("\t\t%s\n", option->vals->elems[i].data);
-
    return true;
 }
 
-core_option_manager_t *core_option_new(const char *conf_path, const struct retro_variable *vars)
+/**
+ * core_option_new:
+ * @conf_path        : Filesystem path to write core option config file to.
+ * @vars             : Pointer to variable array handle.
+ *
+ * Creates and initializes a core manager handle.
+ *
+ * Returns: handle to new core manager handle, otherwise NULL.
+ **/
+core_option_manager_t *core_option_new(const char *conf_path,
+      const struct retro_variable *vars)
 {
    const struct retro_variable *var;
-   core_option_manager_t *opt = (core_option_manager_t*)calloc(1, sizeof(*opt));
+   size_t size                      = 0;
+   core_option_manager_t *opt       = (core_option_manager_t*)
+      calloc(1, sizeof(*opt));
+
    if (!opt)
       return NULL;
-
-   size_t size = 0;
 
    if (*conf_path)
       opt->conf = config_file_new(conf_path);
@@ -153,8 +179,8 @@ core_option_manager_t *core_option_new(const char *conf_path, const struct retro
       goto error;
 
    opt->size = size;
+   size      = 0;
 
-   size = 0;
    for (var = vars; var->key && var->value; size++, var++)
    {
       if (!parse_variable(opt, size, var))
@@ -168,68 +194,194 @@ error:
    return NULL;
 }
 
+/**
+ * core_option_updated:
+ * @opt              : options manager handle
+ *
+ * Has a core option been updated?
+ *
+ * Returns: true (1) if a core option has been updated,
+ * otherwise false (0).
+ **/
 bool core_option_updated(core_option_manager_t *opt)
 {
+   if (!opt)
+      return false;
    return opt->updated;
 }
 
-void core_option_flush(core_option_manager_t *opt)
+/**
+ * core_option_flush:
+ * @opt              : options manager handle
+ *
+ * Writes core option key-pair values to file.
+ *
+ * Returns: true (1) if core option values could be
+ * successfully saved to disk, otherwise false (0).
+ **/
+bool core_option_flush(core_option_manager_t *opt)
 {
    size_t i;
+
    for (i = 0; i < opt->size; i++)
    {
-      struct core_option *option = &opt->opts[i];
-      config_set_string(opt->conf, option->key, core_option_get_val(opt, i));
+      struct core_option *option = (struct core_option*)&opt->opts[i];
+
+      if (option)
+         config_set_string(opt->conf, option->key, core_option_get_val(opt, i));
    }
-   config_file_write(opt->conf, opt->conf_path);
+
+   return config_file_write(opt->conf, opt->conf_path);
 }
 
+/**
+ * core_option_size:
+ * @opt              : options manager handle
+ *
+ * Gets total number of options.
+ *
+ * Returns: Total number of options.
+ **/
 size_t core_option_size(core_option_manager_t *opt)
 {
+   if (!opt)
+      return 0;
    return opt->size;
 }
 
-const char *core_option_get_desc(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_get_desc:
+ * @opt              : options manager handle
+ * @index            : index identifier of the option
+ *
+ * Gets description for an option.
+ *
+ * Returns: Description for an option.
+ **/
+const char *core_option_get_desc(core_option_manager_t *opt, size_t idx)
 {
-   return opt->opts[index].desc;
+   if (!opt)
+      return NULL;
+   return opt->opts[idx].desc;
 }
 
-const char *core_option_get_val(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_get_val:
+ * @opt              : options manager handle
+ * @index            : index identifier of the option
+ *
+ * Gets value for an option.
+ *
+ * Returns: Value for an option.
+ **/
+const char *core_option_get_val(core_option_manager_t *opt, size_t idx)
 {
-   struct core_option *option = &opt->opts[index];
+   struct core_option *option = NULL;
+   if (!opt)
+      return NULL;
+   option = (struct core_option*)&opt->opts[idx];
+   if (!option)
+      return NULL;
    return option->vals->elems[option->index].data;
 }
 
-struct string_list *core_option_get_vals(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_get_vals:
+ * @opt                   : pointer to core option manager object.
+ * @idx                   : idx of core option.
+ *
+ * Gets list of core option values from core option at index @idx.
+ *
+ * Returns: string list of core option values if successful, otherwise
+ * NULL.
+ **/
+struct string_list *core_option_get_vals(
+      core_option_manager_t *opt, size_t idx)
 {
-   return opt->opts[index].vals;
+   if (!opt)
+      return NULL;
+   return opt->opts[idx].vals;
 }
 
-void core_option_set_val(core_option_manager_t *opt, size_t index, size_t val_index)
+void core_option_set_val(core_option_manager_t *opt,
+      size_t idx, size_t val_idx)
 {
-   struct core_option *option= (struct core_option*)&opt->opts[index];
-   option->index = val_index % option->vals->size;
-   opt->updated = true;
+   struct core_option *option= NULL;
+
+   if (!opt)
+      return;
+   
+   option = (struct core_option*)&opt->opts[idx];
+
+   if (!option)
+      return;
+
+   option->index = val_idx % option->vals->size;
+   opt->updated  = true;
 }
 
-void core_option_next(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_next:
+ * @opt                   : pointer to core option manager object.
+ * @idx                   : index of core option to be reset to defaults.
+ *
+ * Get next value for core option specified by @idx.
+ * Options wrap around.
+ **/
+void core_option_next(core_option_manager_t *opt, size_t idx)
 {
-   struct core_option *option = &opt->opts[index];
+   struct core_option *option = NULL;
+
+   if (!opt)
+      return;
+   
+   option = (struct core_option*)&opt->opts[idx];
+
+   if (!option)
+      return;
+
    option->index = (option->index + 1) % option->vals->size;
-   opt->updated = true;
+   opt->updated  = true;
 }
 
-void core_option_prev(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_prev:
+ * @opt                   : pointer to core option manager object.
+ * @idx                   : index of core option to be reset to defaults.
+ * Options wrap around.
+ *
+ * Get previous value for core option specified by @idx.
+ * Options wrap around.
+ **/
+void core_option_prev(core_option_manager_t *opt, size_t idx)
 {
-   struct core_option *option = &opt->opts[index];
-   option->index = (option->index + option->vals->size - 1) % option->vals->size;
-   opt->updated = true;
+   struct core_option *option = NULL;
+
+   if (!opt)
+      return;
+   
+   option = (struct core_option*)&opt->opts[idx];
+
+   if (!option)
+      return;
+
+   option->index = (option->index + option->vals->size - 1) %
+      option->vals->size;
+   opt->updated  = true;
 }
 
-void core_option_set_default(core_option_manager_t *opt, size_t index)
+/**
+ * core_option_set_default:
+ * @opt                   : pointer to core option manager object.
+ * @idx                   : index of core option to be reset to defaults.
+ *
+ * Reset core option specified by @idx and sets default value for option.
+ **/
+void core_option_set_default(core_option_manager_t *opt, size_t idx)
 {
-   opt->opts[index].index = 0;
-   opt->updated = true;
+   if (!opt)
+      return;
+
+   opt->opts[idx].index = 0;
+   opt->updated         = true;
 }
-
-

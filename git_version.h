@@ -1,5 +1,6 @@
 /*  RetroArch - A frontend for libretro.
  *  Copyright (C) 2010-2014 - Hans-Kristian Arntzen
+ *  Copyright (C) 2011-2015 - Daniel De Matteis
  * 
  *  RetroArch is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
@@ -20,7 +21,8 @@
 extern "C" {
 #endif
 
-// Put this in a separate file so we don't have to rebuilt retroarch.c every single build.
+/* Put this in a separate file so we don't have to rebuilt 
+ * retroarch.c every single build. */
 extern const char rarch_git_version[];
 
 #ifdef __cplusplus

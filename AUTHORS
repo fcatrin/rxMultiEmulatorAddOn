@@ -2,23 +2,15 @@ Hans-Kristian Arntzen - <maister@archlinux.us>
    - Main code
    - Initial Gamecube/Wii libogc port
 
+Daniel De Matteis - <libretro@gmail.com>
+   - Maintainer
+   - Main code
+
 Devin J. Pohly - <djpohly@djpohly.com>
    - Joypad axis support
 
 Chris Moeller - <kode54@gmail.com> 
    - CoreAudio audio driver
-
-Daniel De Matteis - <libretro@gmail.com>
-   - Maintainer
-   - PlayStation 3 port
-   - XBox 360 XDK port
-   - Libxenon port
-   - XBox 1 port
-   - Android port
-   - OpenSL ES audio driver
-   - Gamecube/Wii libogc port
-   - Blackberry 10/Playbook port
-   - iOS port patches
 
 Tobias Jakobi - <TBA>
    - OMAP graphics driver
@@ -44,12 +36,16 @@ Michael Lelli - <toadking@toadking.com>
    - Linux Raw keyboard input driver
    - Android port patches
 
+Ali Bouhlel - <aliaspider@gmail.com>
+   - PSP port
+   - Convoluted Cosine resampler
+
 Darren Alton -
    - OpenPandora port
 
 Fabian Knopf -
    - WGL multi-monitor support
-   - D3D9 overlay, multi-monitor and RGUI support
+   - D3D9 overlay, multi-monitor and menu support
 
 Gražvydas Ignotas -
    - ARM Linux patches
@@ -59,3 +55,19 @@ Saggi Mizrahi -
 
 Alfred Agrell - <floating@muncher.se>
    - Rewritten savestate manager
+   
+Jean-André Santoni - <jean.andre.santoni@gmail.com>
+   - Lakka menu driver
+
+Morgane Alonso -
+   - Lakka menu driver (graphic design)
+
+Timo Strunk - <Timo.Strunk@gmail.com>
+   - 7zip support
+
+Higor Euripedes - <TBA>
+   - SDL2 drivers
+
+Jay McCarthy - <jay.mccarthy@gmail.com>
+   - CoreText font driver
+   - (Apple) CFRunLoop improvements
