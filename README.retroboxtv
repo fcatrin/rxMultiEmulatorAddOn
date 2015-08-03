@@ -1,0 +1,14 @@
+== Para trabajar en Eclipse ==
+
+* Importar este proyecto desde SVN.  Este proyecto abarca todas las plataformas. Usa el nombre RetroArch_
+* Import -> Existing projects into workspace -> RetroArch/android/phoenix
+  Esto creará el proyecto RetroArch que contiene la versión Android
+  NO SE DEBE usar la opcion "copiar archivos" al importar, ya que en SVN es un solo proyecto RetroArch
+*  Import -> Existing projects into workspace -> RetroArch/android/phoenix/libs/appcompat
+*  Import -> Existing projects into workspace -> RetroArch/android/phoenix/libs/googleplay
+
+== Para compilar y probar ==
+* Entrar al directorio jni y correr ndk-build (probado exitosamente con ndk-9d)
+* Correr el proyecto RetroArch
+
+
