@@ -5,8 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Iterator;
+
+import org.json.JSONObject;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -128,9 +132,12 @@ public final class UserPreferences
 	 * 
 	 * @param ctx the current {@link Context}.
 	 */
-	public static void updateConfigFile(Context ctx)
+	public static void updateConfigFile(Activity ctx)
 	{
 		String path = getDefaultConfigPath(ctx);
+		 File f = new File(path);
+		 if (f.exists()) f.delete();  // start with clean config
+         
 		ConfigFile config = new ConfigFile(path);
 
 		Log.i(TAG, "Writing config to: " + path);
@@ -142,7 +149,43 @@ public final class UserPreferences
 		
 		config.setString("libretro_directory", coreDir);
 		config.setInt("audio_out_rate", getOptimalSamplingRate(ctx));
+		
+		config.setString("libretro_info_path",prefs.getString("libretro_info_path", ""));
+		config.setBoolean("log_verbosity", true);
+		config.setBoolean("core_specific_config", false);
+		
+		String jConfig = ctx.getIntent().getStringExtra("RETROBOX_CONFIG");
+		if (jConfig != null) {
+			try {
+				JSONObject o = new JSONObject(jConfig);
+				for (Iterator<String> iter = o.keys(); iter.hasNext();) {
 
+					String key = iter.next();
+
+					// special case
+					if (key.equals("video_aspect_ratio")) {
+						Log.d("AspectRatio", "" + o.getDouble("video_aspect_ratio"));
+						config.setBoolean("video_force_aspect", true);
+						config.setDouble("video_aspect_ratio", o.getDouble("video_aspect_ratio"));
+						continue;
+					}
+
+					try {
+						boolean boolValue = o.getBoolean(key);
+						config.setBoolean(key, boolValue);
+						continue;
+					} catch (Exception e) {
+					}
+
+					String sValue = o.optString(key);
+					config.setString(key, sValue);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
 		// Refactor this entire mess and make this usable for per-core config
 		if (Build.VERSION.SDK_INT >= 17 && prefs.getBoolean("audio_latency_auto", true))
 		{

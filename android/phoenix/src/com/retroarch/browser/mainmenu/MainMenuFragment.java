@@ -184,7 +184,7 @@ public final class MainMenuFragment extends PreferenceListFragment implements On
 		// Resume Content
 		if (prefKey.equals("resumeContentPref"))
 		{
-			UserPreferences.updateConfigFile(ctx);
+			// UserPreferences.updateConfigFile(ctx);
 			final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 			final Intent retro = getRetroActivity();
 			
