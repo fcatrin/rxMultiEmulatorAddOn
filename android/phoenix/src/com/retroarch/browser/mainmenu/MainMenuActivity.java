@@ -2,7 +2,7 @@ package com.retroarch.browser.mainmenu;
 
 import java.io.File;
 
-import com.retroarch.R;
+import retrobox.retroarch.R;
 import com.retroarch.browser.preferences.util.UserPreferences;
 
 import android.content.SharedPreferences;

@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.retroarch"
+    package="retrobox.retroarch"
     android:versionCode="42"
     android:versionName="1.2.2"
     android:installLocation="preferExternal">
