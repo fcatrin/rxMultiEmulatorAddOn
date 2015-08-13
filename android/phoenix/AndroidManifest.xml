@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="retrobox.retroarch"
+    android:sharedUserId="psychoworld.retrobox"
     android:versionCode="12200"
     android:versionName="1.2.2-0"
     android:installLocation="preferExternal">
