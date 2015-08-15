@@ -3,7 +3,7 @@
     android:sharedUserId="psychoworld.retrobox"
     android:versionCode="12200"
     android:versionName="1.2.2-0"
-    android:installLocation="preferExternal">
+    android:installLocation="auto">
     <uses-feature android:glEsVersion="0x00020000" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
     <uses-feature android:name="android.software.leanback" android:required="false" />
@@ -36,10 +36,22 @@
         <activity android:name="com.retroarch.browser.retroactivity.RetroActivityFuture" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" android:launchMode="singleInstance" android:screenOrientation="sensorLandscape">
             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
-        </activity>
+            <intent-filter>
+                <action android:name="retrobox.retroarch.future" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		</activity>
         <activity android:name="com.retroarch.browser.retroactivity.RetroActivityPast" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:launchMode="singleInstance">
             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
+        </activity>
+	    <activity android:name="com.retroarch.browser.retroactivity.RetroBoxWrapper"
+           android:screenOrientation="sensorLandscape" 
+           android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:excludeFromRecents="true" >
+            <intent-filter>
+                <action android:name="retrobox.retroarch" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>
