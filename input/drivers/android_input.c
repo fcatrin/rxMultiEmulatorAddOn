@@ -93,6 +93,7 @@ typedef struct android_input
    ASensorManager *sensorManager;
    ASensorEventQueue *sensorEventQueue;
    const input_device_driver_t *joypad;
+   bool is_back_pressed;
 } android_input_t;
 
 static void frontend_android_get_version_sdk(int32_t *sdk);
@@ -426,6 +427,7 @@ static void *android_input_init(void)
    if (!android)
       return NULL;
 
+   android->is_back_pressed = false;
    android->pads_connected = 0;
    android->joypad         = input_joypad_init_driver(
          settings->input.joypad_driver, android);
@@ -520,6 +522,10 @@ static INLINE void android_input_poll_event_type_key(
       case AKEY_EVENT_ACTION_DOWN:
          BIT_SET(buf, keycode);
          break;
+   }
+
+   if (keycode == AKEYCODE_BACK) {
+	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
    }
 
    if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
@@ -881,7 +887,9 @@ static bool android_input_key_pressed(void *data, int key)
 
 static bool android_input_meta_key_pressed(void *data, int key)
 {
-   return false;
+	android_input_t *android = (android_input_t*)data;
+	if (key == RARCH_MENU_TOGGLE) return android->is_back_pressed;
+	return false;
 }
 
 static void android_input_free_input(void *data)
