@@ -210,7 +210,7 @@ retro_input_t input_driver_keys_pressed(void)
    {
       bool state = false;
       if ((!driver->block_libretro_input && ((key < RARCH_FIRST_META_KEY)))
-            || !driver->block_hotkey)
+            || !driver->block_hotkey || key == RARCH_MENU_TOGGLE)
          state = input->key_pressed(driver->input_data, key);
 
       if (key >= RARCH_FIRST_META_KEY)
