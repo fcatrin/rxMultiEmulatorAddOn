@@ -128,26 +128,12 @@ static void check_fast_forward_button(driver_t *driver,
 static void check_stateslots(settings_t *settings,
       bool pressed_increase, bool pressed_decrease)
 {
-   char msg[PATH_MAX_LENGTH] = {0};
-
    /* Save state slots */
-   if (pressed_increase)
-      settings->state_slot++;
-   else if (pressed_decrease)
-   {
-      if (settings->state_slot > 0)
-         settings->state_slot--;
+   if (pressed_increase) {
+	   event_command(EVENT_CMD_SAVE_SLOT_PLUS);
+   } if (pressed_decrease)  {
+	   event_command(EVENT_CMD_SAVE_SLOT_MINUS);
    }
-   else
-      return;
-
-   snprintf(msg, sizeof(msg), "%s: %d",
-         msg_hash_to_str(MSG_STATE_SLOT),
-         settings->state_slot);
-
-   rarch_main_msg_queue_push(msg, 1, 180, true);
-
-   RARCH_LOG("%s\n", msg);
 }
 
 /**

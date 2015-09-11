@@ -990,6 +990,21 @@ static void event_main_state(unsigned cmd)
    RARCH_LOG("%s\n", msg);
 }
 
+static void event_slot_state() {
+	char msg[PATH_MAX_LENGTH]  = {0};
+	settings_t *settings       = config_get_ptr();
+
+	snprintf(msg, sizeof(msg), "%s: %d",
+		msg_hash_to_str(MSG_STATE_SLOT),
+		settings->state_slot);
+
+	rarch_main_msg_queue_push(msg, 1, 180, true);
+
+	RARCH_LOG("%s\n", msg);
+
+}
+
+
 static bool event_update_system_info(struct retro_system_info *_info,
       bool *load_no_content)
 {
@@ -1129,6 +1144,15 @@ bool event_command(enum event_command cmd)
 
          event_main_state(cmd);
          break;
+      case EVENT_CMD_SAVE_SLOT_PLUS:
+    	  settings->state_slot++;
+    	  event_slot_state();
+    	  break;
+      case EVENT_CMD_SAVE_SLOT_MINUS:
+    	  if (settings->state_slot>0) settings->state_slot--;
+    	  event_slot_state();
+          break;
+
       case EVENT_CMD_TAKE_SCREENSHOT:
          if (!take_screenshot())
             return false;

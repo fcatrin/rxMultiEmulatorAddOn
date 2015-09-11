@@ -20,7 +20,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		QUIT,
 		RESET,
 		LOAD_STATE,
-		SAVE_STATE
+		SAVE_STATE,
+		SAVE_SLOT_PLUS,
+		SAVE_SLOT_MINUS
 	}
 	
 	public static native void eventCommand(int command);
@@ -31,6 +33,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     static final private int SAVE_ID = Menu.FIRST +2;
     static final private int QUIT_ID = Menu.FIRST +3;
     static final private int RESET_ID = Menu.FIRST +4;
+    static final private int SAVE_SLOT_PLUS  = Menu.FIRST +5;
+    static final private int SAVE_SLOT_MINUS = Menu.FIRST +6;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -39,6 +43,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
         menu.add(0, CANCEL_ID, 0, "Cancel");
         menu.add(0, SAVE_ID, 0, "Save State");
         menu.add(0, LOAD_ID, 0, "Load State");
+        menu.add(0, SAVE_SLOT_PLUS, 0, "Next save slot");
+        menu.add(0, SAVE_SLOT_MINUS, 0, "Prev save slot");
         menu.add(0, RESET_ID, 0, "Reset");
         menu.add(0, QUIT_ID, 0, "Quit");
         
@@ -51,6 +57,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	        switch (item.getItemId()) {
 	        case LOAD_ID   : uiLoadState(); return true;
 	        case SAVE_ID   : uiSaveState(); return true;
+	        case SAVE_SLOT_PLUS   : uiNextSaveSlot(); return true;
+	        case SAVE_SLOT_MINUS  : uiPrevSaveSlot(); return true;
 	        case RESET_ID  : uiReset(); return true;
 	        case QUIT_ID   : uiQuit(); return true;
 	        case CANCEL_ID : return true;
@@ -73,6 +81,14 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 
 	private void uiLoadState() {
 		eventCommand(EventCommand.LOAD_STATE.ordinal());
+	}
+
+	private void uiNextSaveSlot() {
+		eventCommand(EventCommand.SAVE_SLOT_PLUS.ordinal());
+	}
+	
+	private void uiPrevSaveSlot() {
+		eventCommand(EventCommand.SAVE_SLOT_MINUS.ordinal());
 	}
 
 	@Override
