@@ -442,7 +442,7 @@ static void do_state_check_menu_toggle(settings_t *settings, global_t *global)
  *
  * Returns: 0.
  **/
-static int do_pre_state_checks(settings_t *settings,
+static int do_pre_state_checks(driver_t *driver, settings_t *settings,
       global_t *global, runloop_t *runloop,
       event_cmd_state_t *cmd)
 {
@@ -459,8 +459,11 @@ static int do_pre_state_checks(settings_t *settings,
       event_command(EVENT_CMD_GRAB_MOUSE_TOGGLE);
 
 #ifdef HAVE_MENU
-   if (cmd->menu_pressed || (global->core_type == CORE_TYPE_DUMMY))
-      do_state_check_menu_toggle(settings, global);
+   if (cmd->menu_pressed || (global->core_type == CORE_TYPE_DUMMY)) {
+	   // do_state_check_menu_toggle(settings, global);
+	   const frontend_ctx_driver_t *frontend = driver->frontend_ctx;
+	   if (frontend->show_menu) frontend->show_menu();
+   }
 #endif
 
    return 0;
@@ -1075,7 +1078,7 @@ int rarch_main_iterate(void)
    if (system->frame_time.callback)
       rarch_update_frame_time(driver, settings, runloop);
 
-   do_pre_state_checks(settings, global, runloop, &cmd);
+   do_pre_state_checks(driver, settings, global, runloop, &cmd);
 
 #ifdef HAVE_OVERLAY
    rarch_main_iterate_linefeed_overlay(driver, settings);

@@ -54,6 +54,7 @@ struct android_app
    char current_ime[PATH_MAX_LENGTH];
    jmethodID getIntent;
    jmethodID onRetroArchExit;
+   jmethodID showOptionsMenu;
    jmethodID getStringExtra;
    jmethodID clearPendingIntent;
    jmethodID hasPendingIntent;

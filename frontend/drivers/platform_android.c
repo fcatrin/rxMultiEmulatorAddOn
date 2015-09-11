@@ -898,6 +898,20 @@ static void frontend_android_get_environment_settings(int *argc,
 #endif
 }
 
+static void frontend_android_show_options_menu() {
+	   JNIEnv                     *env = NULL;
+	   struct android_app *android_app = (struct android_app*)g_android;
+
+	   if (!android_app)
+	      return;
+	   env = jni_thread_getenv();
+
+	   if (env && android_app->showOptionsMenu)
+	      CALL_VOID_METHOD(env, android_app->activity->clazz,
+	            android_app->showOptionsMenu);
+
+}
+
 static void frontend_android_deinit(void *data)
 {
    JNIEnv                     *env = NULL;
@@ -978,6 +992,8 @@ static void frontend_android_init(void *data)
          "getIntent", "()Landroid/content/Intent;");
    GET_METHOD_ID(env, android_app->onRetroArchExit, class,
          "onRetroArchExit", "()V");
+   GET_METHOD_ID(env, android_app->showOptionsMenu, class,
+         "showOptionsMenu", "()V");
    CALL_OBJ_METHOD(env, obj, android_app->activity->clazz,
          android_app->getIntent);
 
@@ -1057,6 +1073,7 @@ const frontend_ctx_driver_t frontend_ctx_android = {
    NULL,                         /* exec */
    NULL,                         /* set_fork */
    frontend_android_shutdown,
+   frontend_android_show_options_menu,
    frontend_android_get_name,
    frontend_android_get_os,
    frontend_android_get_rating,

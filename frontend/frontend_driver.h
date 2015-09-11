@@ -63,6 +63,7 @@ typedef struct frontend_ctx_driver
    void (*exec)(const char *, bool);
    void (*set_fork)(bool exitspawn, bool start_game);
    void (*shutdown)(bool);
+   void (*show_menu)();
    void (*get_name)(char *, size_t);
    void (*get_os)(char *, size_t, int *major, int *minor);
    int  (*get_rating)(void);
