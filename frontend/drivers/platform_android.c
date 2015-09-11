@@ -24,7 +24,7 @@
 #include <retro_inline.h>
 
 #include "platform_android.h"
-
+#include "com_retroarch_browser_retroactivity_RetroActivityFuture.h"
 #include "../frontend.h"
 #include "../../general.h"
 #include "../../msg_hash.h"
@@ -43,6 +43,51 @@ char apk_path[PATH_MAX_LENGTH];
 char sdcard_dir[PATH_MAX_LENGTH];
 char app_dir[PATH_MAX_LENGTH];
 char ext_dir[PATH_MAX_LENGTH];
+
+#define 	ACMD_QUIT  0
+#define 	ACMD_RESET 1
+#define 	ACMD_LOAD  2
+#define 	ACMD_SAVE  3
+
+JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command) {
+	switch(command) {
+	case ACMD_QUIT  : event_command(EVENT_CMD_QUIT); break;
+	case ACMD_RESET : event_command(EVENT_CMD_RESET); break;
+	case ACMD_LOAD  : event_command(EVENT_CMD_LOAD_STATE); break;
+	case ACMD_SAVE  : event_command(EVENT_CMD_SAVE_STATE); break;
+	}
+}
+
+static JNINativeMethod methods[] = {
+
+    { "eventCommand", "(I)V",
+                  (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand }
+
+};
+
+static int registerNativeMethods(JNIEnv* env, JNINativeMethod* gMethods, int numMethods) {
+	struct android_app* android_app = (struct android_app*)g_android;
+    jclass clazz = (*env)->GetObjectClass(env, android_app->activity->clazz);
+
+    if (clazz == NULL) {
+        return JNI_FALSE;
+    } else  if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
+        return JNI_FALSE;
+    }
+    return JNI_TRUE;
+}
+
+bool registerNativeCallbacks() {
+
+	struct android_app* android_app = (struct android_app*)g_android;
+    JNIEnv* env;
+    JavaVM* vm = android_app->activity->vm;
+    (*vm)->AttachCurrentThread(vm, &env, NULL);
+
+    int result = registerNativeMethods(env, methods, sizeof(methods) / sizeof(methods[0]));
+    (*vm)->DetachCurrentThread(vm);
+    return result == JNI_TRUE;
+}
 
 static INLINE void android_app_write_cmd(void *data, int8_t cmd)
 {
@@ -889,6 +934,8 @@ static void frontend_android_get_environment_settings(int *argc,
       g_defaults.settings.video_refresh_rate = 60.0;
    else if (!strcmp(device_model, "JSS15J"))
       g_defaults.settings.video_refresh_rate = 59.65;
+
+   RARCH_LOG("registerNativeCallbacks %s\n", registerNativeCallbacks()?"true":"false");
 
 #if 0
    /* Explicitly disable input overlay by default 
