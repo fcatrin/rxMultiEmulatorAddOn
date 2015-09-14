@@ -1152,7 +1152,9 @@ bool event_command(enum event_command cmd)
     	  if (settings->state_slot>0) settings->state_slot--;
     	  event_slot_state();
           break;
-
+      case EVENT_CMD_SWAP_DISK:
+    	  pretro_load_game_special(0, NULL, 0);
+    	  break;
       case EVENT_CMD_TAKE_SCREENSHOT:
          if (!take_screenshot())
             return false;

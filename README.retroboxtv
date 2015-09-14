@@ -8,7 +8,7 @@
 *  Import -> Existing projects into workspace -> RetroArch/android/phoenix/libs/googleplay
 
 == Para compilar y probar ==
-* Entrar al directorio jni y correr ndk-build (probado exitosamente con ndk-9d)
+* Entrar al directorio jni y correr ndk-build (probado exitosamente con ndk-10d)
 * Correr el proyecto RetroArch
 
 

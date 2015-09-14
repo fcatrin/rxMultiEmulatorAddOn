@@ -22,7 +22,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		LOAD_STATE,
 		SAVE_STATE,
 		SAVE_SLOT_PLUS,
-		SAVE_SLOT_MINUS
+		SAVE_SLOT_MINUS,
+		SWAP_DISK
 	}
 	
 	public static native void eventCommand(int command);
@@ -35,6 +36,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     static final private int RESET_ID = Menu.FIRST +4;
     static final private int SAVE_SLOT_PLUS  = Menu.FIRST +5;
     static final private int SAVE_SLOT_MINUS = Menu.FIRST +6;
+    static final private int SWAP_ID = Menu.FIRST +7;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -45,6 +47,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
         menu.add(0, LOAD_ID, 0, "Load State");
         menu.add(0, SAVE_SLOT_PLUS, 0, "Next save slot");
         menu.add(0, SAVE_SLOT_MINUS, 0, "Prev save slot");
+        if (getIntent().hasExtra("MULTIDISK")) {
+        	menu.add(0, SWAP_ID, 0, "Swap Disk");
+        }
         menu.add(0, RESET_ID, 0, "Reset");
         menu.add(0, QUIT_ID, 0, "Quit");
         
@@ -59,6 +64,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	        case SAVE_ID   : uiSaveState(); return true;
 	        case SAVE_SLOT_PLUS   : uiNextSaveSlot(); return true;
 	        case SAVE_SLOT_MINUS  : uiPrevSaveSlot(); return true;
+	        case SWAP_ID  : uiSwapDisk(); return true;
 	        case RESET_ID  : uiReset(); return true;
 	        case QUIT_ID   : uiQuit(); return true;
 	        case CANCEL_ID : return true;
@@ -89,6 +95,10 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	
 	private void uiPrevSaveSlot() {
 		eventCommand(EventCommand.SAVE_SLOT_MINUS.ordinal());
+	}
+	
+	private void uiSwapDisk() {
+		eventCommand(EventCommand.SWAP_DISK.ordinal());
 	}
 
 	@Override
