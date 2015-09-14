@@ -246,7 +246,20 @@ static void set_basename(const char *path)
    global_t *global   = global_get_ptr();
 
    strlcpy(global->fullpath, path, sizeof(global->fullpath));
-   strlcpy(global->basename, path, sizeof(global->basename));
+
+   char codename[PATH_MAX_LENGTH];
+   if (strstr(path, "|")) { // multidisk
+	   char basename[PATH_MAX_LENGTH];
+	   strlcpy(basename, path, sizeof(basename));
+	   strlcpy(codename, strtok(basename, "|"), sizeof(codename));
+	   strlcat(codename, "/", sizeof(codename));
+	   strlcat(codename, strtok(NULL, "|"), sizeof(codename));
+   } else {
+	   strlcpy(codename, path, sizeof(codename));
+   }
+
+   strlcpy(global->basename, codename, sizeof(global->basename));
+   RARCH_LOG("set global basename to %s\n", global->basename);
 
 #ifdef HAVE_COMPRESSION
    /* Removing extension is a bit tricky for compressed files.
@@ -269,11 +282,14 @@ static void set_basename(const char *path)
     *
     */
    path_basedir(global->basename);
-   fill_pathname_dir(global->basename, path, "", sizeof(global->basename));
+   fill_pathname_dir(global->basename, codename, "", sizeof(global->basename));
 #endif
 
    if ((dst = strrchr(global->basename, '.')))
       *dst = '\0';
+
+   RARCH_LOG("exit with global basename to %s\n", global->basename);
+
 }
 
 static void set_special_paths(char **argv, unsigned num_content)
