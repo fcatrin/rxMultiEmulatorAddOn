@@ -2,7 +2,10 @@ package com.retroarch.browser.retroactivity;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,15 +18,24 @@ import com.retroarch.browser.preferences.util.UserPreferences;
 public class RetroBoxWrapper extends Activity {
 	private static final String RETROARCH_FUTURE = "retrobox.retroarch.future";
 	private static final String RETROARCH_PAST = "retrobox.retroarch.past";
+	private static final String KEY_SIGNATURE = "signature";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		String signature = getIntent().getStringExtra("RETROBOX_SIGNATURE");
+		String lastSignature = getLastSignature();
+		if (signature.equals(lastSignature)) {
+			finish();
+			return;
+		}
+		
+		saveLastSignature(signature);
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-		Log.d("RetroArch", "RetroBoxWrapper");
 
 		setTitle(getIntent().getStringExtra("TITLE"));
 		UserPreferences.updateConfigFile(this);
@@ -37,8 +49,23 @@ public class RetroBoxWrapper extends Activity {
 		startActivityForResult(intent, 1);
 	}
 
+	private void saveLastSignature(String signature) {
+		Editor editor = getPreferences().edit();
+		editor.putString(KEY_SIGNATURE, signature);
+		editor.commit();
+	}
+
+	private String getLastSignature() {
+		return getPreferences().getString(KEY_SIGNATURE, "");
+	}
+	
+	private SharedPreferences getPreferences() {
+		return getSharedPreferences("RetroBoxWrapper", Context.MODE_PRIVATE);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.d("RetroArch", "onActivityResult.finish()");
 		finish();
 	}
 
