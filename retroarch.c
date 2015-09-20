@@ -1481,7 +1481,7 @@ void rarch_main_set_state(unsigned cmd)
       case RARCH_ACTION_STATE_QUIT:
 	     if (global)
             system->shutdown = true;
-         rarch_main_set_state(RARCH_ACTION_STATE_MENU_RUNNING_FINISHED);
+         // rarch_main_set_state(RARCH_ACTION_STATE_MENU_RUNNING_FINISHED);
          break;
       case RARCH_ACTION_STATE_FORCE_QUIT:
          rarch_main_set_state(RARCH_ACTION_STATE_QUIT);
