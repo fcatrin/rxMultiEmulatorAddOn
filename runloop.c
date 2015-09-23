@@ -971,6 +971,12 @@ static bool rarch_main_cmd_get_state_menu_toggle_button_combo(
          if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_R3))
             return false;
          break;
+      case 3:
+		  if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_START))
+			 return false;
+		  if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_SELECT))
+			 return false;
+		  break;
    }
 
    driver->flushing_input = true;
