@@ -75,6 +75,7 @@ typedef struct state_device
 {
    int id;
    int port;
+   int ignore_back;
    char name[256];
 } state_device_t;
 
@@ -524,7 +525,7 @@ static INLINE void android_input_poll_event_type_key(
          break;
    }
 
-   if (keycode == AKEYCODE_BACK) {
+   if (keycode == AKEYCODE_BACK && !android->pad_states[port].ignore_back) {
 	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
    }
 
@@ -694,12 +695,21 @@ static void handle_hotplug(android_input_t *android,
       }
    }
 
-   if (!back_mapped && settings->input.back_as_menu_toggle_enable)
-      settings->input.autoconf_binds[*port][RARCH_MENU_TOGGLE].joykey = AKEYCODE_BACK;
 
    *port = android->pads_connected;
+   bool ignore_back = false;
+   unsigned bind;
+   for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
+	   ignore_back = settings->input.binds[*port][bind].joykey == AKEYCODE_BACK;
+   }
+
+   if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
+      settings->input.autoconf_binds[*port][RARCH_MENU_TOGGLE].joykey = AKEYCODE_BACK;
+   }
+
    android->pad_states[android->pads_connected].id = id;
    android->pad_states[android->pads_connected].port = *port;
+   android->pad_states[android->pads_connected].ignore_back = ignore_back;
    strlcpy(android->pad_states[*port].name, name_buf,
          sizeof(android->pad_states[*port].name));
 
