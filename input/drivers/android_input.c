@@ -724,6 +724,11 @@ static int android_input_get_id(android_input_t *android, AInputEvent *event)
    if (id == zeus_second_id)
       id = zeus_id;
 
+   settings_t *settings = config_get_ptr();
+   if (settings->input.join_device_ids && id == 2) {
+	   id = 1;
+   }
+
    return id;
 }
 

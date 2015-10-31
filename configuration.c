@@ -639,6 +639,7 @@ static void config_set_defaults(void)
    settings->input.overlay_opacity                 = 0.7f;
    settings->input.overlay_scale                   = 1.0f;
    settings->input.autodetect_enable               = input_autodetect_enable;
+   settings->input.join_device_ids                 = input_join_device_ids;
    *settings->input.keyboard_layout                = '\0';
 
    for (i = 0; i < MAX_USERS; i++)
@@ -1633,7 +1634,10 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_INT_BASE(conf, settings, input.turbo_duty_cycle, "input_duty_cycle");
 
    CONFIG_GET_BOOL_BASE(conf, settings, input.autodetect_enable, "input_autodetect_enable");
+   CONFIG_GET_BOOL_BASE(conf, settings, input.join_device_ids, "input_join_device_ids");
    CONFIG_GET_PATH_BASE(conf, settings, input.autoconfig_dir, "joypad_autoconfig_dir");
+
+   RARCH_LOG("read from config input_join_device_ids %s\n", settings->input.join_device_ids?"TRUE":"FALSE");
 
    if (!global->has_set_username)
       CONFIG_GET_PATH_BASE(conf, settings, username, "netplay_nickname");

@@ -726,6 +726,11 @@ static const unsigned turbo_duty_cycle = 3;
  * gamepads, plug-and-play style. */
 static const bool input_autodetect_enable = true;
 
+/* Join device Ids for devices that uses separate ids for the same gamepad
+ * like tha Archos Gamepad 2
+ */
+static const bool input_join_device_ids = false;
+
 /* Show the input descriptors set by the core instead 
  * of the default ones. */
 static const bool input_descriptor_label_show = true;

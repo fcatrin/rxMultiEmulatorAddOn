@@ -226,6 +226,7 @@ typedef struct settings
       unsigned device[MAX_USERS];
       char device_names[MAX_USERS][64];
       bool autodetect_enable;
+      bool join_device_ids;
       bool netplay_client_swap_input;
 
       unsigned turbo_period;
