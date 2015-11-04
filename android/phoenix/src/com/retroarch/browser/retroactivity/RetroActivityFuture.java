@@ -1,5 +1,8 @@
 package com.retroarch.browser.retroactivity;
 
+import retrobox.utils.ImmersiveModeSetter;
+import retrobox.vinput.Mapper;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,10 +13,15 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	public void onResume() {
 		super.onResume();
 
-		if (android.os.Build.VERSION.SDK_INT >= 19) {
-			View thisView = getWindow().getDecorView();
-			RetroBoxWrapper.setImmersiveMode(thisView);
-		}
+		ImmersiveModeSetter.postImmersiveMode(new Handler(), getWindow(), isStableLayout());
+	}
+	
+    private void setImmersiveMode() {
+    	ImmersiveModeSetter.get().setImmersiveMode(getWindow(), isStableLayout());
+	}
+
+	private boolean isStableLayout() {
+		return Mapper.hasGamepads();
 	}
 	
 	enum EventCommand {
