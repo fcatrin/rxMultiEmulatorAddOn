@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<style name="Theme.CustomTranslucent" parent="android:style/Theme.Translucent">
+    	<item name="android:windowNoTitle">true</item>
+    	<item name="android:windowIsTranslucent">true</item>
+    	<!--
+        <item name="android:backgroundDimEnabled">true</item>
+          <item name="android:backgroundDimAmount">0.5</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>  -->
+        <item name="android:background">@android:color/transparent</item>
+ </style> 
+ </resources>
+ 

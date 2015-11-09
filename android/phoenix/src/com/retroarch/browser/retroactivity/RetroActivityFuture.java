@@ -2,12 +2,14 @@ package com.retroarch.browser.retroactivity;
 
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.vinput.Mapper;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 
 public final class RetroActivityFuture extends RetroActivityCamera {
+	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 
 	@Override
 	public void onResume() {
@@ -24,7 +26,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		return Mapper.hasGamepads();
 	}
 	
-	enum EventCommand {
+	public enum EventCommand {
 		QUIT,
 		RESET,
 		LOAD_STATE,
@@ -37,49 +39,15 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	public static native void eventCommand(int command);
 
 	
-	static final private int CANCEL_ID = Menu.FIRST;
-    static final private int LOAD_ID = Menu.FIRST +1;
-    static final private int SAVE_ID = Menu.FIRST +2;
-    static final private int QUIT_ID = Menu.FIRST +3;
-    static final private int RESET_ID = Menu.FIRST +4;
-    static final private int SAVE_SLOT_PLUS  = Menu.FIRST +5;
-    static final private int SAVE_SLOT_MINUS = Menu.FIRST +6;
-    static final private int SWAP_ID = Menu.FIRST +7;
-    
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
+	static final public int RESULT_CANCEL_ID = Menu.FIRST;
+    static final public int RESULT_LOAD_ID = Menu.FIRST +1;
+    static final public int RESULT_SAVE_ID = Menu.FIRST +2;
+    static final public int RESULT_QUIT_ID = Menu.FIRST +3;
+    static final public int RESULT_RESET_ID = Menu.FIRST +4;
+    static final public int RESULT_SAVE_SLOT_PLUS  = Menu.FIRST +5;
+    static final public int RESULT_SAVE_SLOT_MINUS = Menu.FIRST +6;
+    static final public int RESULT_SWAP_ID = Menu.FIRST +7;
 
-        menu.add(0, CANCEL_ID, 0, "Cancel");
-        menu.add(0, SAVE_ID, 0, "Save State");
-        menu.add(0, LOAD_ID, 0, "Load State");
-        menu.add(0, SAVE_SLOT_PLUS, 0, "Next save slot");
-        menu.add(0, SAVE_SLOT_MINUS, 0, "Prev save slot");
-        if (getIntent().hasExtra("MULTIDISK")) {
-        	menu.add(0, SWAP_ID, 0, "Swap Disk");
-        }
-        menu.add(0, RESET_ID, 0, "Reset");
-        menu.add(0, QUIT_ID, 0, "Quit");
-        
-        return true;
-    }
-    
-    @Override
-    public boolean onMenuItemSelected(int featureId, MenuItem item) {
-    	if (item != null) {
-	        switch (item.getItemId()) {
-	        case LOAD_ID   : uiLoadState(); return true;
-	        case SAVE_ID   : uiSaveState(); return true;
-	        case SAVE_SLOT_PLUS   : uiNextSaveSlot(); return true;
-	        case SAVE_SLOT_MINUS  : uiPrevSaveSlot(); return true;
-	        case SWAP_ID  : uiSwapDisk(); return true;
-	        case RESET_ID  : uiReset(); return true;
-	        case QUIT_ID   : uiQuit(); return true;
-	        case CANCEL_ID : return true;
-	        }
-    	}
-        return super.onMenuItemSelected(featureId, item);
-    }
 	
     private void uiQuit() {
     	eventCommand(EventCommand.QUIT.ordinal());
@@ -109,25 +77,39 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		eventCommand(EventCommand.SWAP_DISK.ordinal());
 	}
 
-	@Override
-	public boolean onMenuOpened(int featureId, Menu menu) {
-		onPause();
-		return super.onMenuOpened(featureId, menu);
-	}
-
-	@Override
-	public void onOptionsMenuClosed(Menu menu) {
-		onResume();
-		super.onOptionsMenuClosed(menu);
-	}
-    
 	public void showOptionsMenu() {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				openOptionsMenu();
+				Intent intent = new Intent(RetroActivityFuture.this, RetroBoxMenu.class);
+				if (getIntent().hasExtra("MULTIDISK")) {
+					intent.getExtras().putBoolean("MULTIDISK", true);	
+				}
+				startActivityForResult(intent, REQUEST_CODE_OPTIONS);
 			}
 		});
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		
+		Log.e("MENU", "on activity result " + requestCode + ", " + resultCode + ", intent:" + data);
+		
+		if (requestCode == REQUEST_CODE_OPTIONS && resultCode == Activity.RESULT_OK) {
+			int optionId = data.getIntExtra("optionId", RESULT_CANCEL_ID);
+			
+	        switch (optionId) {
+	        case RESULT_LOAD_ID   : uiLoadState(); break;
+	        case RESULT_SAVE_ID   : uiSaveState(); break;
+	        case RESULT_SAVE_SLOT_PLUS   : uiNextSaveSlot(); break;
+	        case RESULT_SAVE_SLOT_MINUS  : uiPrevSaveSlot(); break;
+	        case RESULT_SWAP_ID  : uiSwapDisk(); break;
+	        case RESULT_RESET_ID  : uiReset(); break;
+	        case RESULT_QUIT_ID   : uiQuit(); break;
+	        case RESULT_CANCEL_ID : break;
+	        }
+		}
 	}
 	
 
