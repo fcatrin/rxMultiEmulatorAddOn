@@ -1,0 +1,176 @@
+### Eclipse Workspace Patch 1.0
+#P RetroArch
+Index: src/com/retroarch/browser/retroactivity/RetroActivityFuture.java
+===================================================================
+--- src/com/retroarch/browser/retroactivity/RetroActivityFuture.java	(revision 3083)
++++ src/com/retroarch/browser/retroactivity/RetroActivityFuture.java	(working copy)
+@@ -3,19 +3,62 @@
+ import retrobox.utils.ImmersiveModeSetter;
+ import retrobox.vinput.Mapper;
+ import android.app.Activity;
++import android.content.Context;
+ import android.content.Intent;
++import android.content.SharedPreferences;
++import android.content.SharedPreferences.Editor;
++import android.os.Bundle;
+ import android.os.Handler;
+ import android.util.Log;
+ import android.view.Menu;
+ 
+ public final class RetroActivityFuture extends RetroActivityCamera {
++	private static final String KEY_SIGNATURE = "signature";
++
+ 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
++	
++	
++	@Override
++	public void onCreate(Bundle savedInstanceState) {
++		super.onCreate(savedInstanceState);
++		/*
++		Log.d("MENU", "onCreate");
++		String signature = getIntent().getStringExtra("RETROBOX_SIGNATURE");
++		String lastSignature = getLastSignature();
++		Log.d("MENU", "rbsig:" + signature + ", last:" + lastSignature);
++		if (signature.equals(lastSignature)) {
++			Log.d("MENU", "onCreate Future finish");
++			finish();
++			return;
++		}
++		saveLastSignature(signature);
++		*/
++	}
+ 
+ 	@Override
+ 	public void onResume() {
++		SharedPreferences preferences = getPreferences();
++		final int optionId = preferences.getInt("optionId", RESULT_CANCEL_ID);
++		Editor editor = preferences.edit();
++		editor.remove("optionId");
++		editor.commit();
++		
++        switch (optionId) {
++        case RESULT_LOAD_ID   : uiLoadState(); break;
++        case RESULT_SAVE_ID   : uiSaveState(); break;
++        case RESULT_SAVE_SLOT_PLUS   : uiNextSaveSlot(); break;
++        case RESULT_SAVE_SLOT_MINUS  : uiPrevSaveSlot(); break;
++        case RESULT_SWAP_ID  : uiSwapDisk(); break;
++        case RESULT_RESET_ID  : uiReset(); break;
++        case RESULT_QUIT_ID   : uiQuit(); break;
++        case RESULT_CANCEL_ID : break;
++        }
++		
+ 		super.onResume();
++		Log.d("MENU", "onResume");
+ 
+ 		ImmersiveModeSetter.postImmersiveMode(new Handler(), getWindow(), isStableLayout());
++		
+ 	}
+ 	
+     private void setImmersiveMode() {
+@@ -50,6 +93,7 @@
+ 
+ 	
+     private void uiQuit() {
++    	Log.d("MENU", "send quit");
+     	eventCommand(EventCommand.QUIT.ordinal());
+ 	}
+ 
+@@ -97,7 +141,8 @@
+ 		Log.e("MENU", "on activity result " + requestCode + ", " + resultCode + ", intent:" + data);
+ 		
+ 		if (requestCode == REQUEST_CODE_OPTIONS && resultCode == Activity.RESULT_OK) {
+-			int optionId = data.getIntExtra("optionId", RESULT_CANCEL_ID);
++			SharedPreferences preferences = getPreferences();
++			int optionId = preferences.getInt("optionId", RESULT_CANCEL_ID);
+ 			
+ 	        switch (optionId) {
+ 	        case RESULT_LOAD_ID   : uiLoadState(); break;
+@@ -112,5 +157,17 @@
+ 		}
+ 	}
+ 	
++	private void saveLastSignature(String signature) {
++		Editor editor = getPreferences().edit();
++		editor.putString(KEY_SIGNATURE, signature);
++		editor.commit();
++	}
+ 
++	private String getLastSignature() {
++		return getPreferences().getString(KEY_SIGNATURE, "");
++	}
++	
++	private SharedPreferences getPreferences() {
++		return getSharedPreferences("RetroActivityFuture", Context.MODE_PRIVATE);
++	}
+ }
+Index: src/com/retroarch/browser/retroactivity/RetroBoxMenu.java
+===================================================================
+--- src/com/retroarch/browser/retroactivity/RetroBoxMenu.java	(revision 3084)
++++ src/com/retroarch/browser/retroactivity/RetroBoxMenu.java	(working copy)
+@@ -11,7 +11,10 @@
+ import xtvapps.core.Callback;
+ import xtvapps.core.content.KeyValue;
+ import android.app.Activity;
++import android.content.Context;
+ import android.content.Intent;
++import android.content.SharedPreferences;
++import android.content.SharedPreferences.Editor;
+ import android.os.Bundle;
+ import android.view.Window;
+ import android.view.WindowManager;
+@@ -59,15 +62,24 @@
+ 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
+ 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
+ 				
++				/*
+ 				Intent returnIntent = new Intent();
+ 				returnIntent.putExtra("optionId", optionId);
+ 				setResult(Activity.RESULT_OK, returnIntent);
+ 				
+ 				finish();
++				*/
++				SharedPreferences preferences = getPreferences();
++				Editor editor = preferences.edit();
++				editor.putInt("optionId", optionId);
++				editor.commit();
++				finish();
+ 			}
+ 		});
+ 	}
+ 	
+-	
++	private SharedPreferences getPreferences() {
++		return getSharedPreferences("RetroActivityFuture", Context.MODE_PRIVATE);
++	}
+ 	
+ }
+Index: AndroidManifest.xml
+===================================================================
+--- AndroidManifest.xml	(revision 3083)
++++ AndroidManifest.xml	(working copy)
+@@ -35,7 +35,7 @@
+             </intent-filter>
+              -->
+         </activity>
+-        <activity android:name="com.retroarch.browser.retroactivity.RetroActivityFuture" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" android:launchMode="singleTop" android:screenOrientation="sensorLandscape">
++        <activity android:name="com.retroarch.browser.retroactivity.RetroActivityFuture" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" android:launchMode="singleInstance" android:screenOrientation="sensorLandscape">
+             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
+             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
+             <intent-filter>
+@@ -43,7 +43,7 @@
+                 <category android:name="android.intent.category.DEFAULT" />
+             </intent-filter>
+ 		</activity>
+-        <activity android:name="com.retroarch.browser.retroactivity.RetroActivityPast" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:launchMode="singleTop">
++        <activity android:name="com.retroarch.browser.retroactivity.RetroActivityPast" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:launchMode="singleInstance">
+             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
+             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
+         </activity>
+@@ -57,6 +57,7 @@
+         </activity>
+ 		<activity android:name="com.retroarch.browser.retroactivity.RetroBoxMenu"
+            android:screenOrientation="sensorLandscape" 
++           android:launchMode="singleTop"
+            android:theme="@style/Theme.CustomTranslucent" android:excludeFromRecents="true" >
+         </activity>
+     </application>
