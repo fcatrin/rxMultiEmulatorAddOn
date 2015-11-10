@@ -172,6 +172,7 @@ public class RetroActivityCamera extends RetroActivityCommon
 	@Override
 	public void onPause()
 	{
+		Log.d("MENU", "RetroActivitCamera onPause start threadId:" + Thread.currentThread().getName());
 		// Save the current setting for updates
 		SharedPreferences prefs = UserPreferences.getPreferences(this);
 		SharedPreferences.Editor edit = prefs.edit();
@@ -179,12 +180,15 @@ public class RetroActivityCamera extends RetroActivityCommon
 		edit.apply();
 		
 		onCameraStop();
+		Log.d("MENU", "RetroActivitCamera onPause end threadId:" + Thread.currentThread().getName());
 		super.onPause();
 	}
 
 	@Override
 	public void onResume()
 	{
+		Log.d("MENU", "RetroActivitCamera onResume start threadId:" + Thread.currentThread().getName());
+
 		SharedPreferences prefs = UserPreferences.getPreferences(this);
 		SharedPreferences.Editor edit = prefs.edit();
 
@@ -206,20 +210,28 @@ public class RetroActivityCamera extends RetroActivityCommon
 			edit.apply();
 			camera_service_running = false;
 		}
+		Log.d("MENU", "RetroActivitCamera onResume end threadId:" + Thread.currentThread().getName());
+
 		super.onResume();
 	}
 
 	@Override
 	public void onDestroy()
 	{
+		Log.d("MENU", "RetroActivitCamera onDestroy start threadId:" + Thread.currentThread().getName());
+
 		onCameraFree();
+		Log.d("MENU", "RetroActivitCamera onDestroy end threadId:" + Thread.currentThread().getName());
+
 		super.onDestroy();
 	}
 
 	@Override
 	public void onStop()
 	{
+		Log.d("MENU", "RetroActivitCamera onStop start threadId:" + Thread.currentThread().getName());
 		onCameraStop();
+		Log.d("MENU", "RetroActivitCamera onStop end threadId:" + Thread.currentThread().getName());
 		super.onStop();
 	}
 }

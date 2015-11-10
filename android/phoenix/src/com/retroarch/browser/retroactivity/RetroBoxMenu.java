@@ -11,7 +11,10 @@ import xtvapps.core.AndroidFonts;
 import xtvapps.core.Callback;
 import xtvapps.core.content.KeyValue;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
@@ -59,15 +62,20 @@ public class RetroBoxMenu extends Activity {
 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
 				
-				Intent returnIntent = new Intent();
-				returnIntent.putExtra("optionId", optionId);
-				setResult(Activity.RESULT_OK, returnIntent);
+				SharedPreferences preferences = getPreferences();
+				Editor editor = preferences.edit();
+				editor.putInt("optionId", optionId);
+				editor.commit();
 				
 				finish();
 			}
 		});
 	}
 	
+	private SharedPreferences getPreferences() {
+		return getSharedPreferences("RetroBoxMenu", Context.MODE_PRIVATE);
+	}
 	
+
 	
 }
