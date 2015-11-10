@@ -46,7 +46,8 @@ public class RetroBoxMenu extends Activity {
         if (getIntent().hasExtra("MULTIDISK")) {
         	options.add(new ListOption("swap", "Swap Disk"));
         }
-        options.add(new ListOption("reset", "Reset"));
+        // disable rest (some emulators hang on reset)
+        // options.add(new ListOption("reset", "Reset"));
         options.add(new ListOption("quit", "Quit"));
 		
 		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options, new Callback<KeyValue>(){
