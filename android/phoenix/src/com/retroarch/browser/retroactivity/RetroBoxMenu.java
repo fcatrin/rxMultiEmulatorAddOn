@@ -58,7 +58,6 @@ public class RetroBoxMenu extends Activity {
 				
 				if (key.equals("save")) optionId = RetroActivityFuture.RESULT_SAVE_ID;
 				if (key.equals("load")) optionId = RetroActivityFuture.RESULT_LOAD_ID;
-				if (key.equals("slot")) optionId = RetroActivityFuture.RESULT_SAVE_SLOT_PLUS;
 				if (key.equals("swap")) optionId = RetroActivityFuture.RESULT_SWAP_ID;
 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;

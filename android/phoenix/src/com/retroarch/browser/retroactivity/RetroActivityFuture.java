@@ -15,6 +15,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 	
 	boolean testQuit = false;
+	private static final int saveSlot = 0;
 	
 	@Override
 	public void onResume() {
@@ -54,12 +55,11 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		RESET,
 		LOAD_STATE,
 		SAVE_STATE,
-		SAVE_SLOT_PLUS,
-		SAVE_SLOT_MINUS,
 		SWAP_DISK
 	}
 	
 	public static native void eventCommand(int command);
+	public static native void setSaveSlot(int slot);
 
 	
 	static final public int RESULT_CANCEL_ID = Menu.FIRST;
@@ -67,8 +67,6 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     static final public int RESULT_SAVE_ID = Menu.FIRST +2;
     static final public int RESULT_QUIT_ID = Menu.FIRST +3;
     static final public int RESULT_RESET_ID = Menu.FIRST +4;
-    static final public int RESULT_SAVE_SLOT_PLUS  = Menu.FIRST +5;
-    static final public int RESULT_SAVE_SLOT_MINUS = Menu.FIRST +6;
     static final public int RESULT_SWAP_ID = Menu.FIRST +7;
 
 	
@@ -86,19 +84,13 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	}
 
 	private void uiSaveState() {
+		setSaveSlot(saveSlot);
 		eventCommand(EventCommand.SAVE_STATE.ordinal());
 	}
 
 	private void uiLoadState() {
+		setSaveSlot(saveSlot);
 		eventCommand(EventCommand.LOAD_STATE.ordinal());
-	}
-
-	private void uiNextSaveSlot() {
-		eventCommand(EventCommand.SAVE_SLOT_PLUS.ordinal());
-	}
-	
-	private void uiPrevSaveSlot() {
-		eventCommand(EventCommand.SAVE_SLOT_MINUS.ordinal());
 	}
 	
 	private void uiSwapDisk() {
@@ -123,9 +115,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	    switch (optionId) {
         case RESULT_LOAD_ID   : uiLoadState(); break;
         case RESULT_SAVE_ID   : uiSaveState(); break;
-        case RESULT_SAVE_SLOT_PLUS   : uiNextSaveSlot(); break;
-        case RESULT_SAVE_SLOT_MINUS  : uiPrevSaveSlot(); break;
-        case RESULT_SWAP_ID  : uiSwapDisk(); break;
+        case RESULT_SWAP_ID   : uiSwapDisk(); break;
         case RESULT_RESET_ID  : uiReset(); break;
         case RESULT_QUIT_ID   : uiQuit(); break;
         case RESULT_CANCEL_ID : break;

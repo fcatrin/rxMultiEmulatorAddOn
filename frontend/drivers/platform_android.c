@@ -48,9 +48,7 @@ char ext_dir[PATH_MAX_LENGTH];
 #define 	ACMD_RESET 1
 #define 	ACMD_LOAD  2
 #define 	ACMD_SAVE  3
-#define 	ACMD_SAVE_SLOT_PLUS  4
-#define 	ACMD_SAVE_SLOT_MINUS  5
-#define 	ACMD_SWAP_DISK  6
+#define 	ACMD_SWAP_DISK  4
 
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command) {
 	switch(command) {
@@ -58,16 +56,21 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 	case ACMD_RESET : event_command(EVENT_CMD_RESET); break;
 	case ACMD_LOAD  : event_command(EVENT_CMD_LOAD_STATE); break;
 	case ACMD_SAVE  : event_command(EVENT_CMD_SAVE_STATE); break;
-	case ACMD_SAVE_SLOT_PLUS : event_command(EVENT_CMD_SAVE_SLOT_PLUS); break;
-	case ACMD_SAVE_SLOT_MINUS : event_command(EVENT_CMD_SAVE_SLOT_MINUS); break;
 	case ACMD_SWAP_DISK : event_command(EVENT_CMD_SWAP_DISK); break;
 	}
+}
+
+JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_setSaveSlot(JNIEnv *env, jclass clazz, jint slot) {
+	settings_t *settings = config_get_ptr();
+	settings->state_slot = slot;
 }
 
 static JNINativeMethod methods[] = {
 
     { "eventCommand", "(I)V",
-                  (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand }
+                  (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand },
+    { "setSaveSlot", "(I)V",
+                  (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_setSaveSlot },
 
 };
 
