@@ -3,7 +3,7 @@ package com.retroarch.browser.retroactivity;
 import java.util.ArrayList;
 import java.util.List;
 
-import retrobox.retroarch.R;
+import retrobox.v2.retroarch.R;
 import retrobox.utils.ListOption;
 import retrobox.utils.RetroBoxDialog;
 import retrobox.utils.RetroBoxUtils;
