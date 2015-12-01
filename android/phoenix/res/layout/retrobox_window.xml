@@ -7,6 +7,7 @@
     android:background="#00000000">
     
     <include layout="@layout/modal_dialog_list" />
+    <include layout="@layout/modal_dialog_gamepad" />
     <include layout="@layout/modal_dialog_actions" />
 
 </FrameLayout>

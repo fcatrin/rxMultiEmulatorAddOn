@@ -63,11 +63,12 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 
 	
 	static final public int RESULT_CANCEL_ID = Menu.FIRST;
-    static final public int RESULT_LOAD_ID = Menu.FIRST +1;
-    static final public int RESULT_SAVE_ID = Menu.FIRST +2;
-    static final public int RESULT_QUIT_ID = Menu.FIRST +3;
-    static final public int RESULT_RESET_ID = Menu.FIRST +4;
-    static final public int RESULT_SWAP_ID = Menu.FIRST +7;
+    static final public int RESULT_LOAD_ID   = Menu.FIRST + 1;
+    static final public int RESULT_SAVE_ID   = Menu.FIRST + 2;
+    static final public int RESULT_QUIT_ID   = Menu.FIRST + 3;
+    static final public int RESULT_RESET_ID  = Menu.FIRST + 4;
+    static final public int RESULT_SWAP_ID   = Menu.FIRST + 5;
+    static final public int RESULT_HELP_ID   = Menu.FIRST + 6;
 
 	
     private void uiQuit() {
@@ -102,9 +103,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		Log.d("MENU", "RetroActivityFuture showOptionsMenu start");
 		testQuit = true;
 		Intent intent = new Intent(RetroActivityFuture.this, RetroBoxMenu.class);
-		if (getIntent().hasExtra("MULTIDISK")) {
-			intent.getExtras().putBoolean("MULTIDISK", true);	
-		}
+		intent.fillIn(getIntent(), 0);
 		startActivity(intent);
 		Log.d("MENU", "RetroActivityFuture showOptionsMenu end");
 	}
