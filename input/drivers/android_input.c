@@ -85,7 +85,8 @@ typedef struct android_input
    unsigned pads_connected;
    state_device_t pad_states[MAX_PADS];
    uint8_t pad_state[MAX_PADS][(LAST_KEYCODE + 7) / 8];
-   int8_t hat_state[MAX_PADS][2];
+   int8_t  hat_state[MAX_PADS][2];
+   int8_t dpad_state[MAX_PADS][2];
 
    int16_t analog_state[MAX_PADS][MAX_AXIS];
    sensor_t accelerometer_state;
@@ -123,6 +124,31 @@ static void engine_handle_dpad_default(android_input_t *android,
 
    android->analog_state[port][0] = (int16_t)(x * 32767.0f);
    android->analog_state[port][1] = (int16_t)(y * 32767.0f);
+}
+
+static void engine_handle_dpad_real(android_input_t *android, int port)
+{
+	   // translate dpad into hat
+	   uint8_t *buf = android->pad_state[port];
+
+	   int dpadx = 0;
+	   int dpady = 0;
+
+	   if (BIT_GET(buf, AKEYCODE_DPAD_UP)) {
+		   dpady = -1;
+	   } else if (BIT_GET(buf, AKEYCODE_DPAD_DOWN)) {
+		   dpady = 1;
+	   }
+
+	   if (BIT_GET(buf, AKEYCODE_DPAD_LEFT)) {
+		   dpadx = -1;
+	   } else if (BIT_GET(buf, AKEYCODE_DPAD_RIGHT)) {
+		   dpadx = 1;
+	   }
+
+	   android->dpad_state[port][0] = dpadx;
+	   android->dpad_state[port][1] = dpady;
+
 }
 
 static void engine_handle_dpad_getaxisvalue(android_input_t *android,
@@ -766,6 +792,10 @@ static void android_input_handle_input(void *data)
                   int keycode = AKeyEvent_getKeyCode(event);
                   android_input_poll_event_type_key(android, android_app,
                         event, port, keycode, source, type_event, &handled);
+                  if (keycode == AKEYCODE_DPAD_LEFT || keycode == AKEYCODE_DPAD_RIGHT ||
+                	  keycode == AKEYCODE_DPAD_UP   || keycode == AKEYCODE_DPAD_DOWN) {
+                	  engine_handle_dpad_real(android, port);
+                  }
                }
                break;
          }

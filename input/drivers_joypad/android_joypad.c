@@ -62,13 +62,13 @@ static bool android_joypad_button(unsigned port, uint16_t joykey)
       switch (GET_HAT_DIR(joykey))
       {
          case HAT_LEFT_MASK:
-            return android->hat_state[port][0] == -1;
+            return android->hat_state[port][0] == -1 || android->dpad_state[port][0] == -1;
          case HAT_RIGHT_MASK:
-            return android->hat_state[port][0] ==  1;
+            return android->hat_state[port][0] ==  1 || android->dpad_state[port][0] == 1;
          case HAT_UP_MASK:
-            return android->hat_state[port][1] == -1;
+            return android->hat_state[port][1] == -1 || android->dpad_state[port][1] == -1;
          case HAT_DOWN_MASK:
-            return android->hat_state[port][1] ==  1;
+            return android->hat_state[port][1] ==  1 || android->dpad_state[port][1] == 1;
          default:
             return false;
       }
