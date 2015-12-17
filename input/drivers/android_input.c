@@ -87,8 +87,9 @@ typedef struct android_input
    uint8_t pad_state[MAX_PADS][(LAST_KEYCODE + 7) / 8];
    int8_t  hat_state[MAX_PADS][2];
    int8_t dpad_state[MAX_PADS][2];
-   int8_t  mouse_button_state[3];
    int8_t  mouse_button_click;
+   struct timeval mouse_button_click_start;
+   struct timeval mouse_button_click_stop;
 
    int16_t analog_state[MAX_PADS][MAX_AXIS];
    sensor_t accelerometer_state;
@@ -500,17 +501,19 @@ static INLINE int android_input_poll_event_type_motion(
    if (keyup && motion_ptr < MAX_TOUCH)
    {
 
-	 RARCH_LOG("click ended on motion_ptr %i", motion_ptr);
   	 if (motion_ptr == 0) {
-  		 int mouse_button = 0;
-  		 if (android->mouse_button_state[2]) mouse_button = 3;
-  		 else if (android->mouse_button_state[1]) mouse_button = 2;
-  		 else if (android->mouse_button_state[0]) mouse_button = 1;
+  		gettimeofday(&android->mouse_button_click_stop, NULL);
+  		suseconds_t delta = android->mouse_button_click_stop.tv_usec - android->mouse_button_click_start.tv_usec;
 
-  		 RARCH_LOG("click flag enabled on motion_ptr %i button %i", motion_ptr, mouse_button);
-  		 android->mouse_button_click = mouse_button;
+ 		int mouse_button = 1;
+  		if (delta > 300000) {
+  			mouse_button = 2;
+  		} else if (delta > 1000000) {
+  			mouse_button = 3;
+  		}
+  		RARCH_LOG("click flag enabled on motion_ptr %i button %i delta:%lu", motion_ptr, mouse_button, delta);
+  		android->mouse_button_click = mouse_button;
   	 }
-  	 android->mouse_button_state[motion_ptr] = 0;
 
       memmove(android->pointer + motion_ptr,
             android->pointer + motion_ptr + 1,
@@ -534,9 +537,8 @@ static INLINE int android_input_poll_event_type_motion(
                &android->pointer[motion_ptr].full_x,
                &android->pointer[motion_ptr].full_y);
 
-		 RARCH_LOG("click started on motion_ptr %i", motion_ptr);
-		 if (motion_ptr < 3) {
-			 android->mouse_button_state[motion_ptr] = 1;
+		 if (motion_ptr == 0 && action == AMOTION_EVENT_ACTION_DOWN) {
+			 gettimeofday(&android->mouse_button_click_start, NULL);
 		 }
 
          android->pointer_count = max(
@@ -949,12 +951,6 @@ static int16_t android_input_state(void *data,
         		 clicked = android->mouse_button_click == 3;
         		 break;
         	 }
-        	 RARCH_LOG("read click status %i [%s,%s,%s] clicked: %s",
-        			 id,
-        			 android->mouse_button_click==1?"on":"off",
-        			 android->mouse_button_click==2?"on":"off",
-        			 android->mouse_button_click==3?"on":"off",
-        			clicked?"true":"false");
         	 if (clicked) android->mouse_button_click = 0;
         	 return clicked;
         }
