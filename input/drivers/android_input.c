@@ -42,6 +42,11 @@
 
 #define LAST_KEYCODE AKEYCODE_ASSIST
 
+#define AMOTION_EVENT_ACTION_HOVER_MOVE  7
+#define AMOTION_EVENT_ACTION_HOVER_ENTER 9
+#define AMOTION_EVENT_ACTION_HOVER_EXIT  10
+#define RETRO_DEVICE_ID_MOUSE_HOVER      16
+
 typedef struct
 {
    float x;
@@ -87,6 +92,7 @@ typedef struct android_input
    uint8_t pad_state[MAX_PADS][(LAST_KEYCODE + 7) / 8];
    int8_t  hat_state[MAX_PADS][2];
    int8_t dpad_state[MAX_PADS][2];
+   bool    motion_from_hover;
    int8_t  mouse_button_click;
    struct timeval mouse_button_click_start;
    struct timeval mouse_button_click_stop;
@@ -477,8 +483,6 @@ static void *android_input_init(void)
 static int zeus_id = -1;
 static int zeus_second_id = -1;
 
-#define AMOTION_EVENT_ACTION_HOVER_MOVE 7
-
 static INLINE int android_input_poll_event_type_motion(
       android_input_t *android, AInputEvent *event,
       int port, int source)
@@ -487,7 +491,7 @@ static INLINE int android_input_poll_event_type_motion(
    size_t motion_ptr;
    bool keyup;
 
-   RARCH_LOG("motion check source %x against %x | %x", source, AINPUT_SOURCE_TOUCHSCREEN, AINPUT_SOURCE_MOUSE);
+   //RARCH_LOG("motion check source %x against %x | %x", source, AINPUT_SOURCE_TOUCHSCREEN, AINPUT_SOURCE_MOUSE);
 
    if (source & ~(AINPUT_SOURCE_TOUCHSCREEN | AINPUT_SOURCE_MOUSE))
       return 1;
@@ -500,14 +504,23 @@ static INLINE int android_input_poll_event_type_motion(
          action == AMOTION_EVENT_ACTION_CANCEL ||
          action == AMOTION_EVENT_ACTION_POINTER_UP) ||
       (source == AINPUT_SOURCE_MOUSE &&
-       action != AMOTION_EVENT_ACTION_DOWN && action != AMOTION_EVENT_ACTION_HOVER_MOVE);
+       action != AMOTION_EVENT_ACTION_DOWN &&
+       action != AMOTION_EVENT_ACTION_MOVE &&
+       action != AMOTION_EVENT_ACTION_HOVER_MOVE);
 
-   RARCH_LOG("motion keyup is %s action is %d", keyup?"true":"false", action);
+   if (action == AMOTION_EVENT_ACTION_HOVER_ENTER || action == AMOTION_EVENT_ACTION_HOVER_EXIT) {
+	   // ignore these events
+	   return 0;
+   }
+
+   android->motion_from_hover = action == AMOTION_EVENT_ACTION_HOVER_MOVE;
+
+   // RARCH_LOG("motion keyup is %s action is %d", keyup?"true":"false", action);
 
    if (keyup && motion_ptr < MAX_TOUCH)
    {
 
-	   RARCH_LOG("motion keyup on motion_ptr = %d", motion_ptr);
+	   // RARCH_LOG("motion keyup on motion_ptr = %d", motion_ptr);
   	 if (motion_ptr == 0) {
   		gettimeofday(&android->mouse_button_click_stop, NULL);
   		suseconds_t delta_msec =
@@ -535,14 +548,14 @@ static INLINE int android_input_poll_event_type_motion(
    {
       float x, y;
       int pointer_max = min(AMotionEvent_getPointerCount(event), MAX_TOUCH);
-      RARCH_LOG("motion pointer_max is %d", pointer_max);
+      // RARCH_LOG("motion pointer_max is %d", pointer_max);
 
       for (motion_ptr = 0; motion_ptr < pointer_max; motion_ptr++)
       {
          x = AMotionEvent_getX(event, motion_ptr);
          y = AMotionEvent_getY(event, motion_ptr);
 
-         RARCH_LOG("motion x, y = %d, %d", x, y);
+         // RARCH_LOG("motion x, y = %f, %f", x, y);
 
          input_translate_coord_viewport(x, y,
                &android->pointer[motion_ptr].x,
@@ -550,7 +563,7 @@ static INLINE int android_input_poll_event_type_motion(
                &android->pointer[motion_ptr].full_x,
                &android->pointer[motion_ptr].full_y);
 
-		 if (motion_ptr == 0 && action == AMOTION_EVENT_ACTION_DOWN) {
+		 if (motion_ptr == 0 && (action == AMOTION_EVENT_ACTION_DOWN || action == AMOTION_EVENT_ACTION_HOVER_EXIT)) {
 			 gettimeofday(&android->mouse_button_click_start, NULL);
 		 }
 
@@ -558,7 +571,7 @@ static INLINE int android_input_poll_event_type_motion(
                android->pointer_count,
                motion_ptr + 1);
 
-         RARCH_LOG("motion pointer_count = %d", android->pointer_count);
+         // RARCH_LOG("motion pointer_count = %d", android->pointer_count);
       }
    }
 
@@ -965,6 +978,9 @@ static int16_t android_input_state(void *data,
         	 case RETRO_DEVICE_ID_MOUSE_MIDDLE:
         		 clicked = android->mouse_button_click == 3;
         		 break;
+        	 case RETRO_DEVICE_ID_MOUSE_HOVER:
+        		 // don't process as clicked... dirty but simple
+        		 return android->motion_from_hover;
         	 }
         	 if (clicked) android->mouse_button_click = 0;
         	 return clicked;
