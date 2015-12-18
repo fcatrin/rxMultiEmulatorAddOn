@@ -503,15 +503,18 @@ static INLINE int android_input_poll_event_type_motion(
 
   	 if (motion_ptr == 0) {
   		gettimeofday(&android->mouse_button_click_stop, NULL);
-  		suseconds_t delta = android->mouse_button_click_stop.tv_usec - android->mouse_button_click_start.tv_usec;
-
- 		int mouse_button = 1;
-  		if (delta > 300000) {
+  		suseconds_t delta_msec =
+  				(android->mouse_button_click_stop.tv_sec  * 1000 + android->mouse_button_click_stop.tv_usec  / 1000) -
+  				(android->mouse_button_click_start.tv_sec * 1000 + android->mouse_button_click_start.tv_usec / 1000);
+ 		int mouse_button = 0;
+  		if (delta_msec < 300) {
+  			mouse_button = 1;
+  		} else if (delta_msec < 1000) {
   			mouse_button = 2;
-  		} else if (delta > 1000000) {
-  			mouse_button = 3;
-  		}
-  		RARCH_LOG("click flag enabled on motion_ptr %i button %i delta:%lu", motion_ptr, mouse_button, delta);
+		} else if (delta_msec < 3000) {
+			mouse_button = 3;
+		}
+  		RARCH_LOG("click flag enabled on motion_ptr %i button %i delta msec:%lu", motion_ptr, mouse_button, delta_msec);
   		android->mouse_button_click = mouse_button;
   	 }
 
