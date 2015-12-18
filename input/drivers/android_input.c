@@ -477,6 +477,8 @@ static void *android_input_init(void)
 static int zeus_id = -1;
 static int zeus_second_id = -1;
 
+#define AMOTION_EVENT_ACTION_HOVER_MOVE 7
+
 static INLINE int android_input_poll_event_type_motion(
       android_input_t *android, AInputEvent *event,
       int port, int source)
@@ -484,6 +486,8 @@ static INLINE int android_input_poll_event_type_motion(
    int getaction, action;
    size_t motion_ptr;
    bool keyup;
+
+   RARCH_LOG("motion check source %x against %x | %x", source, AINPUT_SOURCE_TOUCHSCREEN, AINPUT_SOURCE_MOUSE);
 
    if (source & ~(AINPUT_SOURCE_TOUCHSCREEN | AINPUT_SOURCE_MOUSE))
       return 1;
@@ -496,11 +500,14 @@ static INLINE int android_input_poll_event_type_motion(
          action == AMOTION_EVENT_ACTION_CANCEL ||
          action == AMOTION_EVENT_ACTION_POINTER_UP) ||
       (source == AINPUT_SOURCE_MOUSE &&
-       action != AMOTION_EVENT_ACTION_DOWN);
+       action != AMOTION_EVENT_ACTION_DOWN && action != AMOTION_EVENT_ACTION_HOVER_MOVE);
+
+   RARCH_LOG("motion keyup is %s action is %d", keyup?"true":"false", action);
 
    if (keyup && motion_ptr < MAX_TOUCH)
    {
 
+	   RARCH_LOG("motion keyup on motion_ptr = %d", motion_ptr);
   	 if (motion_ptr == 0) {
   		gettimeofday(&android->mouse_button_click_stop, NULL);
   		suseconds_t delta_msec =
@@ -528,11 +535,14 @@ static INLINE int android_input_poll_event_type_motion(
    {
       float x, y;
       int pointer_max = min(AMotionEvent_getPointerCount(event), MAX_TOUCH);
+      RARCH_LOG("motion pointer_max is %d", pointer_max);
 
       for (motion_ptr = 0; motion_ptr < pointer_max; motion_ptr++)
       {
          x = AMotionEvent_getX(event, motion_ptr);
          y = AMotionEvent_getY(event, motion_ptr);
+
+         RARCH_LOG("motion x, y = %d, %d", x, y);
 
          input_translate_coord_viewport(x, y,
                &android->pointer[motion_ptr].x,
@@ -547,6 +557,8 @@ static INLINE int android_input_poll_event_type_motion(
          android->pointer_count = max(
                android->pointer_count,
                motion_ptr + 1);
+
+         RARCH_LOG("motion pointer_count = %d", android->pointer_count);
       }
    }
 
