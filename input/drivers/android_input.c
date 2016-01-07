@@ -373,6 +373,22 @@ static void engine_handle_cmd(void)
          break;
 
       case APP_CMD_RESUME:
+    	  if (android_app->keep_pause) {
+    		  // this is a delayed unpause. Copied from APP_CMD_GAINED_FOCUS
+    		  // we should not unpause RetroArch if last action was open the context menu
+			 runloop->is_paused = false;
+			 runloop->is_idle   = false;
+
+			 if ((android_app->sensor_state_mask
+					  & (UINT64_C(1) << RETRO_SENSOR_ACCELEROMETER_ENABLE))
+				   && android_app->accelerometerSensor == NULL
+				   && driver->input_data)
+				android_input_set_sensor_state(driver->input_data, 0,
+					  RETRO_SENSOR_ACCELEROMETER_ENABLE,
+					  android_app->accelerometer_event_rate);
+
+			 android_app->keep_pause = false;
+    	  }
          slock_lock(android_app->mutex);
          android_app->activityState = cmd;
          scond_broadcast(android_app->cond);
@@ -425,16 +441,18 @@ static void engine_handle_cmd(void)
          break;
 
       case APP_CMD_GAINED_FOCUS:
-         runloop->is_paused = false;
-         runloop->is_idle   = false;
+    	  if (!android_app->keep_pause) {
+			 runloop->is_paused = false;
+			 runloop->is_idle   = false;
 
-         if ((android_app->sensor_state_mask
-                  & (UINT64_C(1) << RETRO_SENSOR_ACCELEROMETER_ENABLE))
-               && android_app->accelerometerSensor == NULL
-               && driver->input_data)
-            android_input_set_sensor_state(driver->input_data, 0,
-                  RETRO_SENSOR_ACCELEROMETER_ENABLE,
-                  android_app->accelerometer_event_rate);
+			 if ((android_app->sensor_state_mask
+					  & (UINT64_C(1) << RETRO_SENSOR_ACCELEROMETER_ENABLE))
+				   && android_app->accelerometerSensor == NULL
+				   && driver->input_data)
+				android_input_set_sensor_state(driver->input_data, 0,
+					  RETRO_SENSOR_ACCELEROMETER_ENABLE,
+					  android_app->accelerometer_event_rate);
+    	 }
          break;
       case APP_CMD_LOST_FOCUS:
          /* Avoid draining battery while app is not being used. */

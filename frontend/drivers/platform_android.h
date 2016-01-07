@@ -47,6 +47,7 @@ struct android_app
    int msgread;
    int msgwrite;
    int running;
+   int keep_pause;
    unsigned accelerometer_event_rate;
    const ASensor* accelerometerSensor;
    uint64_t sensor_state_mask;

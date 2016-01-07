@@ -962,6 +962,7 @@ static void frontend_android_show_options_menu() {
 	      return;
 	   env = jni_thread_getenv();
 
+	   g_android->keep_pause = true;
 	   if (env && android_app->showOptionsMenu)
 	      CALL_VOID_METHOD(env, android_app->activity->clazz,
 	            android_app->showOptionsMenu);
