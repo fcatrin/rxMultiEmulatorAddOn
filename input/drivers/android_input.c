@@ -82,6 +82,7 @@ typedef struct state_device
    int port;
    int ignore_back;
    char name[256];
+   char descriptor[256];
 } state_device_t;
 
 typedef struct android_input
@@ -328,6 +329,62 @@ error:
    return false;
 }
 
+
+static bool android_input_get_descriptor(char *buf, size_t size, int id)
+{
+   jobject descriptor      = NULL;
+   jmethodID getDescriptor = NULL;
+   jobject device    = NULL;
+   jmethodID method  = NULL;
+   jclass    class   = 0;
+   const char *str   = NULL;
+   JNIEnv     *env   = (JNIEnv*)jni_thread_getenv();
+
+   if (!env)
+      goto error;
+
+   FIND_CLASS(env, class, "android/view/InputDevice");
+   if (!class)
+      goto error;
+
+   GET_STATIC_METHOD_ID(env, method, class, "getDevice",
+         "(I)Landroid/view/InputDevice;");
+   if (!method)
+      goto error;
+
+   CALL_OBJ_STATIC_METHOD_PARAM(env, device, class, method, (jint)id);
+   if (!device)
+   {
+      RARCH_ERR("Failed to find device for ID: %d\n", id);
+      goto error;
+   }
+
+   GET_METHOD_ID(env, getDescriptor, class, "getDescriptor", "()Ljava/lang/String;");
+   if (!getDescriptor)
+      goto error;
+
+   CALL_OBJ_METHOD(env, descriptor, device, getDescriptor);
+   if (!descriptor)
+   {
+      RARCH_ERR("Failed to find descriptor for device ID: %d\n", id);
+      goto error;
+   }
+
+   buf[0] = '\0';
+
+   str = (*env)->GetStringUTFChars(env, descriptor, 0);
+   if (str)
+      strlcpy(buf, str, size);
+   (*env)->ReleaseStringUTFChars(env, descriptor, str);
+
+   RARCH_LOG("device descriptor: %s\n", buf);
+
+   return true;
+error:
+   return false;
+}
+
+
 static void engine_handle_cmd(void)
 {
    int8_t cmd;
@@ -486,6 +543,21 @@ static void *android_input_init(void)
    android->joypad         = input_joypad_init_driver(
          settings->input.joypad_driver, android);
 
+   // load known retroboxtv gamepads
+   for(int i=0; i<MAX_USERS; i++) {
+	   if (strlen(settings->input.device_descriptor[i])>0) {
+		   int port = android->pads_connected;
+		   android->pad_states[port].id = -1;
+		   android->pad_states[port].port = -1;
+		   strcpy(android->pad_states[port].name, "unknown");
+		   strlcpy(android->pad_states[port].descriptor, settings->input.device_descriptor[i],
+		         sizeof(android->pad_states[port].descriptor));
+
+		   android->pads_connected++;
+		   RARCH_LOG("Added device descriptor %s for gamepad %d", android->pad_states[port].descriptor, android->pads_connected);
+	   }
+   }
+
    frontend_android_get_version_sdk(&sdk);
 
    RARCH_LOG("sdk version: %d\n", sdk);
@@ -636,7 +708,7 @@ static int android_input_get_id_port(android_input_t *android, int id,
       return 0; /* touch overlay is always user 1 */
 
    for (i = 0; i < android->pads_connected; i++)
-      if (android->pad_states[i].id == id)
+      if (android->pad_states[i].id>=0 && android->pad_states[i].id == id)
          return i;
 
    return -1;
@@ -659,17 +731,19 @@ static int android_input_get_id_index_from_name(android_input_t *android,
 }
 
 static void handle_hotplug(android_input_t *android,
-      struct android_app *android_app, unsigned *port, unsigned id,
+      struct android_app *android_app, unsigned id,
       int source)
 {
    char device_name[256]        = {0};
    char name_buf[256]           = {0};
+   char device_descriptor[256]  = {0};
+   unsigned port                = 0;
    int vendorId                 = 0;
    int productId                = 0;
    bool back_mapped             = false;
    settings_t         *settings = config_get_ptr();
 
-   if (*port > MAX_PADS)
+   if (android->pads_connected > MAX_PADS)
    {
       RARCH_ERR("Max number of pads reached.\n");
       return;
@@ -678,6 +752,12 @@ static void handle_hotplug(android_input_t *android,
    if (!engine_lookup_name(device_name, &vendorId, &productId, sizeof(device_name), id))
    {
       RARCH_ERR("Could not look up device name or IDs.\n");
+      return;
+   }
+
+   if (!android_input_get_descriptor(device_descriptor, sizeof(device_descriptor), id))
+   {
+      RARCH_ERR("Could not look up device descriptor\n");
       return;
    }
 
@@ -716,9 +796,9 @@ static void handle_hotplug(android_input_t *android,
       //the other to be User 2.
       //
       //If this is finally implemented right, then these port conditionals can go.
-      if (*port == 0)
+      if (port == 0)
          strlcpy(name_buf, "TTT THT Arcade (User 1)", sizeof(name_buf));
-      else if (*port == 1)
+      else if (port == 1)
          strlcpy(name_buf, "TTT THT Arcade (User 2)", sizeof(name_buf));
    }
    else if (strstr(device_name, "360 Wireless"))
@@ -736,14 +816,14 @@ static void handle_hotplug(android_input_t *android,
        * We really need to find a way to detect useless input devices
        * like gpio-keys in a general way.
        */
-      *port = 0;
+      port = 0;
       strlcpy(name_buf, device_name, sizeof(name_buf));
    }
    else if (strstr(device_name, "Virtual") || 
          (strstr(device_name, "gpio") && strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller v01.01")))
    {
       /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
-      *port = 0;
+      port = 0;
       strlcpy(name_buf, "NVIDIA Corporation NVIDIA Controller v01.01", sizeof(name_buf));
    }
    else if (
@@ -765,18 +845,18 @@ static void handle_hotplug(android_input_t *android,
       strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
 
    if (name_buf[0] != '\0')
-      strlcpy(settings->input.device_names[*port],
-            name_buf, sizeof(settings->input.device_names[*port]));
+      strlcpy(settings->input.device_names[port],
+            name_buf, sizeof(settings->input.device_names[port]));
 
    if (settings->input.autodetect_enable)
    {
       unsigned      autoconfigured = false;
       autoconfig_params_t params   = {{0}};
 
-      RARCH_LOG("Port %d: %s.\n", *port, name_buf);
+      RARCH_LOG("Port %d: %s.\n", port, name_buf);
 
       strlcpy(params.name, name_buf, sizeof(params.name));
-      params.idx = *port;
+      params.idx = port;
       params.vid = vendorId;
       params.pid = productId;
       strlcpy(params.driver, android_joypad.ident, sizeof(params.driver));
@@ -784,30 +864,51 @@ static void handle_hotplug(android_input_t *android,
 
       if (autoconfigured)
       {
-         if (settings->input.autoconf_binds[*port][RARCH_MENU_TOGGLE].joykey != 0)
+         if (settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey != 0)
             back_mapped = true;
       }
    }
 
+   unsigned preset_device = -1;
+   for(int i=0; i<android->pads_connected; i++) {
+	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)) {
+		   preset_device = i;
+		   break;
+	   }
+   }
 
-   *port = android->pads_connected;
+   if (preset_device<0) {
+	   RARCH_LOG("Looking for known device descriptor %s. NOT FOUND", device_descriptor);
+   } else {
+	   RARCH_LOG("Looking for known device descriptor %s. Found at gamepad %d", device_descriptor, preset_device+1);
+   }
+
+   port = preset_device>=0 ? preset_device : android->pads_connected;
    bool ignore_back = false;
    unsigned bind;
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
-	   ignore_back = settings->input.binds[*port][bind].joykey == AKEYCODE_BACK;
+	   ignore_back = settings->input.binds[port][bind].joykey == AKEYCODE_BACK;
    }
 
    if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
-      settings->input.autoconf_binds[*port][RARCH_MENU_TOGGLE].joykey = AKEYCODE_BACK;
+      settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey = AKEYCODE_BACK;
    }
 
-   android->pad_states[android->pads_connected].id = id;
-   android->pad_states[android->pads_connected].port = *port;
-   android->pad_states[android->pads_connected].ignore_back = ignore_back;
-   strlcpy(android->pad_states[*port].name, name_buf,
-         sizeof(android->pad_states[*port].name));
+   android->pad_states[port].id = id;
+   android->pad_states[port].port = port;
+   android->pad_states[port].ignore_back = ignore_back;
+   strlcpy(android->pad_states[port].name, name_buf,
+         sizeof(android->pad_states[port].name));
 
-   android->pads_connected++;
+   if (preset_device<0) {
+	   strlcpy(android->pad_states[port].descriptor, device_descriptor, sizeof(android->pad_states[port].descriptor));
+	   android->pads_connected++;
+   }
+
+   RARCH_LOG("Current %d devices", android->pads_connected);
+   for(int i=0; i<android->pads_connected; i++) {
+	   RARCH_LOG("Current gamepad %d: %s (%s)", i+1, android->pad_states[i].name, android->pad_states[i].descriptor);
+   }
 }
 
 static int android_input_get_id(android_input_t *android, AInputEvent *event)
@@ -845,8 +946,7 @@ static void android_input_handle_input(void *data)
          int          port = android_input_get_id_port(android, id, source);
 
          if (port < 0)
-            handle_hotplug(android, android_app,
-                  &android->pads_connected, id, source);
+            handle_hotplug(android, android_app, id, source);
 
          switch (type_event)
          {

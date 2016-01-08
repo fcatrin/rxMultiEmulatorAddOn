@@ -219,6 +219,7 @@ typedef struct settings
 
       unsigned libretro_device[MAX_USERS];
       unsigned analog_dpad_mode[MAX_USERS];
+      char device_descriptor[MAX_USERS][64];
 
       bool remap_binds_enable;
       float axis_threshold;
