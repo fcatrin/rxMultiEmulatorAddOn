@@ -84,6 +84,12 @@ public class RetroBoxMenu extends Activity {
 					finish();
 				}
 			}
+
+			@Override
+			public void onError() {
+				finish();
+			}
+			
 		});
 	}
 	
