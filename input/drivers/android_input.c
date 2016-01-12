@@ -549,6 +549,7 @@ static void *android_input_init(void)
 		   int port = android->pads_connected;
 		   android->pad_states[port].id = -1;
 		   android->pad_states[port].port = -1;
+		   android->pad_states[port].ignore_back = true;
 		   strcpy(android->pad_states[port].name, "unknown");
 		   strlcpy(android->pad_states[port].descriptor, settings->input.device_descriptor[i],
 		         sizeof(android->pad_states[port].descriptor));
