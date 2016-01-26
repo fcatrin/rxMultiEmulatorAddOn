@@ -1,8 +1,11 @@
 package com.retroarch.browser.retroactivity;
 
+import java.util.List;
+
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.vinput.Mapper;
-import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,8 +17,9 @@ import android.view.Menu;
 public final class RetroActivityFuture extends RetroActivityCamera {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 	
-	boolean testQuit = false;
 	private static final int saveSlot = 0;
+
+	private boolean menuRunning = false;
 	
 	@Override
 	public void onResume() {
@@ -36,6 +40,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		super.onResume();
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
+		menuRunning = false;
 	}
 	
 	private SharedPreferences getPreferences() {
@@ -73,7 +78,11 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	
     private void uiQuit() {
     	Log.d("MENU", "RetroActivityFuture UI QUIT send threadId:" + Thread.currentThread().getName());
-		eventCommand(EventCommand.QUIT.ordinal());
+    	try {
+    		eventCommand(EventCommand.QUIT.ordinal());
+    	} catch (UnsatisfiedLinkError ue) {
+    		// ignore this error. Sometimes the native lib isn't up yet
+    	}
 		finish();
     	Log.d("MENU", "RetroActivityFuture UI QUIT sent threadId:" + Thread.currentThread().getName());
 	}
@@ -100,14 +109,24 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 
 
 	public void showOptionsMenu() {
+		if (menuRunning) return;
+		menuRunning  = true;
 		Log.d("MENU", "RetroActivityFuture showOptionsMenu start");
-		testQuit = true;
 		Intent intent = new Intent(RetroActivityFuture.this, RetroBoxMenu.class);
 		intent.fillIn(getIntent(), 0);
 		startActivity(intent);
 		Log.d("MENU", "RetroActivityFuture showOptionsMenu end");
 	}
 
+	private boolean isMenuRunning() {
+		ActivityManager activityManager = (ActivityManager) getSystemService( ACTIVITY_SERVICE );
+        List<RunningAppProcessInfo> procInfos = activityManager.getRunningAppProcesses();
+        for(RunningAppProcessInfo procInfo : procInfos) {
+            if (procInfo.processName.equals(RetroBoxMenu.class.getName())) return true; 
+        }
+        return false;
+	}
+	
 	protected void handleOption(int optionId) {
 		
 		Log.e("MENU", "handleOption " + optionId);
