@@ -49,8 +49,10 @@ public class RetroBoxMenu extends Activity {
 		super.onResume();
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", "Cancel"));
-        options.add(new ListOption("save", "Save State"));
-        options.add(new ListOption("load", "Load State"));
+        if (getIntent().getBooleanExtra("CAN_SAVE", false)) {
+        	options.add(new ListOption("save", "Save State"));
+        	options.add(new ListOption("load", "Load State"));
+        }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
         	options.add(new ListOption("swap", "Swap Disk"));
