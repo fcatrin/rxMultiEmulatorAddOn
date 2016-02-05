@@ -35,6 +35,7 @@
 #define MAX_PADS 8
 
 #define AKEY_EVENT_NO_ACTION 255
+#define ANALOG_DIGITAL_THRESHOLD 0.2f
 
 #ifndef AKEYCODE_ASSIST
 #define AKEYCODE_ASSIST 219
@@ -93,6 +94,7 @@ typedef struct android_input
    uint8_t pad_state[MAX_PADS][(LAST_KEYCODE + 7) / 8];
    int8_t  hat_state[MAX_PADS][2];
    int8_t dpad_state[MAX_PADS][2];
+   int8_t  trigger_state[MAX_PADS][2];
    bool    motion_from_hover;
    int8_t  mouse_button_click;
    struct timeval mouse_button_click_start;
@@ -194,6 +196,9 @@ static void engine_handle_dpad_getaxisvalue(android_input_t *android,
    android->analog_state[port][7] = (int16_t)(rtrig * 32767.0f);
    android->analog_state[port][8] = (int16_t)(brake * 32767.0f);
    android->analog_state[port][9] = (int16_t)(gas * 32767.0f);
+
+   android->trigger_state[port][0] = brake > ANALOG_DIGITAL_THRESHOLD || ltrig > ANALOG_DIGITAL_THRESHOLD;
+   android->trigger_state[port][1] = gas   > ANALOG_DIGITAL_THRESHOLD || rtrig > ANALOG_DIGITAL_THRESHOLD;
 }
 
 static bool android_input_lookup_name_prekitkat(char *buf,
@@ -1047,6 +1052,11 @@ static int16_t android_input_state(void *data,
       unsigned idx, unsigned id)
 {
    android_input_t *android = (android_input_t*)data;
+
+   if (device == RETRO_DEVICE_JOYPAD || device == RETRO_DEVICE_ANALOG) {
+	   if (id ==  RETRO_DEVICE_ID_JOYPAD_L2 && android->trigger_state[port][0]) return true;
+	   if (id ==  RETRO_DEVICE_ID_JOYPAD_R2 && android->trigger_state[port][1]) return true;
+   }
 
    switch (device)
    {
