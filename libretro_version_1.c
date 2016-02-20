@@ -183,7 +183,7 @@ static int16_t input_state(unsigned port, unsigned device,
    if (settings->input.remap_binds_enable)
       input_remapping_state(port, &device, &idx, &id);
 
-   if (!driver->block_libretro_input)
+   if (!driver->block_libretro_input || id == RETRO_DEVICE_ID_JOYPAD_START)
    {
       if (((id < RARCH_FIRST_META_KEY) || (device == RETRO_DEVICE_KEYBOARD)))
          res = input->input_state(driver->input_data, libretro_input_binds, port, device, idx, id);
