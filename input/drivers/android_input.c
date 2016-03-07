@@ -84,6 +84,7 @@ typedef struct state_device
    int ignore_back;
    char name[256];
    char descriptor[256];
+   int is_nvidia;
 } state_device_t;
 
 typedef struct android_input
@@ -701,6 +702,10 @@ static INLINE void android_input_poll_event_type_key(
 	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
    }
 
+   if (keycode == AKEYCODE_SEARCH && android->pad_states[port].is_nvidia) {
+	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
+   }
+
    if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
       *handled = 0;
 }
@@ -738,7 +743,7 @@ static int android_input_get_id_index_from_name(android_input_t *android,
 
 static void handle_hotplug(android_input_t *android,
       struct android_app *android_app, unsigned id,
-      int source)
+      int source, int *detected_port)
 {
    char device_name[256]        = {0};
    char name_buf[256]           = {0};
@@ -875,7 +880,7 @@ static void handle_hotplug(android_input_t *android,
       }
    }
 
-   unsigned preset_device = -1;
+   int preset_device = -1;
    for(int i=0; i<android->pads_connected; i++) {
 	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)) {
 		   preset_device = i;
@@ -890,6 +895,8 @@ static void handle_hotplug(android_input_t *android,
    }
 
    port = preset_device>=0 ? preset_device : android->pads_connected;
+   *detected_port = port;
+
    bool ignore_back = false;
    unsigned bind;
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
@@ -903,6 +910,7 @@ static void handle_hotplug(android_input_t *android,
    android->pad_states[port].id = id;
    android->pad_states[port].port = port;
    android->pad_states[port].ignore_back = ignore_back;
+   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL;
    strlcpy(android->pad_states[port].name, name_buf,
          sizeof(android->pad_states[port].name));
 
@@ -952,7 +960,7 @@ static void android_input_handle_input(void *data)
          int          port = android_input_get_id_port(android, id, source);
 
          if (port < 0)
-            handle_hotplug(android, android_app, id, source);
+            handle_hotplug(android, android_app, id, source, &port);
 
          switch (type_event)
          {
