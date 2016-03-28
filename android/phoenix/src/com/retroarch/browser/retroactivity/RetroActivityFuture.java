@@ -17,7 +17,7 @@ import android.view.Menu;
 public final class RetroActivityFuture extends RetroActivityCamera {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 	
-	private static final int saveSlot = 0;
+	static int saveSlot = 0;
 
 	private boolean menuRunning = false;
 	

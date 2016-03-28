@@ -11,6 +11,7 @@ import retrobox.v2.retroarch.R;
 import xtvapps.core.AndroidFonts;
 import xtvapps.core.Callback;
 import xtvapps.core.SimpleCallback;
+import xtvapps.core.Utils;
 import xtvapps.core.content.KeyValue;
 import android.app.Activity;
 import android.content.Context;
@@ -20,6 +21,7 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 public class RetroBoxMenu extends Activity {
 	private GamepadInfoDialog gamepadInfoDialog;
@@ -47,11 +49,16 @@ public class RetroBoxMenu extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		uiMainMenu();
+	}
+	
+	private void uiMainMenu() {
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", "Cancel"));
         if (getIntent().getBooleanExtra("CAN_SAVE", false)) {
         	options.add(new ListOption("save", "Save State"));
         	options.add(new ListOption("load", "Load State"));
+        	options.add(new ListOption("slot", "Change Save State slot", "Slot " + (RetroActivityFuture.saveSlot)));
         }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
@@ -74,6 +81,10 @@ public class RetroBoxMenu extends Activity {
 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
 				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
+				if (key.equals("slot")) {
+					uiChangeSlot();
+					return;
+				}
 				
 				SharedPreferences preferences = getPreferences();
 				Editor editor = preferences.edit();
@@ -94,6 +105,35 @@ public class RetroBoxMenu extends Activity {
 			
 		});
 	}
+	
+	private void uiChangeSlot() {
+		List<ListOption> options = new ArrayList<ListOption>();
+		options.add(new ListOption("", "Cancel"));
+		for (int i = 0; i < 5; i++) {
+			options.add(new ListOption((i + 1) + "", "Use save slot " + i,
+					(i == (RetroActivityFuture.saveSlot)) ? "Active" : ""));
+		}
+
+		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options,
+				new Callback<KeyValue>() {
+					@Override
+					public void onResult(KeyValue result) {
+						int slot = Utils.str2i(result.getKey());
+						if (slot > 0 && slot != (RetroActivityFuture.saveSlot+1)) {
+							RetroActivityFuture.saveSlot = slot - 1;
+							toastMessage("Save State slot changed to " + RetroActivityFuture.saveSlot);
+						}
+						uiMainMenu();
+					}
+
+					@Override
+					public void onError() {
+						uiMainMenu();
+					}
+
+				});
+	}
+
 	
     protected void uiHelp() {
 		RetroBoxDialog.showGamepadDialogIngame(this, gamepadInfoDialog, new SimpleCallback() {
@@ -121,6 +161,9 @@ public class RetroBoxMenu extends Activity {
 		return super.onKeyUp(keyCode, event);
 	}
 	
-	
+    private void toastMessage(final String message) {
+    	Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
 	
 }
