@@ -188,6 +188,7 @@ typedef struct settings
       char device[PATH_MAX_LENGTH];
       unsigned latency;
       bool sync;
+      bool is_minix;
 
       char dsp_plugin[PATH_MAX_LENGTH];
       char filter_dir[PATH_MAX_LENGTH];

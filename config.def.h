@@ -611,6 +611,9 @@ static const int out_latency = 64;
 /* Will sync audio. (recommended) */
 static const bool audio_sync = true;
 
+/* Minix NEO has problems with some signals, use alternative method */
+static const bool is_minix = false;
+
 /* Audio rate control. */
 #if !defined(RARCH_CONSOLE)
 static const bool rate_control = true;

@@ -526,6 +526,7 @@ static void config_set_defaults(void)
 
    settings->audio.latency                     = g_defaults.settings.out_latency;
    settings->audio.sync                        = audio_sync;
+   settings->audio.is_minix                    = is_minix;
    settings->audio.rate_control                = rate_control;
    settings->audio.rate_control_delta          = rate_control_delta;
    settings->audio.max_timing_skew             = max_timing_skew;
@@ -1452,6 +1453,7 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_STRING_BASE(conf, settings, audio.device, "audio_device");
    CONFIG_GET_INT_BASE(conf, settings, audio.latency, "audio_latency");
    CONFIG_GET_BOOL_BASE(conf, settings, audio.sync, "audio_sync");
+   CONFIG_GET_BOOL_BASE(conf, settings, audio.is_minix, "audio_minix");
    CONFIG_GET_BOOL_BASE(conf, settings, audio.rate_control, "audio_rate_control");
    CONFIG_GET_FLOAT_BASE(conf, settings, audio.rate_control_delta, "audio_rate_control_delta");
    CONFIG_GET_FLOAT_BASE(conf, settings, audio.max_timing_skew, "audio_max_timing_skew");
@@ -2473,6 +2475,7 @@ bool config_save_file(const char *path)
    config_set_bool(conf,  "rewind_enable", settings->rewind_enable);
    config_set_int(conf,   "audio_latency", settings->audio.latency);
    config_set_bool(conf,  "audio_sync",    settings->audio.sync);
+   config_set_bool(conf,  "audio_minix",    settings->audio.is_minix);
    config_set_int(conf,   "audio_block_frames", settings->audio.block_frames);
    config_set_int(conf,   "rewind_granularity", settings->rewind_granularity);
    config_set_path(conf,  "video_shader", settings->video.shader_path);

@@ -53,6 +53,7 @@ typedef struct sl
    scond_t *cond;
    bool nonblock;
    bool is_paused;
+   bool is_minix;
    unsigned buf_size;
    unsigned buf_count;
 } sl_t;
@@ -129,6 +130,9 @@ static void *sl_init(const char *device, unsigned rate, unsigned latency)
 
    GOTO_IF_FAIL(SLEngineItf_CreateOutputMix(sl->engine, &sl->output_mix, 0, NULL, NULL));
    GOTO_IF_FAIL(SLObjectItf_Realize(sl->output_mix, SL_BOOLEAN_FALSE));
+
+   sl->is_minix = settings->audio.is_minix;
+   RARCH_LOG("[SLES]: Using workaround for MINIX: %s", sl->is_minix?"true":"false");
 
    if (settings->audio.block_frames)
       sl->buf_size = settings->audio.block_frames * 4;
@@ -244,13 +248,18 @@ static ssize_t sl_write(void *data, const void *buf_, size_t size)
       if (sl->nonblock)
       {
          if (sl->buffered_blocks == sl->buf_count)
-            break;
+             break;
       }
       else
       {
          slock_lock(sl->lock);
-         while (sl->buffered_blocks == sl->buf_count)
-            scond_wait(sl->cond, sl->lock);
+         while (sl->buffered_blocks == sl->buf_count) {
+        	 if (sl->is_minix) {
+            	 usleep(10);
+        	 } else {
+        		 scond_wait(sl->cond, sl->lock);
+        	 }
+         }
          slock_unlock(sl->lock);
       }
 
