@@ -416,6 +416,21 @@ void fill_dated_filename(char *out_filename,
    strlcat(out_filename, ext, size);
 }
 
+void fill_dated_filename_retrobox(char *out_filename, char *basename,
+      const char *ext, size_t size)
+{
+	char timepart[PATH_MAX_LENGTH] = {0};
+   time_t cur_time;
+   time(&cur_time);
+
+   strftime(timepart, size,
+         ".%m%d%H%M%S.", localtime(&cur_time));
+
+   strncpy(out_filename, basename, size);
+   strlcat(out_filename, timepart, size);
+   strlcat(out_filename, ext, size);
+}
+
 /**
  * path_basedir:
  * @path               : path           

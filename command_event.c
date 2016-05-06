@@ -955,41 +955,51 @@ static void event_load_state(const char *path, char *s, size_t len)
             settings->state_slot);
 }
 
-static void event_main_state(unsigned cmd)
-{
-   char path[PATH_MAX_LENGTH] = {0};
-   char msg[PATH_MAX_LENGTH]  = {0};
-   global_t *global           = global_get_ptr();
-   settings_t *settings       = config_get_ptr();
+void save_state_filename_prepare() {
+	char path[PATH_MAX_LENGTH] = {0};
+	settings_t *settings       = config_get_ptr();
+	global_t *global           = global_get_ptr();
 
    if (settings->state_slot > 0)
-      snprintf(path, sizeof(path), "%s%d",
-            global->savestate_name, settings->state_slot);
+	  snprintf(path, sizeof(path), "%s%d",
+			global->savestate_name, settings->state_slot);
    else if (settings->state_slot < 0)
-      fill_pathname_join_delim(path,
-            global->savestate_name, "auto", '.', sizeof(path));
+	  fill_pathname_join_delim(path,
+			global->savestate_name, "auto", '.', sizeof(path));
    else
-      strlcpy(path, global->savestate_name, sizeof(path));
+	  strlcpy(path, global->savestate_name, sizeof(path));
+
+	strlcpy(global->savestate_path_shot, path, sizeof(global->savestate_path_shot));
+}
+
+void save_state_filename_reset() {
+	global_t *global = global_get_ptr();
+	strcpy(global->savestate_path_shot, "");
+}
+
+static void event_main_state(unsigned cmd)
+{
+   char msg[PATH_MAX_LENGTH]  = {0};
+   global_t *global           = global_get_ptr();
+
+   save_state_filename_prepare();
 
    if (pretro_serialize_size())
    {
       switch (cmd)
       {
          case EVENT_CMD_SAVE_STATE:
-            event_save_state(path, msg, sizeof(msg));
-            strlcpy(global->savestate_path_shot, path, sizeof(global->savestate_path_shot));
-            // take_screenshot();
-            // strcpy(global->savestate_path_shot, "");
+            event_save_state(global->savestate_path_shot, msg, sizeof(msg));
             break;
          case EVENT_CMD_LOAD_STATE:
-            event_load_state(path, msg, sizeof(msg));
+            event_load_state(global->savestate_path_shot, msg, sizeof(msg));
             break;
       }
    }
    else
       strlcpy(msg, msg_hash_to_str(MSG_CORE_DOES_NOT_SUPPORT_SAVESTATES), sizeof(msg));
 
-   // rarch_main_msg_queue_push(msg, 2, 180, true);
+   if (global->show_state_message) rarch_main_msg_queue_push(msg, 2, 180, true);
    RARCH_LOG("%s\n", msg);
 }
 

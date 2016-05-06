@@ -125,6 +125,9 @@ typedef struct global
    char savestate_name[PATH_MAX_LENGTH];
    char cheatfile_name[PATH_MAX_LENGTH];
 
+   /* show save / load state message only if triggered by shortcut */
+   bool show_state_message;
+
    /* full filename for savestate screen shot */
    char savestate_path_shot[PATH_MAX_LENGTH];
 

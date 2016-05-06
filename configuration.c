@@ -685,6 +685,7 @@ static void config_set_defaults(void)
    *settings->cursor_directory = '\0';
    *settings->cheat_settings_path = '\0';
    *settings->resampler_directory = '\0';
+   *settings->game_code = '\0';
    *settings->screenshot_directory = '\0';
    *settings->system_directory = '\0';
    *settings->extraction_directory = '\0';
@@ -829,6 +830,10 @@ static void config_set_defaults(void)
       strlcpy(settings->screenshot_directory,
             g_defaults.screenshot_dir,
             sizeof(settings->screenshot_directory));
+   if (*g_defaults.game_code)
+      strlcpy(settings->game_code,
+            g_defaults.game_code,
+            sizeof(settings->game_code));
    if (*g_defaults.resampler_dir)
       strlcpy(settings->resampler_directory,
             g_defaults.resampler_dir,

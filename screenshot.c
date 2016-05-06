@@ -259,6 +259,7 @@ bool take_screenshot(void)
 {
    bool viewport_read   = false;
    bool ret             = true;
+   bool silent          = false;
    const char *msg      = NULL;
    runloop_t *runloop   = rarch_main_get_ptr();
    driver_t *driver     = driver_get_ptr();
@@ -270,6 +271,8 @@ bool take_screenshot(void)
    /* No way to infer screenshot directory. */
    if ((!*settings->screenshot_directory) && (!*global->basename))
       return false;
+
+   silent = strlen(global->savestate_path_shot)>0;
 
    viewport_read = (settings->video.gpu_screenshot ||
          ((hw_render->context_type
@@ -332,7 +335,7 @@ bool take_screenshot(void)
       RARCH_WARN("%s.\n", msg);
    }
 
-   // rarch_main_msg_queue_push(msg, 1, runloop->is_paused ? 1 : 180, true);
+   if (!silent) rarch_main_msg_queue_push(msg, 1, runloop->is_paused ? 1 : 180, true);
 
    if (runloop->is_paused)
       video_driver_cached_frame();
@@ -353,6 +356,7 @@ bool screenshot_dump(const char *folder, const void *frame,
    bool ret                       = false;
    driver_t *driver               = driver_get_ptr();
    global_t *global               = global_get_ptr();
+   settings_t *settings           = config_get_ptr();
 
    (void)file;
    (void)out_buffer;
@@ -363,14 +367,19 @@ bool screenshot_dump(const char *folder, const void *frame,
 	   strcpy(filename, global->savestate_path_shot);
 	   strcat(filename, ".");
 	   strcat(filename, IMG_EXT);
+	   strcpy(global->savestate_path_shot, "");
+   } else if (strlen(settings->game_code)>0) {
+	   fill_dated_filename_retrobox(shotname, settings->game_code, IMG_EXT, sizeof(shotname));
+	   fill_pathname_join(filename, folder, shotname, sizeof(filename));
    } else {
 	   fill_dated_filename(shotname, IMG_EXT, sizeof(shotname));
 	   fill_pathname_join(filename, folder, shotname, sizeof(filename));
    }
 
+   RARCH_LOG("Screenshot %s", filename);
+
 #ifdef _XBOX1
    d3d_video_t *d3d = (d3d_video_t*)driver->video_data;
-   settings_t *settings = config_get_ptr();
 
    D3DSurface *surf = NULL;
    d3d->dev->GetBackBuffer(-1, D3DBACKBUFFER_TYPE_MONO, &surf);

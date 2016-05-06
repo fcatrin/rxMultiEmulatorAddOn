@@ -543,10 +543,17 @@ static int do_state_checks(driver_t *driver, settings_t *settings,
    check_stateslots(settings, cmd->state_slot_increase,
          cmd->state_slot_decrease);
 
-   if (cmd->save_state_pressed)
+   if (cmd->save_state_pressed) {
+	  global->show_state_message = true;
+	  save_state_filename_prepare();
+      event_command(EVENT_CMD_TAKE_SCREENSHOT);
       event_command(EVENT_CMD_SAVE_STATE);
-   else if (cmd->load_state_pressed)
-      event_command(EVENT_CMD_LOAD_STATE);
+      save_state_filename_reset();
+   } else if (cmd->load_state_pressed) {
+	   global->show_state_message = true;
+	   event_command(EVENT_CMD_LOAD_STATE);
+   }
+   global->show_state_message = false;
 
    check_rewind(settings, global, runloop, cmd->rewind_pressed);
    check_slowmotion(settings, global, runloop,
@@ -983,6 +990,19 @@ static bool rarch_main_cmd_get_state_menu_toggle_button_combo(
    return true;
 }
 
+static bool rarch_main_cmd_get_state_screenshot_button_combo (
+      retro_input_t input)
+{
+
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_L3))
+	   return false;
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_R3))
+	   return false;
+
+   return true;
+}
+
+
 static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
       retro_input_t input, retro_input_t old_input,
       retro_input_t trigger_input)
@@ -999,7 +1019,10 @@ static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
                                             old_input, trigger_input);
 #endif
    cmd->quit_key_pressed            = BIT64_GET(input, RARCH_QUIT_KEY);
-   cmd->screenshot_pressed          = BIT64_GET(trigger_input, RARCH_SCREENSHOT);
+
+   cmd->screenshot_pressed          = BIT64_GET(trigger_input, RARCH_SCREENSHOT) ||
+		   	   	   	   	   	   	   	  rarch_main_cmd_get_state_screenshot_button_combo(input);
+
    cmd->mute_pressed                = BIT64_GET(trigger_input, RARCH_MUTE);
    cmd->osk_pressed                 = BIT64_GET(trigger_input, RARCH_OSK);
    cmd->volume_up_pressed           = BIT64_GET(input, RARCH_VOLUME_UP);
@@ -1030,6 +1053,7 @@ static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
          RARCH_CHEAT_INDEX_MINUS);
    cmd->cheat_toggle_pressed        = BIT64_GET(trigger_input,
          RARCH_CHEAT_TOGGLE);
+
 }
 
 /**

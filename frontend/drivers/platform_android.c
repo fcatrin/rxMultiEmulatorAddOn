@@ -38,6 +38,7 @@ struct android_app *g_android;
 static pthread_key_t thread_key;
 
 char screenshot_dir[PATH_MAX_LENGTH];
+char game_code[PATH_MAX_LENGTH];
 char downloads_dir[PATH_MAX_LENGTH];
 char apk_path[PATH_MAX_LENGTH];
 char sdcard_dir[PATH_MAX_LENGTH];
@@ -701,6 +702,38 @@ static void frontend_android_get_environment_settings(int *argc,
       }
    }
    
+   /* Screenshots */
+   CALL_OBJ_METHOD_PARAM(env, jstr, obj, android_app->getStringExtra,
+         (*env)->NewStringUTF(env, "GAME_CODE"));
+
+   if (android_app->getStringExtra && jstr)
+   {
+      const char *argv = NULL;
+
+      *game_code = '\0';
+      argv = (*env)->GetStringUTFChars(env, jstr, 0);
+
+      if (argv && *argv)
+         strlcpy(game_code, argv, sizeof(game_code));
+      (*env)->ReleaseStringUTFChars(env, jstr, argv);
+
+      if (*game_code)
+      {
+         RARCH_LOG("Game code [%s]\n", game_code);
+      }
+   }
+
+   if (*screenshot_dir) {
+	   strlcpy(g_defaults.screenshot_dir,
+			 screenshot_dir, sizeof(g_defaults.screenshot_dir));
+	   RARCH_LOG("Default screenshot folder: [%s]", g_defaults.screenshot_dir);
+   }
+
+   if (*game_code) {
+	   strlcpy(g_defaults.game_code, game_code, sizeof(g_defaults.game_code));
+	   RARCH_LOG("Default game code: [%s]", g_defaults.game_code);
+   }
+
    /* Downloads */
    CALL_OBJ_METHOD_PARAM(env, jstr, obj, android_app->getStringExtra,
          (*env)->NewStringUTF(env, "DOWNLOADS"));
@@ -795,6 +828,7 @@ static void frontend_android_get_environment_settings(int *argc,
 
    RARCH_LOG("SD permissions: %d",perms);
 
+
       if (*app_dir)
       {
          RARCH_LOG("Application location: [%s].\n", app_dir);
@@ -857,8 +891,6 @@ static void frontend_android_get_environment_settings(int *argc,
                      app_dir, "screenshots", sizeof(g_defaults.screenshot_dir));
                path_mkdir(g_defaults.screenshot_dir);
             }
-
-            RARCH_LOG("Default screenshot folder: [%s]", g_defaults.screenshot_dir);
 
             switch (perms)
             {

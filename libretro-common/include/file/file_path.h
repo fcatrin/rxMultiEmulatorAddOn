@@ -214,6 +214,9 @@ void fill_pathname(char *out_path, const char *in_path,
 void fill_dated_filename(char *out_filename,
       const char *ext, size_t size);
 
+void fill_dated_filename_retrobox(char *out_filename, char *basename,
+      const char *ext, size_t size);
+
 /**
  * fill_pathname_noext:
  * @out_path           : output path

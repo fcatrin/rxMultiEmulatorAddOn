@@ -304,6 +304,7 @@ typedef struct settings
    char input_remapping_directory[PATH_MAX_LENGTH];
 
    char resampler_directory[PATH_MAX_LENGTH];
+   char game_code[PATH_MAX_LENGTH];
    char screenshot_directory[PATH_MAX_LENGTH];
    char system_directory[PATH_MAX_LENGTH];
    bool system_in_content_dir;

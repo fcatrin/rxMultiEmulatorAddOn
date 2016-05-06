@@ -256,6 +256,10 @@ void event_disk_control_append_image(const char *path);
  **/
 bool event_command(enum event_command action);
 
+void save_state_filename_prepare();
+void save_state_filename_reset();
+
+
 #ifdef __cplusplus
 }
 #endif
