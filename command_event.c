@@ -977,6 +977,9 @@ static void event_main_state(unsigned cmd)
       {
          case EVENT_CMD_SAVE_STATE:
             event_save_state(path, msg, sizeof(msg));
+            strlcpy(global->savestate_path_shot, path, sizeof(global->savestate_path_shot));
+            // take_screenshot();
+            // strcpy(global->savestate_path_shot, "");
             break;
          case EVENT_CMD_LOAD_STATE:
             event_load_state(path, msg, sizeof(msg));
@@ -986,7 +989,7 @@ static void event_main_state(unsigned cmd)
    else
       strlcpy(msg, msg_hash_to_str(MSG_CORE_DOES_NOT_SUPPORT_SAVESTATES), sizeof(msg));
 
-   rarch_main_msg_queue_push(msg, 2, 180, true);
+   // rarch_main_msg_queue_push(msg, 2, 180, true);
    RARCH_LOG("%s\n", msg);
 }
 

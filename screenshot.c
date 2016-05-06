@@ -323,16 +323,16 @@ bool take_screenshot(void)
 
    if (ret)
    {
-      RARCH_LOG("%s.\n", msg_hash_to_str(MSG_TAKING_SCREENSHOT));
       msg = msg_hash_to_str(MSG_TAKING_SCREENSHOT);
+      RARCH_LOG("%s.\n", msg);
    }
    else
    {
-      RARCH_WARN("%s.\n", msg_hash_to_str(MSG_FAILED_TO_TAKE_SCREENSHOT));
       msg = msg_hash_to_str(MSG_FAILED_TO_TAKE_SCREENSHOT);
+      RARCH_WARN("%s.\n", msg);
    }
 
-   rarch_main_msg_queue_push(msg, 1, runloop->is_paused ? 1 : 180, true);
+   // rarch_main_msg_queue_push(msg, 1, runloop->is_paused ? 1 : 180, true);
 
    if (runloop->is_paused)
       video_driver_cached_frame();
@@ -352,14 +352,21 @@ bool screenshot_dump(const char *folder, const void *frame,
    uint8_t *out_buffer            = NULL;
    bool ret                       = false;
    driver_t *driver               = driver_get_ptr();
+   global_t *global               = global_get_ptr();
 
    (void)file;
    (void)out_buffer;
    (void)scaler;
    (void)driver;
 
-   fill_dated_filename(shotname, IMG_EXT, sizeof(shotname));
-   fill_pathname_join(filename, folder, shotname, sizeof(filename));
+   if (strlen(global->savestate_path_shot)>0) {
+	   strcpy(filename, global->savestate_path_shot);
+	   strcat(filename, ".");
+	   strcat(filename, IMG_EXT);
+   } else {
+	   fill_dated_filename(shotname, IMG_EXT, sizeof(shotname));
+	   fill_pathname_join(filename, folder, shotname, sizeof(filename));
+   }
 
 #ifdef _XBOX1
    d3d_video_t *d3d = (d3d_video_t*)driver->video_data;

@@ -49,6 +49,7 @@ char ext_dir[PATH_MAX_LENGTH];
 #define 	ACMD_LOAD  2
 #define 	ACMD_SAVE  3
 #define 	ACMD_SWAP_DISK  4
+#define 	ACMD_SHOT  5
 
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command) {
 	switch(command) {
@@ -57,6 +58,7 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 	case ACMD_LOAD  : event_command(EVENT_CMD_LOAD_STATE); break;
 	case ACMD_SAVE  : event_command(EVENT_CMD_SAVE_STATE); break;
 	case ACMD_SWAP_DISK : event_command(EVENT_CMD_SWAP_DISK); break;
+	case ACMD_SHOT  : event_command(EVENT_CMD_TAKE_SCREENSHOT); break;
 	}
 }
 

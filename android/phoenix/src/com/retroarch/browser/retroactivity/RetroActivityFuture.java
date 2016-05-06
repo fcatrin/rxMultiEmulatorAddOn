@@ -4,6 +4,7 @@ import java.util.List;
 
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.vinput.Mapper;
+import xtvapps.core.AndroidUtils;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
@@ -24,8 +25,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	@Override
 	public void onResume() {
 		SharedPreferences preferences = getPreferences();
+		int optionId = RESULT_CANCEL_ID;
 		if (preferences.contains("optionId")) {
-			int optionId = preferences.getInt("optionId", RESULT_CANCEL_ID);
+			optionId = preferences.getInt("optionId", RESULT_CANCEL_ID);
 			Editor editor = preferences.edit();
 			editor.remove("optionId");
 			editor.commit();
@@ -38,6 +40,13 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		ImmersiveModeSetter.postImmersiveMode(new Handler(), getWindow(), isStableLayout());
 		
 		super.onResume();
+		
+		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
+			eventCommand(EventCommand.SCREENSHOT.ordinal());
+			AndroidUtils.toast(this, "State saved on slot " + saveSlot);
+		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
+			AndroidUtils.toast(this, "State loaded from slot " + saveSlot);
+		}
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
 		menuRunning = false;
@@ -60,7 +69,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		RESET,
 		LOAD_STATE,
 		SAVE_STATE,
-		SWAP_DISK
+		SWAP_DISK,
+		SCREENSHOT
 	}
 	
 	public static native void eventCommand(int command);

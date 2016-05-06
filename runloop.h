@@ -125,9 +125,13 @@ typedef struct global
    char savestate_name[PATH_MAX_LENGTH];
    char cheatfile_name[PATH_MAX_LENGTH];
 
+   /* full filename for savestate screen shot */
+   char savestate_path_shot[PATH_MAX_LENGTH];
+
    /* Used on reentrancy to use a savestate dir. */
    char savefile_dir[PATH_MAX_LENGTH];
    char savestate_dir[PATH_MAX_LENGTH];
+
 
 #ifdef HAVE_OVERLAY
    char overlay_dir[PATH_MAX_LENGTH];
