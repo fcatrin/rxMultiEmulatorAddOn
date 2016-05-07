@@ -123,34 +123,7 @@ public class RetroBoxMenu extends Activity {
 		editor.commit();
 	}
 	
-	private void uiChangeSlot() {
-		List<ListOption> options = new ArrayList<ListOption>();
-		options.add(new ListOption("", "Cancel"));
-		for (int i = 0; i < 5; i++) {
-			options.add(new ListOption((i + 1) + "", "Use save slot " + i,
-					(i == (RetroActivityFuture.saveSlot)) ? "Active" : ""));
-		}
 
-		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options,
-				new Callback<KeyValue>() {
-					@Override
-					public void onResult(KeyValue result) {
-						int slot = Utils.str2i(result.getKey());
-						if (slot > 0 && slot != (RetroActivityFuture.saveSlot+1)) {
-							RetroActivityFuture.saveSlot = slot - 1;
-							toastMessage("Save State slot changed to " + RetroActivityFuture.saveSlot);
-						}
-						uiMainMenu();
-					}
-
-					@Override
-					public void onError() {
-						uiMainMenu();
-					}
-
-				});
-	}
-	
 	private void uiSelectSaveState(final int optionId) {
 		List<SaveStateInfo> list = new ArrayList<SaveStateInfo>();
 		String baseName = getIntent().getStringExtra("SAVENAME_BASE");
@@ -161,40 +134,35 @@ public class RetroBoxMenu extends Activity {
 		}
 		
 		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(list, 
-				(TextView)findViewById(R.id.txtDialogSaveStatesInfo),
 				RetroActivityFuture.saveSlot);
 		
-		GridView grid = (GridView)findViewById(R.id.savestates_grid);
-		grid.setOnItemClickListener(new OnItemClickListener() {
+		Callback<Integer> callback = new Callback<Integer>() {
 
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				System.out.println("setting save slot to " + position + " option id " + optionId);
+			public void onResult(Integer index) {
+				System.out.println("setting save slot to " + index + " option id " + optionId);
 				boolean invalidSlot = optionId == RetroActivityFuture.RESULT_LOAD_ID && 
-						!((SaveStateInfo)adapter.getItem(position)).exists();
+						!((SaveStateInfo)adapter.getItem(index)).exists();
 				
 				if (!invalidSlot) {
-					RetroActivityFuture.saveSlot = position;
+					RetroActivityFuture.saveSlot = index;
 					saveOptionId(optionId);
 					RetroBoxDialog.cancelDialog(RetroBoxMenu.this);
 				}
 			}
-		});
 
-		String title = "Select slot to " + (optionId == RetroActivityFuture.RESULT_SAVE_ID ?
-				"save on": "load from");
-		
-		RetroBoxDialog.showSaveStatesDialog(this, title, adapter, new SimpleCallback() {
 			@Override
 			public void onFinally() {
 				System.out.println("finish menu");
 				finish();
 			}
-
-			@Override
-			public void onResult() {
-			}
-		});
+			
+		};
+		
+		String title = "Select slot to " + (optionId == RetroActivityFuture.RESULT_SAVE_ID ?
+				"save on": "load from");
+		
+		RetroBoxDialog.showSaveStatesDialog(this, title, adapter, callback);
 	}
 
 	
