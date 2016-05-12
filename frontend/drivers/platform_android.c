@@ -51,8 +51,12 @@ char ext_dir[PATH_MAX_LENGTH];
 #define 	ACMD_SAVE  3
 #define 	ACMD_SWAP_DISK  4
 #define 	ACMD_SHOT  5
+#define 	ACMD_DISK_EJECT  6
+#define 	ACMD_DISK_INSERT  7
 
-JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command) {
+JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command, jint command_number) {
+	event_command_number = command_number; // used for disk insert
+
 	switch(command) {
 	case ACMD_QUIT  : event_command(EVENT_CMD_QUIT); break;
 	case ACMD_RESET : event_command(EVENT_CMD_RESET); break;
@@ -60,6 +64,8 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 	case ACMD_SAVE  : event_command(EVENT_CMD_SAVE_STATE); break;
 	case ACMD_SWAP_DISK : event_command(EVENT_CMD_SWAP_DISK); break;
 	case ACMD_SHOT  : event_command(EVENT_CMD_TAKE_SCREENSHOT); break;
+	case ACMD_DISK_EJECT  : event_command(EVENT_CMD_DISK_EJECT_TOGGLE); break;
+	case ACMD_DISK_INSERT : event_command(EVENT_CMD_DISK_INSERT); break;
 	}
 }
 
@@ -70,7 +76,7 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 
 static JNINativeMethod methods[] = {
 
-    { "eventCommand", "(I)V",
+    { "eventCommand", "(II)V",
                   (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand },
     { "setSaveSlot", "(I)V",
                   (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_setSaveSlot },

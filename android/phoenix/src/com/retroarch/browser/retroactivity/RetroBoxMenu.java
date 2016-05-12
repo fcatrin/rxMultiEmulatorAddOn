@@ -75,6 +75,7 @@ public class RetroBoxMenu extends Activity {
         if (getIntent().hasExtra("MULTIDISK")) {
         	options.add(new ListOption("swap", "Swap Disk"));
         }
+        // options.add(new ListOption("disk", "Insert disk 2"));
         // disable rest (some emulators hang on reset)
         // options.add(new ListOption("reset", "Reset"));
         options.add(new ListOption("help", "Help"));
@@ -84,12 +85,6 @@ public class RetroBoxMenu extends Activity {
 			@Override
 			public void onResult(KeyValue result) {
 				String key = result.getKey();
-				int optionId = RetroActivityFuture.RESULT_CANCEL_ID;
-				
-				if (key.equals("swap")) optionId = RetroActivityFuture.RESULT_SWAP_ID;
-				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
-				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
-				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
 				if (key.equals("save")) {
 					uiSelectSaveState(RetroActivityFuture.RESULT_SAVE_ID);
 					return;
@@ -99,6 +94,19 @@ public class RetroBoxMenu extends Activity {
 					return;
 				}
 				
+				if (key.equals("disk")) {
+					saveOptionId(RetroActivityFuture.RESULT_DISK_INSERT_ID, 1);
+					finish();
+					return;
+				}
+
+				int optionId = RetroActivityFuture.RESULT_CANCEL_ID;
+				
+				if (key.equals("swap")) optionId = RetroActivityFuture.RESULT_SWAP_ID;
+				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
+				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
+				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
+
 				saveOptionId(optionId);
 				
 				if (optionId == RetroActivityFuture.RESULT_HELP_ID) {
@@ -117,9 +125,14 @@ public class RetroBoxMenu extends Activity {
 	}
 	
 	private void saveOptionId(int optionId) {
+		saveOptionId(optionId, 0);
+	}
+	
+	private void saveOptionId(int optionId, int param) {
 		SharedPreferences preferences = getPreferences();
 		Editor editor = preferences.edit();
 		editor.putInt("optionId", optionId);
+		editor.putInt("param", param);
 		editor.commit();
 	}
 	

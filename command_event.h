@@ -185,6 +185,8 @@ enum event_command
    EVENT_CMD_DISK_NEXT,
    /* Cycle to previous disk. */
    EVENT_CMD_DISK_PREV,
+   /* Insert a specific disk */
+   EVENT_CMD_DISK_INSERT,
    /* Stops rumbling. */
    EVENT_CMD_RUMBLE_STOP,
    /* Toggles mouse grab. */
@@ -259,6 +261,7 @@ bool event_command(enum event_command action);
 void save_state_filename_prepare();
 void save_state_filename_reset();
 
+extern int event_command_number;
 
 #ifdef __cplusplus
 }

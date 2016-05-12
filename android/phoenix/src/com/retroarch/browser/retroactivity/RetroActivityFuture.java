@@ -28,11 +28,14 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		int optionId = RESULT_CANCEL_ID;
 		if (preferences.contains("optionId")) {
 			optionId = preferences.getInt("optionId", RESULT_CANCEL_ID);
+			int param = preferences.getInt("param", 0);
+			
 			Editor editor = preferences.edit();
 			editor.remove("optionId");
+			editor.remove("param");
 			editor.commit();
 			
-			handleOption(optionId);
+			handleOption(optionId, param);
 		}
 		
 		Log.d("MENU", "RetroActivityFuture onResume start threadId:" + Thread.currentThread().getName());
@@ -43,9 +46,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		
 		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
 			eventCommand(EventCommand.SCREENSHOT.ordinal());
-			AndroidUtils.toast(this, "State saved on slot " + saveSlot);
+			AndroidUtils.toast(this, "State saved on slot #" + (saveSlot+1));
 		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
-			AndroidUtils.toast(this, "State loaded from slot " + saveSlot);
+			AndroidUtils.toast(this, "State loaded from slot #" + (saveSlot+1));
 		}
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
@@ -70,10 +73,12 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		LOAD_STATE,
 		SAVE_STATE,
 		SWAP_DISK,
-		SCREENSHOT
+		SCREENSHOT,
+		DISK_EJECT,
+		DISK_INSERT
 	}
 	
-	public static native void eventCommand(int command);
+	public static native void eventCommand(int command, int command_number);
 	public static native void setSaveSlot(int slot);
 
 	
@@ -84,8 +89,13 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     static final public int RESULT_RESET_ID  = Menu.FIRST + 4;
     static final public int RESULT_SWAP_ID   = Menu.FIRST + 5;
     static final public int RESULT_HELP_ID   = Menu.FIRST + 6;
+    static final public int RESULT_DISK_INSERT_ID  = Menu.FIRST + 7;
 
 	
+    public static void eventCommand(int command) {
+    	eventCommand(command, 0);
+    }
+    
     private void uiQuit() {
     	Log.d("MENU", "RetroActivityFuture UI QUIT send threadId:" + Thread.currentThread().getName());
     	try {
@@ -117,6 +127,17 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		eventCommand(EventCommand.SWAP_DISK.ordinal());
 	}
 
+	private void uiInsertDisk(final int diskNumber) {
+		new Handler().postDelayed(new Runnable() {
+
+			@Override
+			public void run() {
+				eventCommand(EventCommand.DISK_EJECT.ordinal());
+				eventCommand(EventCommand.DISK_INSERT.ordinal(), diskNumber);
+			}
+		}, 500);
+		
+	}
 
 	public void showOptionsMenu() {
 		if (menuRunning) return;
@@ -137,7 +158,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
         return false;
 	}
 	
-	protected void handleOption(int optionId) {
+	protected void handleOption(int optionId, int param) {
 		
 		Log.e("MENU", "handleOption " + optionId);
 	    switch (optionId) {
@@ -146,6 +167,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
         case RESULT_SWAP_ID   : uiSwapDisk(); break;
         case RESULT_RESET_ID  : uiReset(); break;
         case RESULT_QUIT_ID   : uiQuit(); break;
+        case RESULT_DISK_INSERT_ID : uiInsertDisk(param);
         case RESULT_CANCEL_ID : break;
         }
 

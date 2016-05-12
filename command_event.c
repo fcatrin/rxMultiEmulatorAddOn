@@ -68,6 +68,8 @@ static void event_init_command(void)
 }
 #endif
 
+int event_command_number = 0;
+
 /**
  * event_free_temporary_content:
  *
@@ -445,6 +447,33 @@ static void event_check_disk_next(
    if (current < num_disks - 1)
       current++;
    event_disk_control_set_index(current);
+}
+
+static void event_check_disk_insert(
+      const struct retro_disk_control_callback *control, int disk_number)
+{
+   unsigned num_disks        = 0;
+   bool     disk_next_enable = false;
+
+   if (!control)
+      return;
+   if (!control->get_num_images)
+      return;
+   if (!control->get_image_index)
+      return;
+
+   num_disks        = control->get_num_images();
+   disk_next_enable = num_disks && num_disks != UINT_MAX;
+
+   if (!disk_next_enable)
+   {
+      RARCH_ERR("%s.\n", msg_hash_to_str(MSG_GOT_INVALID_DISK_INDEX));
+      return;
+   }
+
+   if (disk_number < num_disks ) {
+	   event_disk_control_set_index(disk_number);
+   }
 }
 
 /**
@@ -1708,6 +1737,26 @@ bool event_command(enum event_command cmd)
                return false;
 
             event_check_disk_prev(control);
+         }
+         else
+            rarch_main_msg_queue_push_new(
+                  MSG_CORE_DOES_NOT_SUPPORT_DISK_OPTIONS,
+                  1, 120, true);
+         break;
+      case EVENT_CMD_DISK_INSERT:
+         if (system && system->disk_control.get_num_images)
+         {
+            const struct retro_disk_control_callback *control =
+               (const struct retro_disk_control_callback*)
+               &system->disk_control;
+
+            if (!control)
+               return false;
+
+            if (!control->get_eject_state())
+               return false;
+
+            event_check_disk_insert(control, event_command_number);
          }
          else
             rarch_main_msg_queue_push_new(

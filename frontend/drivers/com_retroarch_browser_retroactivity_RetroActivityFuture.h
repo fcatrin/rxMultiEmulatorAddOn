@@ -14,7 +14,7 @@ extern "C" {
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand
-  (JNIEnv *, jclass, jint);
+  (JNIEnv *, jclass, jint, jint);
 
 #ifdef __cplusplus
 }
