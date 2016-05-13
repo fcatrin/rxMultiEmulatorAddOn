@@ -73,9 +73,13 @@ public class RetroBoxMenu extends Activity {
         }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
-        	options.add(new ListOption("swap", "Swap Disk"));
+        	String platform = getIntent().getStringExtra("PLATFORM");
+        	if ("psx".equals(platform)) {
+        		options.add(new ListOption("disk", "Change Disk"));
+        	} else {
+        		options.add(new ListOption("swap", "Swap Disk"));
+        	}
         }
-        // options.add(new ListOption("disk", "Insert disk 2"));
         // disable rest (some emulators hang on reset)
         // options.add(new ListOption("reset", "Reset"));
         options.add(new ListOption("help", "Help"));
@@ -95,8 +99,7 @@ public class RetroBoxMenu extends Activity {
 				}
 				
 				if (key.equals("disk")) {
-					saveOptionId(RetroActivityFuture.RESULT_DISK_INSERT_ID, 1);
-					finish();
+					uiSelectDisk();
 					return;
 				}
 
@@ -136,6 +139,32 @@ public class RetroBoxMenu extends Activity {
 		editor.commit();
 	}
 	
+	private void uiSelectDisk() {
+		int disks = getIntent().getIntExtra("DISKS", 1);
+		
+		List<ListOption> options = new ArrayList<ListOption>();
+		options.add(new ListOption("", "Cancel"));
+		for(int i=0; i<disks; i++) {
+			int disk = i+1;
+			options.add(new ListOption(disk + "", "Insert disk " + disk));
+		}
+		
+		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options, new Callback<KeyValue>(){
+
+			@Override
+			public void onResult(KeyValue result) {
+				int disk = Utils.str2i(result.getKey());
+				if (disk>0) {
+					saveOptionId(RetroActivityFuture.RESULT_DISK_INSERT_ID, disk - 1);
+				}
+			}
+
+			@Override
+			public void onFinally() {
+				finish();
+			}
+		});
+	}
 
 	private void uiSelectSaveState(final int optionId) {
 		List<SaveStateInfo> list = new ArrayList<SaveStateInfo>();

@@ -128,15 +128,27 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	}
 
 	private void uiInsertDisk(final int diskNumber) {
-		new Handler().postDelayed(new Runnable() {
-
+		final int delay = 500;
+		final EventCommand commands[] = {EventCommand.DISK_EJECT, EventCommand.DISK_INSERT, EventCommand.DISK_EJECT};
+		final int commandsParam[] = {0, diskNumber, 0};
+		
+		final Handler handler = new Handler();
+		Runnable task = new Runnable() {
+			int commandIndex = 0;
 			@Override
 			public void run() {
-				eventCommand(EventCommand.DISK_EJECT.ordinal());
-				eventCommand(EventCommand.DISK_INSERT.ordinal(), diskNumber);
+				EventCommand command = commands[commandIndex];
+				int param = commandsParam[commandIndex];
+				eventCommand(command.ordinal(), param);
+				
+				commandIndex++;
+				if (commandIndex<commands.length) {
+					handler.postDelayed(this, delay);
+				}
 			}
-		}, 500);
-		
+		};
+			
+		handler.postDelayed(task, delay);
 	}
 
 	public void showOptionsMenu() {
