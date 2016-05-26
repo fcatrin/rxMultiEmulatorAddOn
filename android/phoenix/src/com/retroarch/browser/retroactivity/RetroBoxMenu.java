@@ -169,10 +169,29 @@ public class RetroBoxMenu extends Activity {
 	private void uiSelectSaveState(final int optionId) {
 		List<SaveStateInfo> list = new ArrayList<SaveStateInfo>();
 		String baseName = getIntent().getStringExtra("SAVENAME_BASE");
+		File baseDir = new File(baseName).getParentFile();
+		File saves[] = baseDir.listFiles();
+		
 		for(int i=0; i<6; i++) {
-			String fileName = baseName + ".state" + (i==0?"":i+"") ;
-			Log.d(LOGTAG, "Reading filestate from " + fileName);
-			list.add(new SaveStateInfo(new File(fileName)));
+			/* ugly workaround before a better solution */
+			boolean found = false;
+			String ending = ".state" + (i==0?"":i+"");
+			if (saves!=null) {
+				for(File save : saves) {
+					if (save.getName().endsWith(ending)) {
+						String fileName = save.getAbsolutePath();
+						Log.d(LOGTAG, "Reading filestate discover from " + fileName);
+						list.add(new SaveStateInfo(new File(fileName)));
+						found = true;
+						break;
+					}
+				}
+			}
+			if (!found) {
+				String fileName = baseName + ".state" + (i==0?"":i+"") ;
+				Log.d(LOGTAG, "Reading filestate from " + fileName);
+				list.add(new SaveStateInfo(new File(fileName)));
+			}
 		}
 		
 		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(list, 
