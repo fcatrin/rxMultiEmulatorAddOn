@@ -212,6 +212,7 @@ static bool android_input_lookup_name_prekitkat(char *buf,
    jclass    class   = 0;
    const char *str   = NULL;
    JNIEnv     *env   = (JNIEnv*)jni_thread_getenv();
+   bool result = false;
 
    if (!env)
       goto error;
@@ -254,9 +255,21 @@ static bool android_input_lookup_name_prekitkat(char *buf,
 
    RARCH_LOG("device name: %s\n", buf);
 
-   return true;
+   result = true;
+
 error:
-   return false;
+   (*env)->DeleteLocalRef(env, name);
+   (*env)->DeleteLocalRef(env, class);
+   (*env)->DeleteLocalRef(env, device);
+
+   return result;
+}
+
+static void dump_locals() {
+	JNIEnv     *env        = (JNIEnv*)jni_thread_getenv();
+	jclass vm_class = (*env)->FindClass(env, "dalvik/system/VMDebug");
+	jmethodID dump_mid = (*env)->GetStaticMethodID(env, vm_class, "dumpReferenceTables", "()V" );
+	(*env)->CallStaticVoidMethod(env, vm_class, dump_mid );
 }
 
 static bool android_input_lookup_name(char *buf,
@@ -271,6 +284,7 @@ static bool android_input_lookup_name(char *buf,
    jclass class           = NULL;
    const char *str        = NULL;
    JNIEnv     *env        = (JNIEnv*)jni_thread_getenv();
+   bool result = false;
 
    if (!env)
       goto error;
@@ -330,9 +344,14 @@ static bool android_input_lookup_name(char *buf,
 
    RARCH_LOG("device product id: %d\n", *productId);
 
-   return true;
+   result = true;
+
 error:
-   return false;
+   (*env)->DeleteLocalRef(env, name);
+   (*env)->DeleteLocalRef(env, class);
+   (*env)->DeleteLocalRef(env, device);
+
+   return result;
 }
 
 
@@ -345,6 +364,7 @@ static bool android_input_get_descriptor(char *buf, size_t size, int id)
    jclass    class   = 0;
    const char *str   = NULL;
    JNIEnv     *env   = (JNIEnv*)jni_thread_getenv();
+   bool result = false;
 
    if (!env)
       goto error;
@@ -385,9 +405,14 @@ static bool android_input_get_descriptor(char *buf, size_t size, int id)
 
    RARCH_LOG("device descriptor: %s\n", buf);
 
-   return true;
+   result = true;
+
 error:
-   return false;
+   (*env)->DeleteLocalRef(env, descriptor);
+   (*env)->DeleteLocalRef(env, device);
+   (*env)->DeleteLocalRef(env, class);
+
+   return result;
 }
 
 
@@ -923,6 +948,7 @@ static void handle_hotplug(android_input_t *android,
    for(int i=0; i<android->pads_connected; i++) {
 	   RARCH_LOG("Current gamepad %d: %s (%s)", i+1, android->pad_states[i].name, android->pad_states[i].descriptor);
    }
+
 }
 
 static int android_input_get_id(android_input_t *android, AInputEvent *event)
