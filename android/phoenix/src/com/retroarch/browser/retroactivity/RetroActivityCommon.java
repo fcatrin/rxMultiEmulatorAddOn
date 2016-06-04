@@ -24,6 +24,7 @@ public class RetroActivityCommon extends RetroActivityLocation
 	public void onRetroArchExit()
 	{
 		UserPreferences.readbackConfigFile(this);
+		finish();
 	}
 
 }
