@@ -747,6 +747,7 @@ static int android_input_get_id_port(android_input_t *android, int id,
       if (android->pad_states[i].id>=0 && android->pad_states[i].id == id)
          return i;
 
+   RARCH_LOG("Port not found for device id %d", id);
    return -1;
 }
 
