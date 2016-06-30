@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="retrobox.v2.retroarch"
     android:sharedUserId="psychoworld.retrobox.v2"
-    android:versionCode="12237"
-    android:versionName="1.2.2-37">
+    android:versionCode="12238"
+    android:versionName="1.2.2-38">
     
     <uses-feature android:glEsVersion="0x00020000" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
