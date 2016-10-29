@@ -936,7 +936,7 @@ static void handle_hotplug(android_input_t *android,
    android->pad_states[port].id = id;
    android->pad_states[port].port = port;
    android->pad_states[port].ignore_back = ignore_back;
-   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL;
+   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL || strstr(device_name, "NVIDIA") != NULL;
    strlcpy(android->pad_states[port].name, name_buf,
          sizeof(android->pad_states[port].name));
 
