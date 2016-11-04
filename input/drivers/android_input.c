@@ -908,7 +908,8 @@ static void handle_hotplug(android_input_t *android,
 
    int preset_device = -1;
    for(int i=0; i<android->pads_connected; i++) {
-	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)) {
+	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)
+			&& (android->pad_states[i].id<0 || android->pad_states[i].id == id)) {
 		   preset_device = i;
 		   break;
 	   }
