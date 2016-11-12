@@ -3,6 +3,7 @@ package com.retroarch.browser.retroactivity;
 import java.util.List;
 
 import retrobox.utils.ImmersiveModeSetter;
+import retrobox.utils.R;
 import retrobox.vinput.Mapper;
 import xtvapps.core.AndroidUtils;
 import android.app.ActivityManager;
@@ -46,9 +47,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		
 		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
 			eventCommand(EventCommand.SCREENSHOT.ordinal());
-			AndroidUtils.toast(this, "State saved on slot #" + (saveSlot+1));
+			AndroidUtils.toast(this, getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
 		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
-			AndroidUtils.toast(this, "State loaded from slot #" + (saveSlot+1));
+			AndroidUtils.toast(this, getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
 		}
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
@@ -144,6 +145,14 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 				commandIndex++;
 				if (commandIndex<commands.length) {
 					handler.postDelayed(this, delay);
+				} else {
+					handler.post(new Runnable(){
+						@Override
+						public void run() {
+							String msg = getString(R.string.emu_disk_inserted_n).replace("{n}", String.valueOf(diskNumber+1));
+							AndroidUtils.toast(RetroActivityFuture.this, msg);
+						}
+					});
 				}
 			}
 		};

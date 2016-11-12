@@ -66,26 +66,26 @@ public class RetroBoxMenu extends Activity {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
 		
 		List<ListOption> options = new ArrayList<ListOption>();
-        options.add(new ListOption("", "Cancel"));
+        options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
         if (getIntent().getBooleanExtra("CAN_SAVE", false)) {
-        	options.add(new ListOption("save", "Save State"));
-        	options.add(new ListOption("load", "Load State"));
+        	options.add(new ListOption("save", getString(R.string.emu_opt_state_save)));
+        	options.add(new ListOption("load", getString(R.string.emu_opt_state_load)));
         }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
         	String platform = getIntent().getStringExtra("PLATFORM");
         	if ("psx".equals(platform)) {
-        		options.add(new ListOption("disk", "Change Disk"));
+        		options.add(new ListOption("disk", getString(R.string.emu_opt_disk_change)));
         	} else {
-        		options.add(new ListOption("swap", "Swap Disk"));
+        		options.add(new ListOption("swap", getString(R.string.emu_opt_disk_swap)));
         	}
         }
         // disable rest (some emulators hang on reset)
         // options.add(new ListOption("reset", "Reset"));
-        options.add(new ListOption("help", "Help"));
-        options.add(new ListOption("quit", "Quit"));
+        options.add(new ListOption("help", getString(R.string.emu_opt_help)));
+        options.add(new ListOption("quit", getString(R.string.emu_opt_quit)));
 		
-		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options, new Callback<KeyValue>(){
+		RetroBoxDialog.showListDialog(this, getString(R.string.emu_opt_title), options, new Callback<KeyValue>(){
 			@Override
 			public void onResult(KeyValue result) {
 				String key = result.getKey();
@@ -146,10 +146,11 @@ public class RetroBoxMenu extends Activity {
 		options.add(new ListOption("", "Cancel"));
 		for(int i=0; i<disks; i++) {
 			int disk = i+1;
-			options.add(new ListOption(disk + "", "Insert disk " + disk));
+			options.add(new ListOption(disk + "", 
+					getString(R.string.emu_disk_insert).replace("{n}", String.valueOf(disk))));
 		}
 		
-		RetroBoxDialog.showListDialog(this, "RetroBoxTV", options, new Callback<KeyValue>(){
+		RetroBoxDialog.showListDialog(this, getString(R.string.emu_disk_select), options, new Callback<KeyValue>(){
 
 			@Override
 			public void onResult(KeyValue result) {
@@ -194,7 +195,7 @@ public class RetroBoxMenu extends Activity {
 			}
 		}
 		
-		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(list, 
+		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(this, list, 
 				RetroActivityFuture.saveSlot);
 		
 		Callback<Integer> callback = new Callback<Integer>() {
@@ -220,8 +221,9 @@ public class RetroBoxMenu extends Activity {
 			
 		};
 		
-		String title = "Select slot to " + (optionId == RetroActivityFuture.RESULT_SAVE_ID ?
-				"save on": "load from");
+		String title = optionId == RetroActivityFuture.RESULT_SAVE_ID ?
+						getString(R.string.emu_slot_save_title) :
+						getString(R.string.emu_slot_load_title);
 		
 		RetroBoxDialog.showSaveStatesDialog(this, title, adapter, callback);
 	}
