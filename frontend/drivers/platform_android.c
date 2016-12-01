@@ -172,7 +172,7 @@ static void android_app_set_activity_state(void *data, int8_t cmd)
    slock_unlock(android_app->mutex);
 
    if (android_app->activityState == APP_CMD_DEAD)
-      RARCH_LOG("RetroArch native thread is dead.\n");
+      RARCH_LOG("RetroArch native thread is dead while trying to set state to %d.\n", (int)cmd);
 }
 
 static void onDestroy(ANativeActivity* activity)
@@ -183,6 +183,7 @@ static void onDestroy(ANativeActivity* activity)
       return;
 
    RARCH_LOG("onDestroy: %p\n", activity);
+   event_command(EVENT_CMD_QUIT);
    sthread_join(android_app->thread);
    RARCH_LOG("Joined with RetroArch native thread.\n");
 

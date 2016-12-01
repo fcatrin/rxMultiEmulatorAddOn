@@ -100,7 +100,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     private void uiQuit() {
     	Log.d("MENU", "RetroActivityFuture UI QUIT send threadId:" + Thread.currentThread().getName());
     	try {
-    		eventCommand(EventCommand.QUIT.ordinal());
+    		// eventCommand(EventCommand.QUIT.ordinal());
     	} catch (UnsatisfiedLinkError ue) {
     		// ignore this error. Sometimes the native lib isn't up yet
     	}
