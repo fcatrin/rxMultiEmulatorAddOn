@@ -5,7 +5,6 @@ import java.util.List;
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.utils.R;
 import retrobox.vinput.Mapper;
-import xtvapps.core.AndroidUtils;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
@@ -15,6 +14,7 @@ import android.content.SharedPreferences.Editor;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.Toast;
 
 public final class RetroActivityFuture extends RetroActivityCamera {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
@@ -47,9 +47,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		
 		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
 			eventCommand(EventCommand.SCREENSHOT.ordinal());
-			AndroidUtils.toast(this, getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
+			toast(this, getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
 		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
-			AndroidUtils.toast(this, getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
+			toast(this, getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
 		}
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
@@ -150,7 +150,7 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 						@Override
 						public void run() {
 							String msg = getString(R.string.emu_disk_inserted_n).replace("{n}", String.valueOf(diskNumber+1));
-							AndroidUtils.toast(RetroActivityFuture.this, msg);
+							toast(RetroActivityFuture.this, msg);
 						}
 					});
 				}
@@ -194,5 +194,8 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 
 	}
 	
+	public static void toast(Context context, String message) {
+		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+	}
 
 }
