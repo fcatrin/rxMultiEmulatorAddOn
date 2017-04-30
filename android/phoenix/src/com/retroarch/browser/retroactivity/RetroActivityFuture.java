@@ -4,6 +4,7 @@ import java.util.List;
 
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.utils.R;
+import retrobox.utils.RetroBoxUtils;
 import retrobox.vinput.Mapper;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
@@ -11,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
@@ -23,6 +25,16 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 
 	private boolean menuRunning = false;
 	
+	
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		String userName = getIntent().getStringExtra("username");
+		RetroBoxUtils.initExceptionHandler(this, "rxMultiEmulator", userName);
+	}
+
 	@Override
 	public void onResume() {
 		SharedPreferences preferences = getPreferences();
