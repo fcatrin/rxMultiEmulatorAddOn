@@ -141,6 +141,8 @@ static void gl_overlay_tex_geom(void *data,
       float x, float y, float w, float h);
 #endif
 
+static void gl_render_background(void *data);
+
 #define set_texture_coords(coords, xamt, yamt) \
    coords[2] = xamt; \
    coords[6] = xamt; \
@@ -1635,6 +1637,8 @@ static bool gl_frame(void *data, const void *frame,
 
    glClear(GL_COLOR_BUFFER_BIT);
 
+   gl_render_background(gl);
+
    gl->shader->set_params(gl,
          frame_width, frame_height,
          gl->tex_w, gl->tex_h,
@@ -3093,6 +3097,42 @@ static void gl_render_overlay(void *data)
    if (gl->overlay_full_screen)
       glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
+
+static void gl_render_background(void *data)
+{
+   unsigned width, height;
+   gl_t *gl = (gl_t*)data;
+   if (!gl)
+      return;
+
+   video_driver_get_size(&width, &height);
+
+   glEnable(GL_BLEND);
+
+   glViewport(0, 0, width, height);
+
+   /* Ensure that we reset the attrib array. */
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
+
+   gl->coords.vertex    = gl->vertex_ptr;
+   gl->coords.vertices  = 4;
+   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.color     = gl->white_color_ptr;
+
+   gl->shader->set_coords(&gl->coords);
+   gl->shader->set_mvp(gl, &gl->mvp);
+
+   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+   glDisable(GL_BLEND);
+   gl->coords.vertex    = gl->vertex_ptr;
+   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.color     = gl->white_color_ptr;
+   gl->coords.vertices  = 4;
+   glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
+}
+
 
 static const video_overlay_interface_t gl_overlay_interface = {
    gl_overlay_enable,
