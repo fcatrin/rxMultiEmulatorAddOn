@@ -141,7 +141,8 @@ static void gl_overlay_tex_geom(void *data,
       float x, float y, float w, float h);
 #endif
 
-static void gl_render_background(void *data);
+#define BACKGROUND_SCALE 16
+static void gl_render_background(void *data, int frame_width, int frame_height);
 
 #define set_texture_coords(coords, xamt, yamt) \
    coords[2] = xamt; \
@@ -430,6 +431,34 @@ static void gl_compute_fbo_geometry(gl_t *gl, unsigned width, unsigned height,
    }
 }
 
+static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h) {
+	glGenTextures(1, &gl->fbo_background_texture);
+	glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	RARCH_WARN("[FBO_BG] gl_create_fbo_background_textures %d x %d", tex_w, tex_h);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w/BACKGROUND_SCALE, tex_h/BACKGROUND_SCALE, 0,
+	                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &gl->fbo_background);
+	glBindFramebuffer(RARCH_GL_FRAMEBUFFER, gl->fbo_background);
+	glFramebufferTexture2D(RARCH_GL_FRAMEBUFFER,
+		            RARCH_GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_background_texture, 0);
+
+	GLenum status = glCheckFramebufferStatus(RARCH_GL_FRAMEBUFFER);
+    if (status != RARCH_GL_FRAMEBUFFER_COMPLETE) {
+    	RARCH_WARN("[FBO_BG] error creating FBO");
+    }
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	gl->fbo_background_inited = true;
+}
+
 static void gl_create_fbo_textures(gl_t *gl)
 {
    int i;
@@ -579,6 +608,19 @@ static void gl_deinit_fbo(gl_t *gl)
    gl->fbo_inited = false;
    gl->fbo_pass = 0;
 }
+
+static void gl_deinit_fbo_background(gl_t *gl)
+{
+   if (!gl->fbo_background_inited)
+      return;
+
+   glDeleteTextures(1, &gl->fbo_background_texture);
+   glDeleteFramebuffers(1, &gl->fbo_background);
+   gl->fbo_background_texture = 0;
+   gl->fbo_background = 0;
+   gl->fbo_background_inited = false;
+}
+
 
 /* Set up render to texture. */
 
@@ -1637,7 +1679,7 @@ static bool gl_frame(void *data, const void *frame,
 
    glClear(GL_COLOR_BUFFER_BIT);
 
-   gl_render_background(gl);
+   gl_render_background(gl, frame_width, frame_height);
 
    gl->shader->set_params(gl,
          frame_width, frame_height,
@@ -2480,6 +2522,8 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
       goto error;
 #endif
 
+   gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
+
    gfx_ctx_input_driver(gl, input, input_data);
    
    if (settings->video.font_enable)
@@ -2642,6 +2686,8 @@ static bool gl_set_shader(void *data,
    gl_deinit_fbo(gl);
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
 #endif
+
+   gl_deinit_fbo_background(gl);
 
    if (!gl->shader->init(gl, path))
    {
@@ -3098,7 +3144,7 @@ static void gl_render_overlay(void *data)
       glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
 
-static void gl_render_background(void *data)
+static void gl_render_background(void *data, int frame_width, int frame_height)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
@@ -3108,13 +3154,13 @@ static void gl_render_background(void *data)
    video_driver_get_size(&width, &height);
 
    glEnable(GL_BLEND);
-
-   glViewport(0, 0, width, height);
-
-   /* Ensure that we reset the attrib array. */
    gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
 
-   gl->coords.vertex    = gl->vertex_ptr;
+   // draw scaled down into FBO
+   glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
+   glViewport(0, 0, frame_width/BACKGROUND_SCALE, frame_height/BACKGROUND_SCALE);
+
+   gl->coords.vertex    = vertexes;
    gl->coords.vertices  = 4;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
@@ -3123,8 +3169,27 @@ static void gl_render_background(void *data)
    gl->shader->set_mvp(gl, &gl->mvp);
 
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+   // now draw to background fiting screen
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+   glViewport(-64, -64, width + 128, height + 128);
+
+   gl->coords.vertex    = vertexes_flipped;
+   gl->coords.vertices  = 4;
+   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.color     = gl->white_color_ptr;
+
+   gl->shader->set_coords(&gl->coords);
+   gl->shader->set_mvp(gl, &gl->mvp);
+
+   glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    glDisable(GL_BLEND);
    gl->coords.vertex    = gl->vertex_ptr;
    gl->coords.tex_coord = gl->tex_info.coord;

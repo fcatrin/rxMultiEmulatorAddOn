@@ -266,6 +266,11 @@ typedef struct gl
    float *overlay_color_coord;
 #endif
 
+   GLuint fbo_background;
+   GLuint fbo_background_texture;
+   bool fbo_background_inited;
+
+
 #ifdef HAVE_GL_ASYNC_READBACK
    /* PBOs used for asynchronous viewport readbacks. */
    GLuint pbo_readback[4];
