@@ -78,6 +78,8 @@ struct shader_uniforms
    int color;
    int lut_tex_coord;
 
+   int blur_direction;
+
    int input_size;
    int output_size;
    int texture_size;
@@ -201,6 +203,33 @@ static const char *stock_fragment_core_blend =
    "void main() {\n"
    "   FragColor = color * texture(Texture, tex_coord);\n"
    "}";
+
+static const char *stock_fragment_blur =
+   "#ifdef GL_ES\n"
+   "precision mediump float;\n"
+   "#endif\n"
+   "uniform sampler2D Texture;\n"
+   "uniform vec2 InputSize;\n"
+   "uniform vec2 Direction;\n"
+   "varying vec2 tex_coord;\n"
+   "\n"
+   "vec4 blur9(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {\n"
+   "   vec4 color = vec4(0.0);\n"
+   "   vec2 off1 = vec2(1.3846153846) * direction;\n"
+   "   vec2 off2 = vec2(3.2307692308) * direction;\n"
+   "   color += texture2D(image, uv) * 0.2270270270;\n"
+   "   color += texture2D(image, uv + (off1 / resolution)) * 0.3162162162;\n"
+   "   color += texture2D(image, uv - (off1 / resolution)) * 0.3162162162;\n"
+   "   color += texture2D(image, uv + (off2 / resolution)) * 0.0702702703;\n"
+   "   color += texture2D(image, uv - (off2 / resolution)) * 0.0702702703;\n"
+   "   return color;\n"
+   "}"
+   "\n"
+   "void main() {\n"
+   "   vec2 uv = vec2(tex_coord.xy / InputSize.xy);"
+   "   gl_FragColor = 0.95 * vec4(blur9(Texture, tex_coord.xy, InputSize.xy, Direction).xyz, 1.0);\n"
+   "}";
+
 
 typedef struct glsl_shader_data
 {
@@ -601,6 +630,8 @@ static void find_uniforms(glsl_shader_data_t *glsl,
    uni->frame_count     = get_uniform(glsl, prog, "FrameCount");
    uni->frame_direction = get_uniform(glsl, prog, "FrameDirection");
 
+   uni->blur_direction  = get_uniform(glsl, prog, "Direction");
+
    for (i = 0; i < glsl->shader->luts; i++)
       uni->lut_texture[i] = glGetUniformLocation(prog, glsl->shader->lut[i].id);
 
@@ -899,6 +930,14 @@ static bool gl_glsl_init(void *data, const char *path)
    glsl->gl_program[glsl->shader->passes  + 1] = glsl->gl_program[0];
    glsl->gl_uniforms[glsl->shader->passes + 1] = glsl->gl_uniforms[0];
 
+   glsl->gl_program[GL_SHADER_STOCK_BLUR] = compile_program(
+		   glsl,
+		   stock_vertex_modern_blend,
+		   stock_fragment_blur,
+		   GL_SHADER_STOCK_BLUR);
+   find_uniforms(glsl, 0, glsl->gl_program[GL_SHADER_STOCK_BLUR],
+               &glsl->gl_uniforms[GL_SHADER_STOCK_BLUR]);
+
    if (glsl->shader->modern)
    {
       glsl->gl_program[GL_SHADER_STOCK_BLEND] = compile_program(
@@ -949,6 +988,7 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
    GLfloat buffer[512];
    struct glsl_attrib attribs[32];
    float input_size[2], output_size[2], texture_size[2];
+   float blur_direction[2], blur_input_size[2];
    unsigned i, texunit = 1;
    const struct shader_uniforms *uni = NULL;
    size_t size = 0, attribs_size = 0;
@@ -963,6 +1003,29 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
    if (!glsl)
       return;
 
+   input_size [0]  = (float)width;
+   input_size [1]  = (float)height;
+   output_size[0]  = (float)out_width;
+   output_size[1]  = (float)out_height;
+   texture_size[0] = (float)tex_width;
+   texture_size[1] = (float)tex_height;
+   blur_direction[0] = 0.75;
+   blur_direction[1] = 0;
+   blur_input_size[0] = 1;
+   blur_input_size[1] = 1;
+
+   uni = (const struct shader_uniforms*)&glsl->gl_uniforms[GL_SHADER_STOCK_BLUR];
+   if (uni->input_size >= 0) {
+      glUniform2fv(uni->input_size, 1, blur_input_size);
+   } else {
+	   RARCH_WARN("BLUR Failed to set input size.\n");
+   }
+   if (uni->blur_direction >= 0) {
+      glUniform2fv(uni->blur_direction, 1, blur_direction);
+   } else {
+	   RARCH_WARN("BLUR Failed to set blur_direction.\n");
+   }
+
    uni = (const struct shader_uniforms*)&glsl->gl_uniforms[glsl->glsl_active_index];
 
    (void)data;
@@ -970,12 +1033,6 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
    if (glsl->gl_program[glsl->glsl_active_index] == 0)
       return;
 
-   input_size [0]  = (float)width;
-   input_size [1]  = (float)height;
-   output_size[0]  = (float)out_width;
-   output_size[1]  = (float)out_height;
-   texture_size[0] = (float)tex_width;
-   texture_size[1] = (float)tex_height;
 
    if (uni->input_size >= 0)
       glUniform2fv(uni->input_size, 1, input_size);

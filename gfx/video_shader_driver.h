@@ -81,6 +81,7 @@ extern const shader_backend_t shader_null_backend;
 #include "video_shader_parse.h"
 
 #define GL_SHADER_STOCK_BLEND (GFX_MAX_SHADERS - 1)
+#define GL_SHADER_STOCK_BLUR  (GFX_MAX_SHADERS - 2)
 
 #endif
 

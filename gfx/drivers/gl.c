@@ -141,7 +141,7 @@ static void gl_overlay_tex_geom(void *data,
       float x, float y, float w, float h);
 #endif
 
-#define BACKGROUND_SCALE 16
+#define BACKGROUND_SCALE 4
 static void gl_render_background(void *data, int frame_width, int frame_height);
 
 #define set_texture_coords(coords, xamt, yamt) \
@@ -1388,7 +1388,7 @@ static INLINE void gl_copy_frame(gl_t *gl, const void *frame,
       else
       {
          /* No GL_UNPACK_ROW_LENGTH. */
-
+    	  // RARCH_ERR("[COPYFRAME]: No GL_UNPACK_ROW_LENGTH\n");
          const GLvoid *data_buf = frame;
          unsigned pitch_width   = pitch / gl->base_size;
 
@@ -1420,7 +1420,6 @@ static INLINE void gl_copy_frame(gl_t *gl, const void *frame,
       size_t buffer_stride      = gl->tex_w * gl->base_size;
       const uint8_t *frame_copy = frame;
       size_t frame_copy_size    = width * gl->base_size;
-
       uint8_t *buffer = (uint8_t*)glMapBuffer(
             GL_TEXTURE_REFERENCE_BUFFER_SCE, GL_READ_WRITE) + buffer_addr;
       for (h = 0; h < height; h++, buffer += buffer_stride, frame_copy += pitch)
@@ -3154,7 +3153,7 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
    video_driver_get_size(&width, &height);
 
    glEnable(GL_BLEND);
-   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
+   gl->shader->use(gl, GL_SHADER_STOCK_BLUR);
 
    // draw scaled down into FBO
    glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
@@ -3171,6 +3170,14 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+   gl->shader->set_params(gl,
+         frame_width, frame_height,
+         gl->tex_w, gl->tex_h,
+         gl->vp.width, gl->vp.height,
+         (unsigned int)1,
+         &gl->tex_info, gl->prev_info, NULL, 0);
+
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -3196,6 +3203,7 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
    gl->coords.color     = gl->white_color_ptr;
    gl->coords.vertices  = 4;
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
 }
 
 
