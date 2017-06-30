@@ -90,6 +90,11 @@ typedef struct settings
       bool allow_rotate;
       bool shared_context;
       bool force_srgb_disable;
+
+      bool  live_background_enable;
+      float live_background_blur;
+      float live_background_brightness;
+      float live_background_saturation;
    } video;
 
    struct

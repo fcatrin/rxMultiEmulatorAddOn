@@ -3178,7 +3178,6 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
          (unsigned int)1,
          &gl->tex_info, gl->prev_info, NULL, 0);
 
-
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
    // now draw to background fiting screen

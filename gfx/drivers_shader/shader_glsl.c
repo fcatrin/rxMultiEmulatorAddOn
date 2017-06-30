@@ -985,18 +985,44 @@ error:
    return false;
 }
 
-static void gl_glsl_set_params(void *data, unsigned width, unsigned height, 
-      unsigned tex_width, unsigned tex_height, 
+static void gl_glsl_set_params_blur()
+{
+   const struct shader_uniforms *uni = NULL;
+   settings_t *settings = config_get_ptr();
+   driver_t *driver = driver_get_ptr();
+   glsl_shader_data_t *glsl = (glsl_shader_data_t*)driver->video_shader_data;
+
+   if (!glsl)
+	  return;
+
+   settings->video.live_background_blur = 0.75;
+   settings->video.live_background_brightness = 0.9;
+   settings->video.live_background_saturation = 0.8;
+
+   uni = (const struct shader_uniforms*)&glsl->gl_uniforms[GL_SHADER_STOCK_BLUR];
+
+   if (uni->blur_direction >= 0) {
+	  glUniform2f(uni->blur_direction, settings->video.live_background_blur, 0.0);
+   }
+   if (uni->blur_value >= 0) {
+	  glUniform1f(uni->blur_value, settings->video.live_background_brightness);
+   }
+   if (uni->blur_desaturation >= 0) {
+	  glUniform1f(uni->blur_desaturation, 1.0 - settings->video.live_background_saturation);
+   }
+}
+
+static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
+      unsigned tex_width, unsigned tex_height,
       unsigned out_width, unsigned out_height,
       unsigned frame_count,
-      const void *_info, 
-      const void *_prev_info, 
+      const void *_info,
+      const void *_prev_info,
       const void *_fbo_info, unsigned fbo_info_cnt)
 {
    GLfloat buffer[512];
    struct glsl_attrib attribs[32];
    float input_size[2], output_size[2], texture_size[2];
-   float blur_direction[2], blur_input_size[2];
    unsigned i, texunit = 1;
    const struct shader_uniforms *uni = NULL;
    size_t size = 0, attribs_size = 0;
@@ -1011,38 +1037,14 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
    if (!glsl)
       return;
 
+   gl_glsl_set_params_blur();
+
    input_size [0]  = (float)width;
    input_size [1]  = (float)height;
    output_size[0]  = (float)out_width;
    output_size[1]  = (float)out_height;
    texture_size[0] = (float)tex_width;
    texture_size[1] = (float)tex_height;
-   blur_direction[0] = 0.75;
-   blur_direction[1] = 0;
-   blur_input_size[0] = 1;
-   blur_input_size[1] = 1;
-
-   uni = (const struct shader_uniforms*)&glsl->gl_uniforms[GL_SHADER_STOCK_BLUR];
-   if (uni->input_size >= 0) {
-      glUniform2fv(uni->input_size, 1, blur_input_size);
-   } else {
-	   RARCH_WARN("BLUR Failed to set input size.\n");
-   }
-   if (uni->blur_direction >= 0) {
-      glUniform2fv(uni->blur_direction, 1, blur_direction);
-   } else {
-	   RARCH_WARN("BLUR Failed to set blur_direction.\n");
-   }
-   if (uni->blur_value >= 0) {
-      glUniform1f(uni->blur_value, 0.4);
-   } else {
-	   RARCH_WARN("BLUR Failed to set blur_value.\n");
-   }
-   if (uni->blur_desaturation >= 0) {
-      glUniform1f(uni->blur_desaturation, 0.1);
-   } else {
-	   RARCH_WARN("BLUR Failed to set blur_desaturation.\n");
-   }
 
    uni = (const struct shader_uniforms*)&glsl->gl_uniforms[glsl->glsl_active_index];
 
