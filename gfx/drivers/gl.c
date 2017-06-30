@@ -1678,8 +1678,10 @@ static bool gl_frame(void *data, const void *frame,
 
    glClear(GL_COLOR_BUFFER_BIT);
 
-   if (settings->video.live_background_enable)
+   if (settings->video.live_background_enable) {
       gl_render_background(gl, frame_width, frame_height);
+      gl->shader->use(gl, 1);
+   }
 
    gl->shader->set_params(gl,
          frame_width, frame_height,
@@ -3207,7 +3209,6 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
    gl->coords.color     = gl->white_color_ptr;
    gl->coords.vertices  = 4;
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
-   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
 }
 
 
