@@ -79,6 +79,8 @@ struct shader_uniforms
    int lut_tex_coord;
 
    int blur_direction;
+   int blur_value;
+   int blur_desaturation;
 
    int input_size;
    int output_size;
@@ -211,6 +213,8 @@ static const char *stock_fragment_blur =
    "uniform sampler2D Texture;\n"
    "uniform vec2 InputSize;\n"
    "uniform vec2 Direction;\n"
+   "uniform float Value;\n"
+   "uniform float Desaturation;\n"
    "varying vec2 tex_coord;\n"
    "\n"
    "vec4 blur9(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {\n"
@@ -226,8 +230,10 @@ static const char *stock_fragment_blur =
    "}"
    "\n"
    "void main() {\n"
-   "   vec2 uv = vec2(tex_coord.xy / InputSize.xy);"
-   "   gl_FragColor = 0.95 * vec4(blur9(Texture, tex_coord.xy, InputSize.xy, Direction).xyz, 1.0);\n"
+   "   vec3 color    = Value * blur9(Texture, tex_coord.xy, InputSize.xy, Direction).xyz;\n"
+   "   vec3 grayXfer = vec3(0.3, 0.59, 0.11);\n"
+   "   vec3 gray     = vec3(dot(grayXfer, color));\n"
+   "   gl_FragColor  = vec4(mix(color, gray, Desaturation), 1.0);\n"
    "}";
 
 
@@ -630,7 +636,9 @@ static void find_uniforms(glsl_shader_data_t *glsl,
    uni->frame_count     = get_uniform(glsl, prog, "FrameCount");
    uni->frame_direction = get_uniform(glsl, prog, "FrameDirection");
 
-   uni->blur_direction  = get_uniform(glsl, prog, "Direction");
+   uni->blur_direction    = get_uniform(glsl, prog, "Direction");
+   uni->blur_value        = get_uniform(glsl, prog, "Value");
+   uni->blur_desaturation = get_uniform(glsl, prog, "Desaturation");
 
    for (i = 0; i < glsl->shader->luts; i++)
       uni->lut_texture[i] = glGetUniformLocation(prog, glsl->shader->lut[i].id);
@@ -1024,6 +1032,16 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
       glUniform2fv(uni->blur_direction, 1, blur_direction);
    } else {
 	   RARCH_WARN("BLUR Failed to set blur_direction.\n");
+   }
+   if (uni->blur_value >= 0) {
+      glUniform1f(uni->blur_value, 0.4);
+   } else {
+	   RARCH_WARN("BLUR Failed to set blur_value.\n");
+   }
+   if (uni->blur_desaturation >= 0) {
+      glUniform1f(uni->blur_desaturation, 0.1);
+   } else {
+	   RARCH_WARN("BLUR Failed to set blur_desaturation.\n");
    }
 
    uni = (const struct shader_uniforms*)&glsl->gl_uniforms[glsl->glsl_active_index];
