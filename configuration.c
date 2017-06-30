@@ -513,6 +513,11 @@ static void config_set_defaults(void)
    settings->video.gpu_screenshot              = gpu_screenshot;
    settings->video.rotation                    = ORIENTATION_NORMAL;
 
+   settings->video.live_background_enable      = live_background_enable;
+   settings->video.live_background_blur        = live_background_blur;
+   settings->video.live_background_brightness  = live_background_brightness;
+   settings->video.live_background_saturation  = live_background_saturation;
+
    settings->audio.enable                      = audio_enable;
    settings->audio.mute_enable                 = false;
    settings->audio.out_rate                    = out_rate;
@@ -1387,6 +1392,11 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_BOOL_BASE(conf, settings, video.post_filter_record, "video_post_filter_record");
    CONFIG_GET_BOOL_BASE(conf, settings, video.gpu_record, "video_gpu_record");
    CONFIG_GET_BOOL_BASE(conf, settings, video.gpu_screenshot, "video_gpu_screenshot");
+
+   CONFIG_GET_BOOL_BASE(conf, settings, video.live_background_enable, "live_background_enable");
+   CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_blur, "live_background_blur");
+   CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_brightness, "live_background_brightness");
+   CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_saturation, "live_background_saturation");
 
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))

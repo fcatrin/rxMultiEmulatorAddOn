@@ -760,6 +760,7 @@ static bool gl_glsl_init(void *data, const char *path)
    const char *stock_vertex   = NULL;
    const char *stock_fragment = NULL;
    driver_t *driver           = driver_get_ptr();
+   settings_t *settings       = config_get_ptr();
 
    (void)data;
 
@@ -938,13 +939,15 @@ static bool gl_glsl_init(void *data, const char *path)
    glsl->gl_program[glsl->shader->passes  + 1] = glsl->gl_program[0];
    glsl->gl_uniforms[glsl->shader->passes + 1] = glsl->gl_uniforms[0];
 
-   glsl->gl_program[GL_SHADER_STOCK_BLUR] = compile_program(
-		   glsl,
-		   stock_vertex_modern_blend,
-		   stock_fragment_blur,
-		   GL_SHADER_STOCK_BLUR);
-   find_uniforms(glsl, 0, glsl->gl_program[GL_SHADER_STOCK_BLUR],
-               &glsl->gl_uniforms[GL_SHADER_STOCK_BLUR]);
+   if (settings->video.live_background_enable) {
+	   glsl->gl_program[GL_SHADER_STOCK_BLUR] = compile_program(
+			   glsl,
+			   stock_vertex_modern_blend,
+			   stock_fragment_blur,
+			   GL_SHADER_STOCK_BLUR);
+	   find_uniforms(glsl, 0, glsl->gl_program[GL_SHADER_STOCK_BLUR],
+				   &glsl->gl_uniforms[GL_SHADER_STOCK_BLUR]);
+   }
 
    if (glsl->shader->modern)
    {
@@ -995,10 +998,6 @@ static void gl_glsl_set_params_blur()
    if (!glsl)
 	  return;
 
-   settings->video.live_background_blur = 0.75;
-   settings->video.live_background_brightness = 0.9;
-   settings->video.live_background_saturation = 0.8;
-
    uni = (const struct shader_uniforms*)&glsl->gl_uniforms[GL_SHADER_STOCK_BLUR];
 
    if (uni->blur_direction >= 0) {
@@ -1032,12 +1031,14 @@ static void gl_glsl_set_params(void *data, unsigned width, unsigned height,
    struct glsl_attrib *attr = (struct glsl_attrib*)attribs;
    driver_t *driver = driver_get_ptr();
    global_t *global = global_get_ptr();
+   settings_t *settings = config_get_ptr();
    glsl_shader_data_t *glsl = (glsl_shader_data_t*)driver->video_shader_data;
 
    if (!glsl)
       return;
 
-   gl_glsl_set_params_blur();
+   if (settings->video.live_background_enable)
+      gl_glsl_set_params_blur();
 
    input_size [0]  = (float)width;
    input_size [1]  = (float)height;

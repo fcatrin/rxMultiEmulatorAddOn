@@ -569,6 +569,12 @@ static const bool gpu_screenshot = true;
 /* Record post-shaded GPU output instead of raw game footage if available. */
 static const bool gpu_record = false;
 
+static const bool  live_background_enable = false;
+static const float live_background_blur = 0.75;
+static const float live_background_brightness = 0.9;
+static const float live_background_saturation = 0.9;
+
+
 /* OSD-messages. */
 static const bool font_enable = true;
 

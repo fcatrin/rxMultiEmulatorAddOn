@@ -1678,7 +1678,8 @@ static bool gl_frame(void *data, const void *frame,
 
    glClear(GL_COLOR_BUFFER_BIT);
 
-   gl_render_background(gl, frame_width, frame_height);
+   if (settings->video.live_background_enable)
+      gl_render_background(gl, frame_width, frame_height);
 
    gl->shader->set_params(gl,
          frame_width, frame_height,
@@ -2521,7 +2522,8 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
       goto error;
 #endif
 
-   gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
+   if (settings->video.live_background_enable)
+      gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
 
    gfx_ctx_input_driver(gl, input, input_data);
    
@@ -2643,6 +2645,8 @@ static void gl_update_tex_filter_frame(gl_t *gl)
 static bool gl_set_shader(void *data,
       enum rarch_shader_type type, const char *path)
 {
+	settings_t *settings = config_get_ptr();
+
 #if defined(HAVE_GLSL) || defined(HAVE_CG)
    gl_t *gl = (gl_t*)data;
 
@@ -2686,7 +2690,8 @@ static bool gl_set_shader(void *data,
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
 #endif
 
-   gl_deinit_fbo_background(gl);
+   if (settings->video.live_background_enable)
+      gl_deinit_fbo_background(gl);
 
    if (!gl->shader->init(gl, path))
    {
