@@ -728,7 +728,8 @@ static INLINE void android_input_poll_event_type_key(
    }
 
    if (keycode == AKEYCODE_SEARCH && android->pad_states[port].is_nvidia) {
-	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
+	   if (action == AKEY_EVENT_ACTION_DOWN)
+		   android->is_back_pressed = true;
    }
 
    if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
@@ -1168,7 +1169,11 @@ static bool android_input_key_pressed(void *data, int key)
 static bool android_input_meta_key_pressed(void *data, int key)
 {
 	android_input_t *android = (android_input_t*)data;
-	if (key == RARCH_MENU_TOGGLE) return android->is_back_pressed;
+	if (key == RARCH_MENU_TOGGLE) {
+		bool isPressed = android->is_back_pressed;
+		android->is_back_pressed = false;
+		return isPressed;
+	}
 	return false;
 }
 
