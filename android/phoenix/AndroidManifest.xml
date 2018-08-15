@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="retrobox.v2.retroarch"
-    android:sharedUserId="psychoworld.retrobox.v2"
+    package="xtvapps.prg.retroarch"
+    android:sharedUserId="xtvapps.prg.user"
     android:versionCode="12251"
     android:versionName="1.2.2-51">
     
@@ -20,7 +20,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/retrobox"
+        android:icon="@drawable/ic_prg"
         android:label="@string/app_name"
         android:hasCode="true"
         android:banner="@drawable/banner">
@@ -51,7 +51,7 @@
            android:screenOrientation="sensorLandscape" 
            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:excludeFromRecents="true" >
             <intent-filter>
-                <action android:name="retrobox.v2.retroarch" />
+                <action android:name="xtvapps.prg.retroarch" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
