@@ -14,7 +14,7 @@ import android.view.WindowManager;
 import com.retroarch.browser.preferences.util.UserPreferences;
 
 public class RetroBoxWrapper extends Activity {
-	private static final String RETROARCH_FUTURE = "retrobox.v2.retroarch.future";
+	private static final String RETROARCH_FUTURE = "xtvapps.prg.retroarch.future";
 	private static final String RETROARCH_PAST = "retrobox.v2.retroarch.past";
 	private static final String KEY_SIGNATURE = "signature";
 
