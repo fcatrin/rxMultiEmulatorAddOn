@@ -288,8 +288,12 @@ public final class UserPreferences
 	{
 		AudioManager manager = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
 
-		return Integer.parseInt(manager
-				.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE));
+		String sSampleRate = manager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+		try {
+			return Integer.parseInt(sSampleRate);
+		} catch (NumberFormatException nfe) {
+			return 44100;
+		}
 	}
 
 	/**
@@ -303,10 +307,15 @@ public final class UserPreferences
 	private static int getLowLatencyBufferSize(Context ctx)
 	{
 		AudioManager manager = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
-		int buffersize = Integer.parseInt(manager
-				.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER));
-		Log.i(TAG, "Queried ideal buffer size (frames): " + buffersize);
-		return buffersize;
+		String sBufferSize = manager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+		int bufferSize = 256;
+		try {
+			bufferSize = Integer.parseInt(sBufferSize);
+		} catch (NumberFormatException nfe) {
+			Log.e(TAG, "Invalid buffer size", nfe);
+		}
+		Log.i(TAG, "Queried ideal buffer size (frames): " + bufferSize);
+		return bufferSize;
 	}
 
 	/**

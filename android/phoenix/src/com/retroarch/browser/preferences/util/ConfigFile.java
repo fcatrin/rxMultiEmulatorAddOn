@@ -43,7 +43,8 @@ public final class ConfigFile
 		}
 		catch (IOException ioe)
 		{
-			Log.e("ConfigFile", "Stream reading the configuration file was suddenly closed for an unknown reason.");
+			ioe.printStackTrace();
+			Log.e("ConfigFile", "Stream reading the configuration file was suddenly closed for an unknown reason.", ioe);
 		}
 	}
 
