@@ -312,7 +312,7 @@ public final class UserPreferences
 		try {
 			bufferSize = Integer.parseInt(sBufferSize);
 		} catch (NumberFormatException nfe) {
-			Log.e(TAG, "Invalid buffer size", nfe);
+			Log.e(TAG, "Invalid buffer size " + nfe.getMessage());
 		}
 		Log.i(TAG, "Queried ideal buffer size (frames): " + bufferSize);
 		return bufferSize;
