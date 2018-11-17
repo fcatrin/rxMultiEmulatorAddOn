@@ -1,12 +1,12 @@
 <resources>
 
-    <string name="app_name">PRG Multi Emulator Add-on</string>
+    <string name="app_name">RES Multi Emulator Add-on</string>
     <string name="input_method">Input Method</string>
     <string name="file_type_icon">File type icon</string>
     <string name="optimal_settings_device">Optimal device settings</string>
     <string name="extracting_assets_please_wait_">Extracting assets, please wait …</string>
 
-    <string name="emu_opt_title">PRG Options</string>
+    <string name="emu_opt_title">RES Options</string>
     
     <!-- Main Menu Strings -->
     <string name="mainmenu_title">RetroArch - Main Menu</string>

@@ -25,7 +25,7 @@ import android.widget.Toast;
 import android.os.Environment;
 import android.content.Context;
 
-import xtvapps.prg.retroarch.R;
+import xtvapps.res.retroarch.R;
 import com.retroarch.browser.NativeInterface;
 import com.retroarch.browser.preferences.fragments.util.PreferenceListFragment;
 import com.retroarch.browser.preferences.util.UserPreferences;

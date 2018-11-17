@@ -16,7 +16,7 @@
 
 package com.retroarch.browser.preferences.fragments.util;
 
-import xtvapps.prg.retroarch.R;
+import xtvapps.res.retroarch.R;
 
 import android.content.Intent;
 import android.os.Bundle;

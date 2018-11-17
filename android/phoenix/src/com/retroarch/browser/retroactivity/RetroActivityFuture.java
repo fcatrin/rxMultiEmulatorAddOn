@@ -3,7 +3,7 @@ package com.retroarch.browser.retroactivity;
 import java.util.List;
 
 import retrobox.utils.ImmersiveModeSetter;
-import xtvapps.prg.retroarch.R;
+import xtvapps.res.retroarch.R;
 import retrobox.utils.RetroBoxUtils;
 import retrobox.vinput.Mapper;
 import android.app.ActivityManager;

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="xtvapps.prg.retroarch"
-    android:sharedUserId="xtvapps.prg.user"
+    package="xtvapps.res.retroarch"
+    android:sharedUserId="xtvapps.res.user"
     android:versionCode="12253"
     android:versionName="1.2.2-53">
     
@@ -39,7 +39,7 @@
             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
             <intent-filter>
-                <action android:name="xtvapps.prg.retroarch.future" />
+                <action android:name="xtvapps.res.retroarch.future" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 		</activity>
@@ -51,7 +51,7 @@
            android:screenOrientation="sensorLandscape" 
            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:excludeFromRecents="true" >
             <intent-filter>
-                <action android:name="xtvapps.prg.retroarch" />
+                <action android:name="xtvapps.res.retroarch" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
