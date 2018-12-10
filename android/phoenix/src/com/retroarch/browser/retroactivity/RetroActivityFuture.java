@@ -8,6 +8,7 @@ import retrobox.utils.RetroBoxUtils;
 import retrobox.vinput.Mapper;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.NativeActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,7 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
-public final class RetroActivityFuture extends RetroActivityCamera {
+public final class RetroActivityFuture extends NativeActivity {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 	
 	static int saveSlot = 0;
