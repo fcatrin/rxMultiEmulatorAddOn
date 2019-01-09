@@ -96,8 +96,8 @@ public final class RetroActivityFuture extends NativeActivity {
 	public static native void setSaveSlot(int slot);
 
 	public static native void cheatsInit(String path);
-	public static native boolean cheatsGetStatus();
-	public static native String[] cheatsGetNames();
+	public static native boolean[] cheatsGetStatus();
+	public static native String[]  cheatsGetNames();
 	public static native void cheatsEnable(int index, boolean enable);
 	
 	static final public int RESULT_CANCEL_ID = Menu.FIRST;

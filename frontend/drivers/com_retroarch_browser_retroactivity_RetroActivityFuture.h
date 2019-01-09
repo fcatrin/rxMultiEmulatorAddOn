@@ -102,9 +102,9 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 /*
  * Class:     com_retroarch_browser_retroactivity_RetroActivityFuture
  * Method:    cheatsGetStatus
- * Signature: ()Z
+ * Signature: ()[Z
  */
-JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetStatus
+JNIEXPORT jbooleanArray JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetStatus
   (JNIEnv *, jclass);
 
 /*

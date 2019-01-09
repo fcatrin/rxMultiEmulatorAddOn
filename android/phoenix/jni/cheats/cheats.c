@@ -8,22 +8,38 @@ cheat_manager_t *cheat_manager;
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsInit
   (JNIEnv *env, jclass _class, jstring jPath) {
 
-	cheat_manager = cheat_manager_load("/sdcard/adventuresofbatmanrobinthe.cht");
-	RARCH_LOG("cheat manager is null %s", cheat_manager == NULL ? "true" : "false");
-	RARCH_LOG("cheats %d", cheat_manager->size);
+	if (cheat_manager != NULL) return;
+
+	const char* path = (*env)->GetStringUTFChars(env, jPath, 0);
+
+	cheat_manager = cheat_manager_load(path);
+	(*env)->ReleaseStringUTFChars(env, jPath, path);
+
 }
 
-JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_NativeInterface_cheatsGetStatus
+JNIEXPORT jbooleanArray JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetStatus
   (JNIEnv *env, jclass _class) {
-	return false;
+	if (cheat_manager == NULL || cheat_manager->size == 0) return NULL;
+
+	jbooleanArray result = (*env)->NewBooleanArray(env, cheat_manager->size);
+	jboolean *elements = (*env)->GetBooleanArrayElements(env, result, NULL);
+
+	for (int i = 0; i < cheat_manager->size; i++) {
+		elements[i] = cheat_manager->cheats[i].state ? JNI_TRUE : JNI_FALSE;
+	}
+
+	(*env)->ReleaseBooleanArrayElements(env, result, elements, 0);
+
+	return result;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_com_retroarch_browser_NativeInterface_cheatsGetNames
+JNIEXPORT jobjectArray JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetNames
   (JNIEnv *env, jclass _class) {
+	if (cheat_manager == NULL) return NULL;
 	return NULL;
 }
 
-JNIEXPORT void JNICALL Java_com_retroarch_browser_NativeInterface_cheatsEnable
+JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsEnable
   (JNIEnv *env, jclass _class, jint index, jboolean enable) {
 
 }

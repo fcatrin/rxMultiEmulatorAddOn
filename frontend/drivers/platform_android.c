@@ -82,6 +82,12 @@ static JNINativeMethod methods[] = {
                   (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_setSaveSlot },
 	{ "cheatsInit", "(Ljava/lang/String;)V",
 				(void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsInit },
+	{ "cheatsGetStatus", "()[Z",
+				(void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetStatus },
+	{ "cheatsGetNames", "()[Ljava/lang/String;",
+				(void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetNames },
+	{ "cheatsEnable", "(IZ)V",
+				(void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsEnable },
 
 };
 
