@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <retro_miscellaneous.h>
 #include <cheats.h>
-#include "../native/com_retroarch_browser_NativeInterface.h"
+#include "../../../frontend/drivers/com_retroarch_browser_retroactivity_RetroActivityFuture.h"
 
 cheat_manager_t *cheat_manager;
 
-JNIEXPORT void JNICALL Java_com_retroarch_browser_NativeInterface_cheatsInit
+JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsInit
   (JNIEnv *env, jclass _class, jstring jPath) {
 
 	cheat_manager = cheat_manager_load("/sdcard/adventuresofbatmanrobinthe.cht");

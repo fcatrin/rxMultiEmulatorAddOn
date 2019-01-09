@@ -80,6 +80,8 @@ static JNINativeMethod methods[] = {
                   (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand },
     { "setSaveSlot", "(I)V",
                   (void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_setSaveSlot },
+	{ "cheatsInit", "(Ljava/lang/String;)V",
+				(void *)Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsInit },
 
 };
 

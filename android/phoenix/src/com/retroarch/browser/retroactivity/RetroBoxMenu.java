@@ -67,7 +67,7 @@ public class RetroBoxMenu extends Activity {
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
 		
-		NativeInterface.cheatsInit("");
+		RetroActivityFuture.cheatsInit("");
 		
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
