@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.retroarch.browser.NativeInterface;
+
 import retrobox.content.SaveStateInfo;
 import retrobox.utils.GamepadInfoDialog;
 import retrobox.utils.ListOption;
@@ -64,6 +66,8 @@ public class RetroBoxMenu extends Activity {
 	
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
+		
+		NativeInterface.cheatsInit("");
 		
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));

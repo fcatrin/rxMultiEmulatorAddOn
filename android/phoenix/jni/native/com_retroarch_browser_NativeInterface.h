@@ -15,6 +15,38 @@ extern "C" {
 JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_NativeInterface_extractArchiveTo
   (JNIEnv *, jclass, jstring, jstring, jstring);
 
+/*
+ * Class:     com_retroarch_browser_NativeInterface
+ * Method:    cheatsInit
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_retroarch_browser_NativeInterface_cheatsInit
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_retroarch_browser_NativeInterface
+ * Method:    cheatsGetStatus
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_retroarch_browser_NativeInterface_cheatsGetStatus
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_retroarch_browser_NativeInterface
+ * Method:    cheatsGetNames
+ * Signature: ()[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_com_retroarch_browser_NativeInterface_cheatsGetNames
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_retroarch_browser_NativeInterface
+ * Method:    cheatsEnable
+ * Signature: (IZ)V
+ */
+JNIEXPORT void JNICALL Java_com_retroarch_browser_NativeInterface_cheatsEnable
+  (JNIEnv *, jclass, jint, jboolean);
+
 #ifdef __cplusplus
 }
 #endif
