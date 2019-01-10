@@ -35,8 +35,17 @@ JNIEXPORT jbooleanArray JNICALL Java_com_retroarch_browser_retroactivity_RetroAc
 
 JNIEXPORT jobjectArray JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsGetNames
   (JNIEnv *env, jclass _class) {
-	if (cheat_manager == NULL) return NULL;
-	return NULL;
+	if (cheat_manager == NULL || cheat_manager->size == 0) return NULL;
+
+	jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+
+	jobjectArray result = (*env)->NewObjectArray(env, cheat_manager->size, stringClass, NULL);
+	for (int i = 0; i < cheat_manager->size; i++) {
+		char *name = cheat_manager->cheats[i].desc;
+		(*env)->SetObjectArrayElement(env, result, i, (*env)->NewStringUTF(env, name));
+	}
+	return result;
+
 }
 
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsEnable

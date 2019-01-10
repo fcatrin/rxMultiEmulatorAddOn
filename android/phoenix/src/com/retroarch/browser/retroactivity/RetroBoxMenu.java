@@ -73,6 +73,9 @@ public class RetroBoxMenu extends Activity {
 		boolean[] cheatStatus = RetroActivityFuture.cheatsGetStatus();
 		Log.d("CHEATS", "status " + Arrays.toString(cheatStatus));
 		
+		String[] names = RetroActivityFuture.cheatsGetNames();
+		Log.d("CHEATS", "names " + Arrays.toString(names));
+		
 		
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
