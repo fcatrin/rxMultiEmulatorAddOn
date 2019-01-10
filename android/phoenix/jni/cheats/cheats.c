@@ -51,4 +51,9 @@ JNIEXPORT jobjectArray JNICALL Java_com_retroarch_browser_retroactivity_RetroAct
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsEnable
   (JNIEnv *env, jclass _class, jint index, jboolean enable) {
 
+	if (cheat_manager == NULL || index >= cheat_manager->size) return;
+
+	cheat_manager->cheats[index].state = enable ? 1 : 0;
+
+	cheat_manager_apply_cheats(cheat_manager);
 }

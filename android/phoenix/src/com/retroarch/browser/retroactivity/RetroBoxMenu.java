@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -70,12 +71,7 @@ public class RetroBoxMenu extends Activity {
 		
 		RetroActivityFuture.cheatsInit("/sdcard/adventuresofbatmanrobinthe.cht");
 		
-		boolean[] cheatStatus = RetroActivityFuture.cheatsGetStatus();
-		Log.d("CHEATS", "status " + Arrays.toString(cheatStatus));
-		
-		String[] names = RetroActivityFuture.cheatsGetNames();
-		Log.d("CHEATS", "names " + Arrays.toString(names));
-		
+		final String[] cheatNames = RetroActivityFuture.cheatsGetNames();
 		
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
@@ -92,6 +88,11 @@ public class RetroBoxMenu extends Activity {
         		options.add(new ListOption("swap", getString(R.string.emu_opt_disk_swap)));
         	}
         }
+        
+        if (cheatNames!=null) {
+            options.add(new ListOption("cheats", "Cheats"));
+        }
+        
         // disable rest (some emulators hang on reset)
         // options.add(new ListOption("reset", "Reset"));
         options.add(new ListOption("help", getString(R.string.emu_opt_help)));
@@ -112,6 +113,11 @@ public class RetroBoxMenu extends Activity {
 				
 				if (key.equals("disk")) {
 					uiSelectDisk();
+					return;
+				}
+				
+				if (key.equals("cheats")) {
+					uiManageCheats(cheatNames);
 					return;
 				}
 
@@ -139,6 +145,36 @@ public class RetroBoxMenu extends Activity {
 		});
 	}
 	
+	protected void uiManageCheats(final String[] cheatNames) {
+		final boolean[] cheatStatus = RetroActivityFuture.cheatsGetStatus();
+
+		List<ListOption> options = new ArrayList<ListOption>();
+		for(int i=0; i<cheatNames.length; i++) {
+			options.add(new ListOption(
+					String.valueOf(i),
+					cheatNames[i],
+					cheatStatus[i] ? "On":"Off"));
+		}
+		
+		RetroBoxDialog.showListDialog(this, "Cheats", options, new Callback<KeyValue>(){
+			@Override
+			public void onResult(KeyValue result) {
+				int index = Utils.str2i(result.getKey());
+				boolean enabled = !cheatStatus[index];
+				RetroActivityFuture.cheatsEnable(index, enabled);
+				
+				uiManageCheats(cheatNames);
+			}
+			
+			@Override
+			public void onError() {
+				uiMainMenu();
+			}
+		});
+
+		
+	}
+
 	private void saveOptionId(int optionId) {
 		saveOptionId(optionId, 0);
 	}
