@@ -8,7 +8,10 @@ cheat_manager_t *cheat_manager;
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_cheatsInit
   (JNIEnv *env, jclass _class, jstring jPath) {
 
-	if (cheat_manager != NULL) return;
+	if (cheat_manager != NULL) {
+		cheat_manager_unload(cheat_manager);
+		cheat_manager = NULL;
+	}
 
 	const char* path = (*env)->GetStringUTFChars(env, jPath, 0);
 

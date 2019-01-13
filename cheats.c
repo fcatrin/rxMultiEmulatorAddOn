@@ -228,6 +228,13 @@ bool cheat_manager_realloc(cheat_manager_t *handle, unsigned new_size)
    return true;
 }
 
+void cheat_manager_unload(cheat_manager_t *handle)
+{
+	pretro_cheat_reset();
+	cheat_manager_free(handle);
+}
+
+
 void cheat_manager_free(cheat_manager_t *handle)
 {
    unsigned i;

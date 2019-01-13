@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import com.retroarch.browser.NativeInterface;
 
@@ -21,6 +22,7 @@ import xtvapps.core.Utils;
 import xtvapps.core.content.KeyValue;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -39,6 +41,9 @@ import android.widget.Toast;
 public class RetroBoxMenu extends Activity {
 	protected static final String LOGTAG = RetroBoxMenu.class.getSimpleName();
 	private GamepadInfoDialog gamepadInfoDialog;
+	
+	static List<File> cheatFiles = new ArrayList<File>();
+	static File activeCheatFile = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -56,8 +61,20 @@ public class RetroBoxMenu extends Activity {
         AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoTop), RetroBoxUtils.FONT_DEFAULT_M);
         AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoBottom), RetroBoxUtils.FONT_DEFAULT_M);
 
+        Intent intent = getIntent();
+        
         gamepadInfoDialog = new GamepadInfoDialog(this);
-        gamepadInfoDialog.loadFromIntent(getIntent());
+        gamepadInfoDialog.loadFromIntent(intent);
+
+        if (cheatFiles.size() == 0 && intent.hasExtra("CHEATS")) {
+        	String[] cheatFileNames = intent.getStringArrayExtra("CHEATS");
+        	for(String cheatFileName : cheatFileNames) {
+        		if (cheatFileName.toLowerCase(Locale.US).contains("retroarch rumbles")) continue;
+        		
+        		cheatFiles.add(new File(cheatFileName));
+        	}
+        }
+        
 	}
 
 	@Override
@@ -68,10 +85,6 @@ public class RetroBoxMenu extends Activity {
 	
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
-		
-		RetroActivityFuture.cheatsInit("/sdcard/adventuresofbatmanrobinthe.cht");
-		
-		final String[] cheatNames = RetroActivityFuture.cheatsGetNames();
 		
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
@@ -89,7 +102,7 @@ public class RetroBoxMenu extends Activity {
         	}
         }
         
-        if (cheatNames!=null) {
+        if (cheatFiles.size()>0) {
             options.add(new ListOption("cheats", "Cheats"));
         }
         
@@ -117,7 +130,7 @@ public class RetroBoxMenu extends Activity {
 				}
 				
 				if (key.equals("cheats")) {
-					uiManageCheats(cheatNames);
+					uiManageCheats();
 					return;
 				}
 
@@ -145,7 +158,51 @@ public class RetroBoxMenu extends Activity {
 		});
 	}
 	
-	protected void uiManageCheats(final String[] cheatNames) {
+	private String getCheatFileNameShort(File file) {
+		String name = file.getName();
+		int p = name.lastIndexOf(".");
+		if (p>0) return name.substring(0, p);
+		return name;
+	}
+	
+	protected void uiManageCheats() {
+		if (cheatFiles.size() == 1) {
+			uiManageCheats(cheatFiles.get(0));
+			return;
+		}
+		
+		int index = 0;
+		List<ListOption> options = new ArrayList<ListOption>();
+		for(File cheatFile : cheatFiles) {
+			boolean active = activeCheatFile!=null
+					&& cheatFile.getAbsolutePath().equals(activeCheatFile.getAbsolutePath());
+			
+			options.add(new ListOption(
+					String.valueOf(index++),
+					getCheatFileNameShort(cheatFile),
+					active ? "Active" : null));
+		}
+		RetroBoxDialog.showListDialog(this, "Cheat files", options, new Callback<KeyValue>(){
+
+			@Override
+			public void onResult(KeyValue result) {
+				int index = Utils.str2i(result.getKey());
+				File cheatFile = cheatFiles.get(index);
+
+				uiManageCheats(cheatFile);
+				
+			}
+		});
+	}
+	
+	protected void uiManageCheats(final File cheatFile) {
+		if (activeCheatFile == null || 
+				!activeCheatFile.getAbsolutePath().equals(cheatFile.getAbsolutePath())) {
+			activeCheatFile = cheatFile;
+			RetroActivityFuture.cheatsInit(cheatFile.getAbsolutePath());
+		}
+		
+		String[] cheatNames = RetroActivityFuture.cheatsGetNames();
 		final boolean[] cheatStatus = RetroActivityFuture.cheatsGetStatus();
 
 		List<ListOption> options = new ArrayList<ListOption>();
@@ -156,14 +213,14 @@ public class RetroBoxMenu extends Activity {
 					cheatStatus[i] ? "On":"Off"));
 		}
 		
-		RetroBoxDialog.showListDialog(this, "Cheats", options, new Callback<KeyValue>(){
+		RetroBoxDialog.showListDialog(this, "Cheats from " + getCheatFileNameShort(cheatFile), options, new Callback<KeyValue>(){
 			@Override
 			public void onResult(KeyValue result) {
 				int index = Utils.str2i(result.getKey());
 				boolean enabled = !cheatStatus[index];
 				RetroActivityFuture.cheatsEnable(index, enabled);
 				
-				uiManageCheats(cheatNames);
+				uiManageCheats(cheatFile);
 			}
 			
 			@Override
@@ -171,8 +228,6 @@ public class RetroBoxMenu extends Activity {
 				uiMainMenu();
 			}
 		});
-
-		
 	}
 
 	private void saveOptionId(int optionId) {
