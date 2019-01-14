@@ -26,8 +26,6 @@ public final class RetroActivityFuture extends NativeActivity {
 
 	private boolean menuRunning = false;
 	
-	
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -89,7 +87,8 @@ public final class RetroActivityFuture extends NativeActivity {
 		SWAP_DISK,
 		SCREENSHOT,
 		DISK_EJECT,
-		DISK_INSERT
+		DISK_INSERT,
+		OPEN_MAME_MENU,
 	}
 	
 	public static native void eventCommand(int command, int command_number);
@@ -108,6 +107,7 @@ public final class RetroActivityFuture extends NativeActivity {
     static final public int RESULT_SWAP_ID   = Menu.FIRST + 5;
     static final public int RESULT_HELP_ID   = Menu.FIRST + 6;
     static final public int RESULT_DISK_INSERT_ID  = Menu.FIRST + 7;
+    static final public int RESULT_OPEN_MAME_MENU  = Menu.FIRST + 8;
 
 	
     public static void eventCommand(int command) {
@@ -143,6 +143,10 @@ public final class RetroActivityFuture extends NativeActivity {
 	
 	private void uiSwapDisk() {
 		eventCommand(EventCommand.SWAP_DISK.ordinal());
+	}
+
+	private void uiOpenMAMEMenu() {
+		eventCommand(EventCommand.OPEN_MAME_MENU.ordinal());
 	}
 
 	private void uiInsertDisk(final int diskNumber) {
@@ -205,7 +209,8 @@ public final class RetroActivityFuture extends NativeActivity {
         case RESULT_SWAP_ID   : uiSwapDisk(); break;
         case RESULT_RESET_ID  : uiReset(); break;
         case RESULT_QUIT_ID   : uiQuit(); break;
-        case RESULT_DISK_INSERT_ID : uiInsertDisk(param);
+        case RESULT_DISK_INSERT_ID : uiInsertDisk(param); break;
+        case RESULT_OPEN_MAME_MENU : uiOpenMAMEMenu(); break;
         case RESULT_CANCEL_ID : break;
         }
 

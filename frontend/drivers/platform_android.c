@@ -53,8 +53,11 @@ char ext_dir[PATH_MAX_LENGTH];
 #define 	ACMD_SHOT  5
 #define 	ACMD_DISK_EJECT  6
 #define 	ACMD_DISK_INSERT  7
+#define 	ACMD_MAME_MENU  8
 
 JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFuture_eventCommand(JNIEnv *env, jclass clazz, jint command, jint command_number) {
+	struct android_app* android_app = (struct android_app*)g_android;
+
 	event_command_number = command_number; // used for disk insert
 
 	switch(command) {
@@ -66,6 +69,7 @@ JNIEXPORT void JNICALL Java_com_retroarch_browser_retroactivity_RetroActivityFut
 	case ACMD_SHOT  : event_command(EVENT_CMD_TAKE_SCREENSHOT); break;
 	case ACMD_DISK_EJECT  : event_command(EVENT_CMD_DISK_EJECT_TOGGLE); break;
 	case ACMD_DISK_INSERT : event_command(EVENT_CMD_DISK_INSERT); break;
+	case ACMD_MAME_MENU : android_app->is_mame_menu_request = true; break;
 	}
 }
 

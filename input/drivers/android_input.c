@@ -200,6 +200,7 @@ static void engine_handle_dpad_getaxisvalue(android_input_t *android,
 
    android->trigger_state[port][0] = brake > ANALOG_DIGITAL_THRESHOLD || ltrig > ANALOG_DIGITAL_THRESHOLD;
    android->trigger_state[port][1] = gas   > ANALOG_DIGITAL_THRESHOLD || rtrig > ANALOG_DIGITAL_THRESHOLD;
+
 }
 
 static bool android_input_lookup_name_prekitkat(char *buf,
@@ -1174,6 +1175,16 @@ static bool android_input_meta_key_pressed(void *data, int key)
 		android->is_back_pressed = false;
 		return isPressed;
 	}
+
+	struct android_app *android_app = (struct android_app*)g_android;
+	if (android_app->is_mame_menu_request) {
+		android_app->is_mame_menu_request = false;
+		android->analog_state[0][8] = 32767.0;
+		android->analog_state[0][9] = 32767.0;
+		android->trigger_state[0][0] = true;
+		android->trigger_state[0][1] = true;
+	}
+
 	return false;
 }
 

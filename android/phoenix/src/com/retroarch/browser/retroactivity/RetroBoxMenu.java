@@ -85,7 +85,8 @@ public class RetroBoxMenu extends Activity {
 	
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
-		
+    	String platform = getIntent().getStringExtra("PLATFORM");
+
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
         if (getIntent().getBooleanExtra("CAN_SAVE", false)) {
@@ -94,7 +95,6 @@ public class RetroBoxMenu extends Activity {
         }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
-        	String platform = getIntent().getStringExtra("PLATFORM");
         	if ("psx".equals(platform)) {
         		options.add(new ListOption("disk", getString(R.string.emu_opt_disk_change)));
         	} else {
@@ -104,6 +104,10 @@ public class RetroBoxMenu extends Activity {
         
         if (cheatFiles.size()>0) {
             options.add(new ListOption("cheats", "Cheats"));
+        }
+        
+        if (platform.toLowerCase(Locale.US).equals("mame")) {
+            options.add(new ListOption("mame", "Open MAME Menu (advanced)"));
         }
         
         // disable rest (some emulators hang on reset)
@@ -140,6 +144,7 @@ public class RetroBoxMenu extends Activity {
 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
 				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
+				if (key.equals("mame")) optionId = RetroActivityFuture.RESULT_OPEN_MAME_MENU;
 
 				saveOptionId(optionId);
 				
