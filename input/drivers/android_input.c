@@ -96,6 +96,8 @@ typedef struct android_input
    int8_t  hat_state[MAX_PADS][2];
    int8_t dpad_state[MAX_PADS][2];
    int8_t  trigger_state[MAX_PADS][2];
+   bool mame_trigger_state_l2;
+   bool mame_trigger_state_r2;
    bool    motion_from_hover;
    int8_t  mouse_button_click;
    struct timeval mouse_button_click_start;
@@ -1091,9 +1093,24 @@ static int16_t android_input_state(void *data,
 {
    android_input_t *android = (android_input_t*)data;
 
+   struct android_app *android_app = (struct android_app*)g_android;
+   if (android_app->is_mame_menu_request) {
+		android_app->is_mame_menu_request = false;
+		android->mame_trigger_state_l2 = true;
+		android->mame_trigger_state_r2 = true;
+   }
+
    if (device == RETRO_DEVICE_JOYPAD || device == RETRO_DEVICE_ANALOG) {
-	   if (id ==  RETRO_DEVICE_ID_JOYPAD_L2 && android->trigger_state[port][0]) return true;
-	   if (id ==  RETRO_DEVICE_ID_JOYPAD_R2 && android->trigger_state[port][1]) return true;
+	   if (id == RETRO_DEVICE_ID_JOYPAD_L2 &&
+			   (android->trigger_state[port][0] || android->mame_trigger_state_l2)) {
+		   android->mame_trigger_state_l2 = false;
+		   return true;
+	   }
+	   if (id == RETRO_DEVICE_ID_JOYPAD_R2 &&
+			   (android->trigger_state[port][1] || android->mame_trigger_state_r2)) {
+		   android->mame_trigger_state_r2 = false;
+		   return true;
+	   }
    }
 
    switch (device)
@@ -1174,15 +1191,6 @@ static bool android_input_meta_key_pressed(void *data, int key)
 		bool isPressed = android->is_back_pressed;
 		android->is_back_pressed = false;
 		return isPressed;
-	}
-
-	struct android_app *android_app = (struct android_app*)g_android;
-	if (android_app->is_mame_menu_request) {
-		android_app->is_mame_menu_request = false;
-		android->analog_state[0][8] = 32767.0;
-		android->analog_state[0][9] = 32767.0;
-		android->trigger_state[0][0] = true;
-		android->trigger_state[0][1] = true;
 	}
 
 	return false;
