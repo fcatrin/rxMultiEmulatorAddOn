@@ -89,6 +89,7 @@ public final class RetroActivityFuture extends NativeActivity {
 		DISK_EJECT,
 		DISK_INSERT,
 		OPEN_MAME_MENU,
+		OPEN_MAME_SERVICE
 	}
 	
 	public static native void eventCommand(int command, int command_number);
@@ -106,8 +107,9 @@ public final class RetroActivityFuture extends NativeActivity {
     static final public int RESULT_RESET_ID  = Menu.FIRST + 4;
     static final public int RESULT_SWAP_ID   = Menu.FIRST + 5;
     static final public int RESULT_HELP_ID   = Menu.FIRST + 6;
-    static final public int RESULT_DISK_INSERT_ID  = Menu.FIRST + 7;
-    static final public int RESULT_OPEN_MAME_MENU  = Menu.FIRST + 8;
+    static final public int RESULT_DISK_INSERT_ID    = Menu.FIRST + 7;
+    static final public int RESULT_OPEN_MAME_MENU    = Menu.FIRST + 8;
+    static final public int RESULT_OPEN_MAME_SERVICE = Menu.FIRST + 9;
 
 	
     public static void eventCommand(int command) {
@@ -147,6 +149,10 @@ public final class RetroActivityFuture extends NativeActivity {
 
 	private void uiOpenMAMEMenu() {
 		eventCommand(EventCommand.OPEN_MAME_MENU.ordinal());
+	}
+
+	private void uiOpenMAMEService() {
+		eventCommand(EventCommand.OPEN_MAME_SERVICE.ordinal());
 	}
 
 	private void uiInsertDisk(final int diskNumber) {
@@ -211,6 +217,7 @@ public final class RetroActivityFuture extends NativeActivity {
         case RESULT_QUIT_ID   : uiQuit(); break;
         case RESULT_DISK_INSERT_ID : uiInsertDisk(param); break;
         case RESULT_OPEN_MAME_MENU : uiOpenMAMEMenu(); break;
+        case RESULT_OPEN_MAME_SERVICE : uiOpenMAMEService(); break;
         case RESULT_CANCEL_ID : break;
         }
 

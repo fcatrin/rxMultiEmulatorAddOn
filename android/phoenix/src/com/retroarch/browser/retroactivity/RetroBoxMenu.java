@@ -83,6 +83,15 @@ public class RetroBoxMenu extends Activity {
 		uiMainMenu();
 	}
 	
+	private int getMameVersion() {
+        String sMameVersion = getIntent().getStringExtra("MAME");
+        if (!Utils.isEmptyString(sMameVersion) && sMameVersion.length() >= 4) {
+        	sMameVersion = sMameVersion.substring(sMameVersion.length() - 4);
+        }
+        
+        return Utils.str2i(sMameVersion, 2001);
+	}
+	
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
     	String platform = getIntent().getStringExtra("PLATFORM");
@@ -107,7 +116,11 @@ public class RetroBoxMenu extends Activity {
         }
         
         if (platform.toLowerCase(Locale.US).equals("mame")) {
-            options.add(new ListOption("mame", "Open MAME Menu (advanced)"));
+            options.add(new ListOption("mame", "Open MAME Options Menu (advanced)"));
+            
+            if (getMameVersion() >= 2003) {
+                // options.add(new ListOption("service", "Open MAME Service Menu (advanced)"));
+            }
         }
         
         // disable rest (some emulators hang on reset)
@@ -145,6 +158,7 @@ public class RetroBoxMenu extends Activity {
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
 				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
 				if (key.equals("mame")) optionId = RetroActivityFuture.RESULT_OPEN_MAME_MENU;
+				if (key.equals("service")) optionId = RetroActivityFuture.RESULT_OPEN_MAME_SERVICE;
 
 				saveOptionId(optionId);
 				
