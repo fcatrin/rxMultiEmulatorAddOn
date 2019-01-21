@@ -96,6 +96,10 @@ typedef struct android_input
    int8_t  hat_state[MAX_PADS][2];
    int8_t dpad_state[MAX_PADS][2];
    int8_t  trigger_state[MAX_PADS][2];
+   bool mame_trigger_state_l2;
+   bool mame_trigger_state_r2;
+   bool mame_trigger_state_l3;
+   bool mame_trigger_state_r3;
    bool    motion_from_hover;
    int8_t  mouse_button_click;
    struct timeval mouse_button_click_start;
@@ -200,6 +204,7 @@ static void engine_handle_dpad_getaxisvalue(android_input_t *android,
 
    android->trigger_state[port][0] = brake > ANALOG_DIGITAL_THRESHOLD || ltrig > ANALOG_DIGITAL_THRESHOLD;
    android->trigger_state[port][1] = gas   > ANALOG_DIGITAL_THRESHOLD || rtrig > ANALOG_DIGITAL_THRESHOLD;
+
 }
 
 static bool android_input_lookup_name_prekitkat(char *buf,
@@ -1090,9 +1095,38 @@ static int16_t android_input_state(void *data,
 {
    android_input_t *android = (android_input_t*)data;
 
+   struct android_app *android_app = (struct android_app*)g_android;
+   if (android_app->is_mame_menu_request) {
+		android_app->is_mame_menu_request = false;
+		android->mame_trigger_state_l2 = true;
+		android->mame_trigger_state_r2 = true;
+   }
+
+   if (android_app->is_mame_service_request) {
+		android_app->is_mame_service_request = false;
+		android->mame_trigger_state_l3 = true;
+		android->mame_trigger_state_r3 = true;
+   }
+
    if (device == RETRO_DEVICE_JOYPAD || device == RETRO_DEVICE_ANALOG) {
-	   if (id ==  RETRO_DEVICE_ID_JOYPAD_L2 && android->trigger_state[port][0]) return true;
-	   if (id ==  RETRO_DEVICE_ID_JOYPAD_R2 && android->trigger_state[port][1]) return true;
+	   if (id == RETRO_DEVICE_ID_JOYPAD_L2 &&
+			   (android->trigger_state[port][0] || android->mame_trigger_state_l2)) {
+		   android->mame_trigger_state_l2 = false;
+		   return true;
+	   }
+	   if (id == RETRO_DEVICE_ID_JOYPAD_R2 &&
+			   (android->trigger_state[port][1] || android->mame_trigger_state_r2)) {
+		   android->mame_trigger_state_r2 = false;
+		   return true;
+	   }
+	   if (id == RETRO_DEVICE_ID_JOYPAD_L3 && (android->mame_trigger_state_l3)) {
+		   android->mame_trigger_state_l2 = false;
+		   return true;
+	   }
+	   if (id == RETRO_DEVICE_ID_JOYPAD_R2 && (android->mame_trigger_state_r3)) {
+		   android->mame_trigger_state_r3 = false;
+		   return true;
+	   }
    }
 
    switch (device)
@@ -1174,6 +1208,7 @@ static bool android_input_meta_key_pressed(void *data, int key)
 		android->is_back_pressed = false;
 		return isPressed;
 	}
+
 	return false;
 }
 

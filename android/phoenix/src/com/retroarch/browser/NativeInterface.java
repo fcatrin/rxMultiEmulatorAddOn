@@ -8,6 +8,7 @@ public final class NativeInterface
 	static
 	{
 		System.loadLibrary("retroarch-jni");
+		System.loadLibrary("retroarch-activity");
 	}
 
 	// Disallow explicit instantiation.
@@ -17,4 +18,5 @@ public final class NativeInterface
 
 	public static native boolean extractArchiveTo(String archive,
 			String subDirectory, String destinationFolder);
+	
 }
