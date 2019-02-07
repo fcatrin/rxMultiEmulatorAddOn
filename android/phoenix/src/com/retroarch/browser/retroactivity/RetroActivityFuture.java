@@ -2,6 +2,8 @@ package com.retroarch.browser.retroactivity;
 
 import java.util.List;
 
+import com.retroarch.browser.preferences.util.UserPreferences;
+
 import retrobox.utils.ImmersiveModeSetter;
 import retrobox.utils.R;
 import retrobox.utils.RetroBoxUtils;
@@ -226,5 +228,8 @@ public final class RetroActivityFuture extends NativeActivity {
 	public static void toast(Context context, String message) {
 		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
 	}
-
+	
+	public void onRetroArchExit() {
+		finish();
+	}
 }
