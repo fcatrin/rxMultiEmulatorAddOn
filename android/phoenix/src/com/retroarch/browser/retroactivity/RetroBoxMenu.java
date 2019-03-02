@@ -2,7 +2,11 @@ package com.retroarch.browser.retroactivity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+
+import com.retroarch.browser.NativeInterface;
 
 import retrobox.content.SaveStateInfo;
 import retrobox.utils.GamepadInfoDialog;
@@ -18,9 +22,11 @@ import xtvapps.core.Utils;
 import xtvapps.core.content.KeyValue;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,6 +41,9 @@ import android.widget.Toast;
 public class RetroBoxMenu extends Activity {
 	protected static final String LOGTAG = RetroBoxMenu.class.getSimpleName();
 	private GamepadInfoDialog gamepadInfoDialog;
+	
+	static List<File> cheatFiles = new ArrayList<File>();
+	static File activeCheatFile = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -52,8 +61,20 @@ public class RetroBoxMenu extends Activity {
         AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoTop), RetroBoxUtils.FONT_DEFAULT_M);
         AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoBottom), RetroBoxUtils.FONT_DEFAULT_M);
 
+        Intent intent = getIntent();
+        
         gamepadInfoDialog = new GamepadInfoDialog(this);
-        gamepadInfoDialog.loadFromIntent(getIntent());
+        gamepadInfoDialog.loadFromIntent(intent);
+
+        if (cheatFiles.size() == 0 && intent.hasExtra("CHEATS")) {
+        	String[] cheatFileNames = intent.getStringArrayExtra("CHEATS");
+        	for(String cheatFileName : cheatFileNames) {
+        		if (cheatFileName.toLowerCase(Locale.US).contains("retroarch rumbles")) continue;
+        		
+        		cheatFiles.add(new File(cheatFileName));
+        	}
+        }
+        
 	}
 
 	@Override
@@ -62,9 +83,19 @@ public class RetroBoxMenu extends Activity {
 		uiMainMenu();
 	}
 	
+	private int getMameVersion() {
+        String sMameVersion = getIntent().getStringExtra("MAME");
+        if (!Utils.isEmptyString(sMameVersion) && sMameVersion.length() >= 4) {
+        	sMameVersion = sMameVersion.substring(sMameVersion.length() - 4);
+        }
+        
+        return Utils.str2i(sMameVersion, 2001);
+	}
+	
 	private void uiMainMenu() {
 		saveOptionId(RetroActivityFuture.RESULT_CANCEL_ID);
-		
+    	String platform = getIntent().getStringExtra("PLATFORM");
+
 		List<ListOption> options = new ArrayList<ListOption>();
         options.add(new ListOption("", getString(R.string.emu_opt_cancel)));
         if (getIntent().getBooleanExtra("CAN_SAVE", false)) {
@@ -73,13 +104,25 @@ public class RetroBoxMenu extends Activity {
         }
         //options.add(new ListOption("slot", "Set Save Slot"));
         if (getIntent().hasExtra("MULTIDISK")) {
-        	String platform = getIntent().getStringExtra("PLATFORM");
         	if ("psx".equals(platform)) {
         		options.add(new ListOption("disk", getString(R.string.emu_opt_disk_change)));
         	} else {
         		options.add(new ListOption("swap", getString(R.string.emu_opt_disk_swap)));
         	}
         }
+        
+        if (cheatFiles.size()>0) {
+            options.add(new ListOption("cheats", "Cheats"));
+        }
+        
+        if (platform.toLowerCase(Locale.US).equals("mame")) {
+            options.add(new ListOption("mame", "Open MAME Options Menu (advanced)"));
+            
+            if (getMameVersion() >= 2003) {
+                // options.add(new ListOption("service", "Open MAME Service Menu (advanced)"));
+            }
+        }
+        
         // disable rest (some emulators hang on reset)
         // options.add(new ListOption("reset", "Reset"));
         options.add(new ListOption("help", getString(R.string.emu_opt_help)));
@@ -102,6 +145,11 @@ public class RetroBoxMenu extends Activity {
 					uiSelectDisk();
 					return;
 				}
+				
+				if (key.equals("cheats")) {
+					uiManageCheats();
+					return;
+				}
 
 				int optionId = RetroActivityFuture.RESULT_CANCEL_ID;
 				
@@ -109,6 +157,8 @@ public class RetroBoxMenu extends Activity {
 				if (key.equals("reset")) optionId = RetroActivityFuture.RESULT_RESET_ID;
 				if (key.equals("quit")) optionId = RetroActivityFuture.RESULT_QUIT_ID;
 				if (key.equals("help")) optionId = RetroActivityFuture.RESULT_HELP_ID;
+				if (key.equals("mame")) optionId = RetroActivityFuture.RESULT_OPEN_MAME_MENU;
+				if (key.equals("service")) optionId = RetroActivityFuture.RESULT_OPEN_MAME_SERVICE;
 
 				saveOptionId(optionId);
 				
@@ -127,6 +177,78 @@ public class RetroBoxMenu extends Activity {
 		});
 	}
 	
+	private String getCheatFileNameShort(File file) {
+		String name = file.getName();
+		int p = name.lastIndexOf(".");
+		if (p>0) return name.substring(0, p);
+		return name;
+	}
+	
+	protected void uiManageCheats() {
+		if (cheatFiles.size() == 1) {
+			uiManageCheats(cheatFiles.get(0));
+			return;
+		}
+		
+		int index = 0;
+		List<ListOption> options = new ArrayList<ListOption>();
+		for(File cheatFile : cheatFiles) {
+			boolean active = activeCheatFile!=null
+					&& cheatFile.getAbsolutePath().equals(activeCheatFile.getAbsolutePath());
+			
+			options.add(new ListOption(
+					String.valueOf(index++),
+					getCheatFileNameShort(cheatFile),
+					active ? "Active" : null));
+		}
+		RetroBoxDialog.showListDialog(this, "Cheat files", options, new Callback<KeyValue>(){
+
+			@Override
+			public void onResult(KeyValue result) {
+				int index = Utils.str2i(result.getKey());
+				File cheatFile = cheatFiles.get(index);
+
+				uiManageCheats(cheatFile);
+				
+			}
+		});
+	}
+	
+	protected void uiManageCheats(final File cheatFile) {
+		if (activeCheatFile == null || 
+				!activeCheatFile.getAbsolutePath().equals(cheatFile.getAbsolutePath())) {
+			activeCheatFile = cheatFile;
+			RetroActivityFuture.cheatsInit(cheatFile.getAbsolutePath());
+		}
+		
+		String[] cheatNames = RetroActivityFuture.cheatsGetNames();
+		final boolean[] cheatStatus = RetroActivityFuture.cheatsGetStatus();
+
+		List<ListOption> options = new ArrayList<ListOption>();
+		for(int i=0; i<cheatNames.length; i++) {
+			options.add(new ListOption(
+					String.valueOf(i),
+					cheatNames[i],
+					cheatStatus[i] ? "On":"Off"));
+		}
+		
+		RetroBoxDialog.showListDialog(this, "Cheats from " + getCheatFileNameShort(cheatFile), options, new Callback<KeyValue>(){
+			@Override
+			public void onResult(KeyValue result) {
+				int index = Utils.str2i(result.getKey());
+				boolean enabled = !cheatStatus[index];
+				RetroActivityFuture.cheatsEnable(index, enabled);
+				
+				uiManageCheats(cheatFile);
+			}
+			
+			@Override
+			public void onError() {
+				uiMainMenu();
+			}
+		});
+	}
+
 	private void saveOptionId(int optionId) {
 		saveOptionId(optionId, 0);
 	}

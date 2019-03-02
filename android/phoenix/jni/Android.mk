@@ -43,6 +43,7 @@ endif
 
 LOCAL_MODULE := retroarch-activity
 
+LOCAL_SRC_FILES  +=	cheats/cheats.c
 LOCAL_SRC_FILES  +=	$(RARCH_DIR)/griffin/griffin.c
 
 ifeq ($(HAVE_LOGGER), 1)
@@ -69,6 +70,7 @@ endif
 
 LOCAL_LDLIBS	:= -L$(SYSROOT)/usr/lib -landroid -lEGL $(GLES_LIB) $(LOGGER_LDLIBS) -ldl
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(RARCH_DIR)/libretro-common/include/
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(RARCH_DIR)/
 
 LOCAL_CFLAGS += -DHAVE_SL
 LOCAL_LDLIBS += -lOpenSLES -lz

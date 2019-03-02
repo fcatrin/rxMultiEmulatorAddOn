@@ -48,6 +48,8 @@ struct android_app
    int msgwrite;
    int running;
    int keep_pause;
+   int is_mame_menu_request;
+   int is_mame_service_request;
    unsigned accelerometer_event_rate;
    const ASensor* accelerometerSensor;
    uint64_t sensor_state_mask;

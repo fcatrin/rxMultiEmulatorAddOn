@@ -8,6 +8,7 @@ import retrobox.utils.RetroBoxUtils;
 import retrobox.vinput.Mapper;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.NativeActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,14 +19,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
-public final class RetroActivityFuture extends RetroActivityCamera {
+public final class RetroActivityFuture extends NativeActivity {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
 	
 	static int saveSlot = 0;
 
 	private boolean menuRunning = false;
-	
-	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -88,12 +87,18 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 		SWAP_DISK,
 		SCREENSHOT,
 		DISK_EJECT,
-		DISK_INSERT
+		DISK_INSERT,
+		OPEN_MAME_MENU,
+		OPEN_MAME_SERVICE
 	}
 	
 	public static native void eventCommand(int command, int command_number);
 	public static native void setSaveSlot(int slot);
 
+	public static native void cheatsInit(String path);
+	public static native boolean[] cheatsGetStatus();
+	public static native String[]  cheatsGetNames();
+	public static native void cheatsEnable(int index, boolean enable);
 	
 	static final public int RESULT_CANCEL_ID = Menu.FIRST;
     static final public int RESULT_LOAD_ID   = Menu.FIRST + 1;
@@ -102,7 +107,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
     static final public int RESULT_RESET_ID  = Menu.FIRST + 4;
     static final public int RESULT_SWAP_ID   = Menu.FIRST + 5;
     static final public int RESULT_HELP_ID   = Menu.FIRST + 6;
-    static final public int RESULT_DISK_INSERT_ID  = Menu.FIRST + 7;
+    static final public int RESULT_DISK_INSERT_ID    = Menu.FIRST + 7;
+    static final public int RESULT_OPEN_MAME_MENU    = Menu.FIRST + 8;
+    static final public int RESULT_OPEN_MAME_SERVICE = Menu.FIRST + 9;
 
 	
     public static void eventCommand(int command) {
@@ -138,6 +145,14 @@ public final class RetroActivityFuture extends RetroActivityCamera {
 	
 	private void uiSwapDisk() {
 		eventCommand(EventCommand.SWAP_DISK.ordinal());
+	}
+
+	private void uiOpenMAMEMenu() {
+		eventCommand(EventCommand.OPEN_MAME_MENU.ordinal());
+	}
+
+	private void uiOpenMAMEService() {
+		eventCommand(EventCommand.OPEN_MAME_SERVICE.ordinal());
 	}
 
 	private void uiInsertDisk(final int diskNumber) {
@@ -200,7 +215,9 @@ public final class RetroActivityFuture extends RetroActivityCamera {
         case RESULT_SWAP_ID   : uiSwapDisk(); break;
         case RESULT_RESET_ID  : uiReset(); break;
         case RESULT_QUIT_ID   : uiQuit(); break;
-        case RESULT_DISK_INSERT_ID : uiInsertDisk(param);
+        case RESULT_DISK_INSERT_ID : uiInsertDisk(param); break;
+        case RESULT_OPEN_MAME_MENU : uiOpenMAMEMenu(); break;
+        case RESULT_OPEN_MAME_SERVICE : uiOpenMAMEService(); break;
         case RESULT_CANCEL_ID : break;
         }
 
