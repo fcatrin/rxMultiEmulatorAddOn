@@ -116,9 +116,7 @@ public class RetroBoxMenu extends Activity {
         }
         
         if (platform.toLowerCase(Locale.US).equals("mame")) {
-        	if (getMameVersion() != 2003) {
-        		options.add(new ListOption("mame", "Open MAME Options Menu (advanced)"));
-        	}
+    		options.add(new ListOption("mame", "Open MAME Options Menu (advanced)"));
             
             if (getMameVersion() >= 2003) {
                 // options.add(new ListOption("service", "Open MAME Service Menu (advanced)"));
