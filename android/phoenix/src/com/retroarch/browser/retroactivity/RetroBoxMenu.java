@@ -15,6 +15,7 @@ import retrobox.utils.RetroBoxDialog;
 import retrobox.utils.RetroBoxUtils;
 import retrobox.utils.SaveStateSelectorAdapter;
 import retrobox.v2.retroarch.R;
+import retrobox.vinput.Mapper;
 import xtvapps.core.AndroidFonts;
 import xtvapps.core.Callback;
 import xtvapps.core.SimpleCallback;
@@ -352,7 +353,7 @@ public class RetroBoxMenu extends Activity {
 
 	
     protected void uiHelp() {
-		RetroBoxDialog.showGamepadDialogIngame(this, gamepadInfoDialog, new SimpleCallback() {
+		RetroBoxDialog.showGamepadDialogIngame(this, gamepadInfoDialog, Mapper.hasGamepads(), new SimpleCallback() {
 			@Override
 			public void onResult() {
 				finish();
