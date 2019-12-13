@@ -985,6 +985,18 @@ static int android_input_get_id(android_input_t *android, AInputEvent *event)
    return id;
 }
 
+static int android_is_gamepad_button(int keycode) {
+	static int buttons[] = {
+			AKEYCODE_BUTTON_A,  AKEYCODE_BUTTON_B,  AKEYCODE_BUTTON_X,  AKEYCODE_BUTTON_Y,
+			AKEYCODE_BUTTON_L1, AKEYCODE_BUTTON_R1, AKEYCODE_BUTTON_L2, AKEYCODE_BUTTON_R2,
+			AKEYCODE_BUTTON_THUMBL, AKEYCODE_BUTTON_THUMBR, AKEYCODE_BUTTON_SELECT, AKEYCODE_BUTTON_START, 0};
+
+	for(int i=0; buttons[i]; i++) {
+		if (buttons[i] == keycode) return 1;
+	}
+	return 0;
+}
+
 static void android_input_handle_input(void *data)
 {
    AInputEvent *event = NULL;
@@ -1003,8 +1015,19 @@ static void android_input_handle_input(void *data)
          int            id = android_input_get_id(android, event);
          int          port = android_input_get_id_port(android, id, source);
 
-         if (port < 0)
-            handle_hotplug(android, android_app, id, source, &port);
+         if (port < 0) {
+        	// do hotplug only with gamepad buttons
+        	RARCH_LOG("Evaluate hotplug: start\n");
+        	if (type_event == AINPUT_EVENT_TYPE_KEY) {
+        		RARCH_LOG("Evaluate hotplug: event is key\n");
+        		int keycode = AKeyEvent_getKeyCode(event);
+        		RARCH_LOG("Evaluate hotplug: keycode is %d\n", keycode);
+        		if (android_is_gamepad_button(keycode)) {
+        			RARCH_LOG("Evaluate hotplug: do hotplug\n");
+        			handle_hotplug(android, android_app, id, source, &port);
+        		}
+        	}
+         }
 
          switch (type_event)
          {
