@@ -800,96 +800,105 @@ static void handle_hotplug(android_input_t *android,
 
    if (!android_input_get_descriptor(device_descriptor, sizeof(device_descriptor), id))
    {
-      RARCH_ERR("Could not look up device descriptor\n");
-      return;
+	  RARCH_ERR("Could not look up device descriptor\n");
+	  return;
    }
 
-   /* FIXME: Ugly hack, see other FIXME note below. */
-   if (strstr(device_name, "keypad-game-zeus") ||
-         strstr(device_name, "keypad-zeus"))
-   {
-      if (zeus_id < 0)
-      {
-         RARCH_LOG("zeus_pad 1 detected: %u\n", id);
-         zeus_id = id;
-      }
-      else
-      {
-         RARCH_LOG("zeus_pad 2 detected: %u\n", id);
-         zeus_second_id = id;
-      }
-      strlcpy(name_buf, device_name, sizeof(name_buf));
-   }
-   /* followed by a 4 (hex) char HW id */
-   else if (strstr(device_name, "iControlPad-"))
-      strlcpy(name_buf, "iControlPad HID Joystick profile", sizeof(name_buf));
-   else if (strstr(device_name, "TTT THT Arcade console 2P USB Play"))
-   {
-      //FIXME - need to do a similar thing here as we did for nVidia Shield
-      //and Xperia Play. We need to keep 'count' of the amount of similar (grouped)
-      //devices.
-      //
-      //For Xperia Play - count similar devices and bind them to the same 'user'
-      //port
-      //
-      //For nVidia Shield - see above
-      //
-      //For TTT HT - keep track of how many of these 'pads' are already
-      //connected, and based on that, assign one of them to be User 1 and
-      //the other to be User 2.
-      //
-      //If this is finally implemented right, then these port conditionals can go.
-      if (port == 0)
-         strlcpy(name_buf, "TTT THT Arcade (User 1)", sizeof(name_buf));
-      else if (port == 1)
-         strlcpy(name_buf, "TTT THT Arcade (User 2)", sizeof(name_buf));
-   }
-   else if (strstr(device_name, "360 Wireless"))
-      strlcpy(name_buf, "XBox 360 Wireless", sizeof(name_buf));
-   else if (strstr(device_name, "Microsoft"))
-   {
-      if (strstr(device_name, "Dual Strike"))
-         strlcpy(device_name, "SideWinder Dual Strike", sizeof(device_name));
-      else if (strstr(device_name, "SideWinder"))
-         strlcpy(name_buf, "SideWinder Classic", sizeof(name_buf));
-   }
-   else if (strstr(device_name, "NVIDIA Corporation NVIDIA Controller v01.01"))
-   {
-      /* Built-in shield contrlleris always user 1. FIXME: This is kinda ugly.
-       * We really need to find a way to detect useless input devices
-       * like gpio-keys in a general way.
-       */
-      port = 0;
-      strlcpy(name_buf, device_name, sizeof(name_buf));
-   }
-   else if (strstr(device_name, "Virtual") || 
-         (strstr(device_name, "gpio") && strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller v01.01")))
-   {
-      /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
-      port = 0;
-      strlcpy(name_buf, "NVIDIA Corporation NVIDIA Controller v01.01", sizeof(name_buf));
-   }
-   else if (
-         strstr(device_name, "PLAYSTATION(R)3") ||
-         strstr(device_name, "Dualshock3") ||
-         strstr(device_name, "Sixaxis")
-         )
-      strlcpy(name_buf, "PlayStation3", sizeof(name_buf));
-   else if (strstr(device_name, "MOGA"))
-      strlcpy(name_buf, "Moga IME", sizeof(name_buf));
-   else if (device_name[0] != '\0')
-      strlcpy(name_buf, device_name, sizeof(name_buf));
+   if (0) {
 
-   if (strstr(android_app->current_ime, "net.obsidianx.android.mogaime"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
-   else if (strstr(android_app->current_ime, "com.ccpcreations.android.WiiUseAndroid"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
-   else if (strstr(android_app->current_ime, "com.hexad.bluezime"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   /* FIXME: Ugly hack, see other FIXME note below. */
+	   if (strstr(device_name, "keypad-game-zeus") ||
+			 strstr(device_name, "keypad-zeus"))
+	   {
+		  if (zeus_id < 0)
+		  {
+			 RARCH_LOG("zeus_pad 1 detected: %u\n", id);
+			 zeus_id = id;
+		  }
+		  else
+		  {
+			 RARCH_LOG("zeus_pad 2 detected: %u\n", id);
+			 zeus_second_id = id;
+		  }
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+	   }
+	   /* followed by a 4 (hex) char HW id */
+	   else if (strstr(device_name, "iControlPad-"))
+		  strlcpy(name_buf, "iControlPad HID Joystick profile", sizeof(name_buf));
+	   else if (strstr(device_name, "TTT THT Arcade console 2P USB Play"))
+	   {
+		  //FIXME - need to do a similar thing here as we did for nVidia Shield
+		  //and Xperia Play. We need to keep 'count' of the amount of similar (grouped)
+		  //devices.
+		  //
+		  //For Xperia Play - count similar devices and bind them to the same 'user'
+		  //port
+		  //
+		  //For nVidia Shield - see above
+		  //
+		  //For TTT HT - keep track of how many of these 'pads' are already
+		  //connected, and based on that, assign one of them to be User 1 and
+		  //the other to be User 2.
+		  //
+		  //If this is finally implemented right, then these port conditionals can go.
+		  if (port == 0)
+			 strlcpy(name_buf, "TTT THT Arcade (User 1)", sizeof(name_buf));
+		  else if (port == 1)
+			 strlcpy(name_buf, "TTT THT Arcade (User 2)", sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "360 Wireless"))
+		  strlcpy(name_buf, "XBox 360 Wireless", sizeof(name_buf));
+	   else if (strstr(device_name, "Microsoft"))
+	   {
+		  if (strstr(device_name, "Dual Strike"))
+			 strlcpy(device_name, "SideWinder Dual Strike", sizeof(device_name));
+		  else if (strstr(device_name, "SideWinder"))
+			 strlcpy(name_buf, "SideWinder Classic", sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "NVIDIA Corporation NVIDIA Controller v01.01"))
+	   {
+		  /* Built-in shield contrlleris always user 1. FIXME: This is kinda ugly.
+		   * We really need to find a way to detect useless input devices
+		   * like gpio-keys in a general way.
+		   */
+		  port = 0;
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "Virtual") ||
+			 (strstr(device_name, "gpio") && strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller v01.01")))
+	   {
+		  /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
+		  port = 0;
+		  strlcpy(name_buf, "NVIDIA Corporation NVIDIA Controller v01.01", sizeof(name_buf));
+	   }
+	   else if (
+			 strstr(device_name, "PLAYSTATION(R)3") ||
+			 strstr(device_name, "Dualshock3") ||
+			 strstr(device_name, "Sixaxis")
+			 )
+		  strlcpy(name_buf, "PlayStation3", sizeof(name_buf));
+	   else if (strstr(device_name, "MOGA"))
+		  strlcpy(name_buf, "Moga IME", sizeof(name_buf));
+	   else if (device_name[0] != '\0')
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+
+	   if (strstr(android_app->current_ime, "net.obsidianx.android.mogaime"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   else if (strstr(android_app->current_ime, "com.ccpcreations.android.WiiUseAndroid"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   else if (strstr(android_app->current_ime, "com.hexad.bluezime"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+
+   } else {
+	   for(int i=0; i<strlen(device_name); i++) {
+		   device_name[i] = tolower(device_name[i]);
+	   }
+	   strlcpy(name_buf, device_name, sizeof(name_buf));
+   }
 
    if (name_buf[0] != '\0')
-      strlcpy(settings->input.device_names[port],
-            name_buf, sizeof(settings->input.device_names[port]));
+	  strlcpy(settings->input.device_names[port],
+			name_buf, sizeof(settings->input.device_names[port]));
 
    if (settings->input.autodetect_enable)
    {
@@ -912,6 +921,7 @@ static void handle_hotplug(android_input_t *android,
       }
    }
 
+   /*
    int preset_device = -1;
    for(int i=0; i<android->pads_connected; i++) {
 	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)
@@ -926,8 +936,10 @@ static void handle_hotplug(android_input_t *android,
    } else {
 	   RARCH_LOG("Looking for known device descriptor %s. Found at gamepad %d", device_descriptor, preset_device+1);
    }
-
    port = preset_device>=0 ? preset_device : android->pads_connected;
+   */
+
+   port = android->pads_connected;
    *detected_port = port;
 
    bool ignore_back = false;
@@ -947,10 +959,8 @@ static void handle_hotplug(android_input_t *android,
    strlcpy(android->pad_states[port].name, name_buf,
          sizeof(android->pad_states[port].name));
 
-   if (preset_device<0) {
-	   strlcpy(android->pad_states[port].descriptor, device_descriptor, sizeof(android->pad_states[port].descriptor));
-	   android->pads_connected++;
-   }
+   strlcpy(android->pad_states[port].descriptor, device_descriptor, sizeof(android->pad_states[port].descriptor));
+   android->pads_connected++;
 
    RARCH_LOG("Current %d devices", android->pads_connected);
    for(int i=0; i<android->pads_connected; i++) {

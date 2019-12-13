@@ -86,6 +86,7 @@ static int input_try_autoconfigure_joypad_from_conf(config_file_t *conf,
    }
 
    /* Check for name match */
+   RARCH_LOG("Autoconf: compare name %s with param name %s\n", ident, params->name);
    if (!strcmp(ident, params->name))
    {
       score += 2;
@@ -178,13 +179,17 @@ static bool input_autoconfigure_joypad_from_conf_dir(
    fill_pathname_join(path,settings->input.autoconfig_dir,
          settings->input.joypad_driver,
          sizeof(path));
+   RARCH_LOG("Autoconfig: using path %s \n", path);
 
-   if (settings)
+   if (settings) {
       list = dir_list_new(path, "cfg", false);
+      RARCH_LOG("Autoconfig: using path %s found:%d\n", path, !list ? 0 : list->size);
+   }
 
-   if (!list || !list->size)
+   if (!list || !list->size) {
       list = dir_list_new(settings->input.autoconfig_dir, "cfg", false);
-
+      RARCH_LOG("Autoconfig: using path %s found:%d\n", settings->input.autoconfig_dir,  !list ? 0 : list->size);
+   }
    if(!list)
       return false;
 
@@ -267,19 +272,25 @@ bool input_config_autoconfigure_joypad(autoconfig_params_t *params)
 {
    bool ret = false;
 
-   if (!input_config_autoconfigure_joypad_init(params))
-      return ret;
+   if (!input_config_autoconfigure_joypad_init(params)) {
+	   RARCH_LOG("Autoconfig: input_config_autoconfigure_joypad init error \n");
+	   return ret;
+   }
 
-   if (!*params->name)
+   if (!*params->name) {
+	  RARCH_LOG("Autoconfig: input_config_autoconfigure_joypad name is empty \n");
       return ret;
-
+   }
 #if defined(HAVE_BUILTIN_AUTOCONFIG)
    ret = input_autoconfigure_joypad_from_conf_internal(params);
 #endif
 
-   if (!ret)
+   if (!ret) {
+	  RARCH_LOG("Autoconfig: input_config_autoconfigure_joypad read dir \n");
       ret = input_autoconfigure_joypad_from_conf_dir(params);
+   }
 
+   RARCH_LOG("Autoconfig: input_config_autoconfigure_joypad result: %s\n", ret? "true":"false");
    return ret;
 }
 
