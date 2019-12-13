@@ -420,6 +420,53 @@ error:
    return result;
 }
 
+static jclass android_find_non_native_class(JNIEnv *env, char *classname) {
+	struct android_app *android_app = (struct android_app*)g_android;
+
+	jobject nativeActivity = android_app->activity->clazz;
+	jclass acl = (*env)->GetObjectClass(env, nativeActivity);
+	jmethodID getClassLoader = (*env)->GetMethodID(env, acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+
+	jobject cls = (*env)->CallObjectMethod(env, nativeActivity, getClassLoader);
+	jclass classLoader = (*env)->FindClass(env, "java/lang/ClassLoader");
+	jmethodID findClass = (*env)->GetMethodID(env, classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+	jstring strClassName = (*env)->NewStringUTF(env, classname);
+	jclass _class = (jclass)((*env)->CallObjectMethod(env, cls, findClass, strClassName));
+
+	(*env)->DeleteLocalRef(env, strClassName);
+	(*env)->DeleteLocalRef(env, classLoader);
+	return _class;
+}
+
+static void android_toast(char *message)
+{
+   jmethodID method  = NULL;
+   jclass    class   = 0;
+   jstring jmessage  = NULL;
+   JNIEnv     *env   = (JNIEnv*)jni_thread_getenv();
+
+   if (!env)
+      goto error;
+
+   class = android_find_non_native_class(env, "com.retroarch.browser.retroactivity.RetroBoxWrapper");
+   if (!class)
+      goto error;
+
+   GET_STATIC_METHOD_ID(env, method, class, "toast",
+         "(Ljava/lang/String;)V");
+   if (!method)
+      goto error;
+
+   jmessage = (*env)->NewStringUTF(env, message);
+
+   CALL_VOID_STATIC_METHOD_PARAM(env, class, method, jmessage);
+
+error:
+   (*env)->DeleteLocalRef(env, jmessage);
+   (*env)->DeleteLocalRef(env, class);
+}
+
 
 static void engine_handle_cmd(void)
 {
@@ -780,7 +827,7 @@ static void handle_hotplug(android_input_t *android,
    char device_name[256]        = {0};
    char name_buf[256]           = {0};
    char device_descriptor[256]  = {0};
-   unsigned port                = 0;
+   unsigned port                = android->pads_connected;
    int vendorId                 = 0;
    int productId                = 0;
    bool back_mapped             = false;
@@ -890,9 +937,6 @@ static void handle_hotplug(android_input_t *android,
 		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
 
    } else {
-	   for(int i=0; i<strlen(device_name); i++) {
-		   device_name[i] = tolower(device_name[i]);
-	   }
 	   strlcpy(name_buf, device_name, sizeof(name_buf));
    }
 
@@ -905,12 +949,19 @@ static void handle_hotplug(android_input_t *android,
       unsigned      autoconfigured = false;
       autoconfig_params_t params   = {{0}};
 
-      RARCH_LOG("Port %d: %s.\n", port, name_buf);
-
       strlcpy(params.name, name_buf, sizeof(params.name));
+      strlcpy(params.display_name, name_buf, sizeof(params.display_name));
+
+      for(int i=0; i<strlen(params.name); i++) {
+    	  params.name[i] = tolower(params.name[i]);
+	  }
+
+      RARCH_LOG("Port %d: %s.\n", port, params.display_name);
+
       params.idx = port;
       params.vid = vendorId;
       params.pid = productId;
+      params.func_message = android_toast;
       strlcpy(params.driver, android_joypad.ident, sizeof(params.driver));
       autoconfigured = input_config_autoconfigure_joypad(&params);
 
@@ -939,7 +990,6 @@ static void handle_hotplug(android_input_t *android,
    port = preset_device>=0 ? preset_device : android->pads_connected;
    */
 
-   port = android->pads_connected;
    *detected_port = port;
 
    bool ignore_back = false;

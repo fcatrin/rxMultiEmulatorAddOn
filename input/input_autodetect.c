@@ -131,14 +131,17 @@ static void input_autoconfigure_joypad_add(
          settings->input.autoconf_binds[params->idx]);
 
    if (buf[0] != '\0' || strcmp(buf, ""))
-      snprintf(msg, sizeof(msg), "%s configured in port #%u.",
-            buf, params->idx);
+      snprintf(msg, sizeof(msg), "Controller %s is Player %u",
+            buf, params->idx+1);
    else
-      snprintf(msg, sizeof(msg), "%s configured in port #%u.",
-            params->name, params->idx);
+      snprintf(msg, sizeof(msg), "Controller %s is Player %u",
+            params->display_name, params->idx+1);
 
-      if (!block_osd_spam)
-         rarch_main_msg_queue_push(msg, 0, 60, false);
+   if (params->func_message) {
+	   params->func_message(msg);
+   } else if (!block_osd_spam) {
+       rarch_main_msg_queue_push(msg, 0, 60, false);
+   }
 
    RARCH_LOG("%s\n", msg);
 }

@@ -214,6 +214,10 @@ enum
    var = (*env)->CallStaticObjectMethod(env, clazz, methodId, __VA_ARGS__); \
    JNI_EXCEPTION(env)
 
+#define CALL_VOID_STATIC_METHOD_PARAM(env, clazz, methodId, ...) \
+   (*env)->CallStaticVoidMethod(env, clazz, methodId, __VA_ARGS__); \
+   JNI_EXCEPTION(env)
+
 #define CALL_OBJ_METHOD_PARAM(env, var, clazz_obj, methodId, ...) \
    var = (*env)->CallObjectMethod(env, clazz_obj, methodId, __VA_ARGS__); \
    JNI_EXCEPTION(env)
