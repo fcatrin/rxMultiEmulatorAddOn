@@ -28,7 +28,6 @@ typedef struct autoconfig_params
    unsigned idx;
    int32_t vid;
    int32_t pid;
-   void (*func_message)(char *message);
 } autoconfig_params_t;
 
 const struct retro_keybind *input_get_auto_bind(unsigned port,

@@ -820,9 +820,22 @@ static int android_input_get_id_index_from_name(android_input_t *android,
    return -1;
 }
 
+static int android_is_gamepad_button(int keycode) {
+
+	static int buttons[] = {
+			RETRO_DEVICE_ID_JOYPAD_A,  RETRO_DEVICE_ID_JOYPAD_B,  RETRO_DEVICE_ID_JOYPAD_X,      RETRO_DEVICE_ID_JOYPAD_Y,
+			RETRO_DEVICE_ID_JOYPAD_L,  RETRO_DEVICE_ID_JOYPAD_R,  RETRO_DEVICE_ID_JOYPAD_L2,     RETRO_DEVICE_ID_JOYPAD_R2,
+			RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START, -1};
+
+	for(int i=0; buttons[i]>=0; i++) {
+		if (buttons[i] == keycode) return true;
+	}
+	return false;
+}
+
 static void handle_hotplug(android_input_t *android,
       struct android_app *android_app, unsigned id,
-      int source, int *detected_port)
+      int source, int keycode, int *detected_port)
 {
    char device_name[256]        = {0};
    char name_buf[256]           = {0};
@@ -832,6 +845,7 @@ static void handle_hotplug(android_input_t *android,
    int productId                = 0;
    bool back_mapped             = false;
    settings_t         *settings = config_get_ptr();
+   unsigned bind;
 
    if (android->pads_connected > MAX_PADS)
    {
@@ -961,18 +975,29 @@ static void handle_hotplug(android_input_t *android,
       params.idx = port;
       params.vid = vendorId;
       params.pid = productId;
-      params.func_message = android_toast;
       strlcpy(params.driver, android_joypad.ident, sizeof(params.driver));
       autoconfigured = input_config_autoconfigure_joypad(&params);
 
-      if (autoconfigured)
-      {
+      if (autoconfigured) {
          if (settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey != 0)
             back_mapped = true;
+      } else {
+    	  return;
       }
 
-      RARCH_LOG("Autoconfigured: %s, back_mapped: %s with %d", autoconfigured?"true":"false", back_mapped?"true":"false",
-    		  settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey);
+      int translated_code = -1;
+      for(bind = 0; bind < RARCH_BIND_LIST_END; bind++) {
+    	  int joykey = settings->input.autoconf_binds[port][bind].joykey;
+    	  RARCH_LOG("Looking for key code %d on bind %d = %d", keycode, bind, joykey);
+    	  if (joykey == keycode) {
+    		  translated_code = bind;
+    		  break;
+    	  }
+      }
+
+      RARCH_LOG("Translated code is %d", translated_code);
+      if (!android_is_gamepad_button(translated_code)) return;
+
    }
 
    /*
@@ -996,7 +1021,6 @@ static void handle_hotplug(android_input_t *android,
    *detected_port = port;
 
    bool ignore_back = false;
-   unsigned bind;
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
 	   int joykey = settings->input.autoconf_binds[port][bind].joykey;
 	   ignore_back = joykey == AKEYCODE_BACK;
@@ -1021,6 +1045,10 @@ static void handle_hotplug(android_input_t *android,
 	   RARCH_LOG("Current gamepad %d: %s (%s)", i+1, android->pad_states[i].name, android->pad_states[i].descriptor);
    }
 
+   char msg[1000];
+   sprintf(msg, "%s is Player %d", device_name, port+1);
+   android_toast(msg);
+
 }
 
 static int android_input_get_id(android_input_t *android, AInputEvent *event)
@@ -1037,23 +1065,6 @@ static int android_input_get_id(android_input_t *android, AInputEvent *event)
    }
 
    return id;
-}
-
-#define AKEYCODE_BUTTON_1  188
-#define AKEYCODE_BUTTON_16 203
-
-static int android_is_gamepad_button(int keycode) {
-	static int buttons[] = {
-			AKEYCODE_BUTTON_A,  AKEYCODE_BUTTON_B,  AKEYCODE_BUTTON_X,  AKEYCODE_BUTTON_Y,
-			AKEYCODE_BUTTON_L1, AKEYCODE_BUTTON_R1, AKEYCODE_BUTTON_L2, AKEYCODE_BUTTON_R2,
-			AKEYCODE_BUTTON_THUMBL, AKEYCODE_BUTTON_THUMBR, AKEYCODE_BUTTON_SELECT, AKEYCODE_BUTTON_START, 0};
-
-	if (AKEYCODE_BUTTON_1 <= keycode && keycode <= AKEYCODE_BUTTON_16) return 1;
-
-	for(int i=0; buttons[i]; i++) {
-		if (buttons[i] == keycode) return 1;
-	}
-	return 0;
 }
 
 static void android_input_handle_input(void *data)
@@ -1081,10 +1092,7 @@ static void android_input_handle_input(void *data)
         		RARCH_LOG("Evaluate hotplug: event is key\n");
         		int keycode = AKeyEvent_getKeyCode(event);
         		RARCH_LOG("Evaluate hotplug: keycode is %d\n", keycode);
-        		if (android_is_gamepad_button(keycode)) {
-        			RARCH_LOG("Evaluate hotplug: do hotplug\n");
-        			handle_hotplug(android, android_app, id, source, &port);
-        		}
+				handle_hotplug(android, android_app, id, source, keycode, &port);
         	}
          }
 

@@ -137,10 +137,8 @@ static void input_autoconfigure_joypad_add(
       snprintf(msg, sizeof(msg), "Controller %s is Player %u",
             params->display_name, params->idx+1);
 
-   if (params->func_message) {
-	   params->func_message(msg);
-   } else if (!block_osd_spam) {
-       rarch_main_msg_queue_push(msg, 0, 60, false);
+   if (!block_osd_spam) {
+       // rarch_main_msg_queue_push(msg, 0, 60, false);
    }
 
    RARCH_LOG("%s\n", msg);
