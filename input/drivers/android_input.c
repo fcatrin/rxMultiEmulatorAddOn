@@ -970,6 +970,9 @@ static void handle_hotplug(android_input_t *android,
          if (settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey != 0)
             back_mapped = true;
       }
+
+      RARCH_LOG("Autoconfigured: %s, back_mapped: %s with %d", autoconfigured?"true":"false", back_mapped?"true":"false",
+    		  settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey);
    }
 
    /*
@@ -995,7 +998,8 @@ static void handle_hotplug(android_input_t *android,
    bool ignore_back = false;
    unsigned bind;
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
-	   ignore_back = settings->input.binds[port][bind].joykey == AKEYCODE_BACK;
+	   int joykey = settings->input.autoconf_binds[port][bind].joykey;
+	   ignore_back = joykey == AKEYCODE_BACK;
    }
 
    if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
@@ -1005,7 +1009,7 @@ static void handle_hotplug(android_input_t *android,
    android->pad_states[port].id = id;
    android->pad_states[port].port = port;
    android->pad_states[port].ignore_back = ignore_back;
-   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL || strstr(device_name, "NVIDIA") != NULL;
+   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL || strcasestr(device_name, "NVIDIA") != NULL;
    strlcpy(android->pad_states[port].name, name_buf,
          sizeof(android->pad_states[port].name));
 
