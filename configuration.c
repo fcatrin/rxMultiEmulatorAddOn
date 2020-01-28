@@ -518,6 +518,8 @@ static void config_set_defaults(void)
    settings->video.live_background_brightness  = live_background_brightness;
    settings->video.live_background_saturation  = live_background_saturation;
 
+   settings->video.background_enable           = background_enable;
+
    settings->audio.enable                      = audio_enable;
    settings->audio.mute_enable                 = false;
    settings->audio.out_rate                    = out_rate;
@@ -1397,6 +1399,9 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_blur, "live_background_blur");
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_brightness, "live_background_brightness");
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_saturation, "live_background_saturation");
+
+   CONFIG_GET_BOOL_BASE(conf, settings, video.background_enable, "background_enable");
+   config_get_path(conf, "background_path", settings->video.background_path, sizeof(settings->video.background_path));
 
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))

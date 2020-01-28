@@ -95,6 +95,9 @@ typedef struct settings
       float live_background_blur;
       float live_background_brightness;
       float live_background_saturation;
+
+      bool background_enable;
+      char background_path[PATH_MAX_LENGTH];
    } video;
 
    struct

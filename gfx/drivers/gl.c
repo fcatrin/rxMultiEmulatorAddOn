@@ -142,7 +142,8 @@ static void gl_overlay_tex_geom(void *data,
 #endif
 
 #define BACKGROUND_SCALE 4
-static void gl_render_background(void *data, int frame_width, int frame_height);
+static void gl_render_background_live(void *data, int frame_width, int frame_height);
+static void gl_render_background_static(void *data, int frame_width, int frame_height);
 
 #define set_texture_coords(coords, xamt, yamt) \
    coords[2] = xamt; \
@@ -459,6 +460,32 @@ static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h) {
 	gl->fbo_background_inited = true;
 }
 
+static void gl_create_background_texture(gl_t *gl, const char *path) {
+
+	gl->background_image = (struct texture_image*)calloc(1, sizeof(struct texture_image));
+
+	if (!texture_image_load(gl->background_image, path)) {
+    	RARCH_WARN("[GL_BG] cannot load background %s", path);
+    	return;
+	}
+
+	glGenTextures(1, &gl->background_texture);
+	glBindTexture(GL_TEXTURE_2D, gl->background_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    unsigned alignment = video_pixel_get_alignment(gl->background_image->width * sizeof(uint32_t));
+
+    gl_load_texture_data(gl->background_texture,
+          RARCH_WRAP_EDGE, TEXTURE_FILTER_LINEAR,
+          alignment,
+		  gl->background_image->width, gl->background_image->height, gl->background_image->pixels,
+          sizeof(uint32_t));
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	gl->background_inited = true;
+}
+
 static void gl_create_fbo_textures(gl_t *gl)
 {
    int i;
@@ -619,6 +646,19 @@ static void gl_deinit_fbo_background(gl_t *gl)
    gl->fbo_background_texture = 0;
    gl->fbo_background = 0;
    gl->fbo_background_inited = false;
+}
+
+static void gl_deinit_background(gl_t *gl)
+{
+   if (!gl->background_inited)
+      return;
+
+   free(gl->background_image);
+   gl->background_image = 0;
+
+   glDeleteTextures(1, &gl->background_texture);
+   gl->background_texture = 0;
+   gl->background_inited = false;
 }
 
 
@@ -1679,8 +1719,11 @@ static bool gl_frame(void *data, const void *frame,
    glClear(GL_COLOR_BUFFER_BIT);
 
    if (settings->video.live_background_enable) {
-      gl_render_background(gl, frame_width, frame_height);
+      gl_render_background_live(gl, frame_width, frame_height);
       gl->shader->use(gl, 1);
+   } else if (settings->video.background_enable) {
+	  gl_render_background_static(gl, frame_width, frame_height);
+	  gl->shader->use(gl, 1);
    }
 
    gl->shader->set_params(gl,
@@ -2524,8 +2567,11 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
       goto error;
 #endif
 
-   if (settings->video.live_background_enable)
+   if (settings->video.live_background_enable) {
       gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
+   } else if (settings->video.background_enable) {
+	  gl_create_background_texture(gl, settings->video.background_path);
+   }
 
    gfx_ctx_input_driver(gl, input, input_data);
    
@@ -2694,6 +2740,9 @@ static bool gl_set_shader(void *data,
 
    if (settings->video.live_background_enable)
       gl_deinit_fbo_background(gl);
+
+   if (settings->video.background_enable)
+      gl_deinit_background(gl);
 
    if (!gl->shader->init(gl, path))
    {
@@ -3150,7 +3199,17 @@ static void gl_render_overlay(void *data)
       glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
 
-static void gl_render_background(void *data, int frame_width, int frame_height)
+static void gl_restore_render_context(gl_t *gl) {
+   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
+   glDisable(GL_BLEND);
+   gl->coords.vertex    = gl->vertex_ptr;
+   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.color     = gl->white_color_ptr;
+   gl->coords.vertices  = 4;
+   glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
+}
+
+static void gl_render_background_live(void *data, int frame_width, int frame_height)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
@@ -3202,15 +3261,38 @@ static void gl_render_background(void *data, int frame_width, int frame_height)
    glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
-   glDisable(GL_BLEND);
-   gl->coords.vertex    = gl->vertex_ptr;
-   gl->coords.tex_coord = gl->tex_info.coord;
-   gl->coords.color     = gl->white_color_ptr;
-   gl->coords.vertices  = 4;
-   glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
+   gl_restore_render_context(gl);
 }
 
+
+static void gl_render_background_static(void *data, int frame_width, int frame_height)
+{
+   unsigned width, height;
+   gl_t *gl = (gl_t*)data;
+   if (!gl)
+      return;
+
+   video_driver_get_size(&width, &height);
+
+   // draw to background fiting screen
+   glEnable(GL_BLEND);
+
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+   glViewport(0, 0, width, height); // TODO calculate scaling
+
+   gl->coords.vertex    = vertexes_flipped;
+   gl->coords.vertices  = 4;
+   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.color     = gl->white_color_ptr;
+
+   gl->shader->set_coords(&gl->coords);
+   gl->shader->set_mvp(gl, &gl->mvp);
+
+   glBindTexture(GL_TEXTURE_2D, gl->background_texture);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+   gl_restore_render_context(gl);
+}
 
 static const video_overlay_interface_t gl_overlay_interface = {
    gl_overlay_enable,

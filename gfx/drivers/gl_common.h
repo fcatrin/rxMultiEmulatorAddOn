@@ -268,8 +268,11 @@ typedef struct gl
 
    GLuint fbo_background;
    GLuint fbo_background_texture;
-   bool fbo_background_inited;
+   bool   fbo_background_inited;
 
+   GLuint background_texture;
+   bool   background_inited;
+   struct texture_image *background_image;
 
 #ifdef HAVE_GL_ASYNC_READBACK
    /* PBOs used for asynchronous viewport readbacks. */
