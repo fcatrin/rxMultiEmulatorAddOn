@@ -1899,7 +1899,7 @@ static bool gl_frame(void *data, const void *frame,
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
 
-   // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
