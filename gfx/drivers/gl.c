@@ -144,6 +144,8 @@ static void gl_overlay_tex_geom(void *data,
 #define BACKGROUND_SCALE 4
 static void gl_render_background_live(void *data, int frame_width, int frame_height);
 static void gl_render_background_static(void *data, int frame_width, int frame_height);
+static void gl_render_border(void *data, int frame_width, int frame_height);
+static void gl_deinit_border(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
    coords[2] = xamt; \
@@ -482,9 +484,130 @@ static void gl_create_background_texture(gl_t *gl, const char *path) {
 		  gl->background_image->width, gl->background_image->height, gl->background_image->pixels,
           sizeof(uint32_t));
 
+    texture_image_free(gl->background_image);
+    gl->background_image = 0;
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	gl->background_inited = true;
 }
+
+#define BORDER_TEXTURES 8
+
+static void gl_apply_coords(GLfloat *coords, int x, int y, int w, int h) {
+	coords[0] = x;
+	coords[1] = y;
+	coords[2] = x + w;
+	coords[3] = y;
+	coords[4] = x;
+	coords[5] = y + h;
+	coords[6] = x + w;
+	coords[7] = y + h;
+}
+
+static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
+	gl_apply_coords((GLfloat*)&gl->border_tex_coord[index * 8], x, y, w, h);
+}
+
+static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
+	GLfloat* vertex = (GLfloat*)&gl->border_vertex_coord[index * 8];
+
+   /* Flipped, so we preserve top-down semantics. */
+   y               = 1.0f - y;
+   h               = -h;
+
+   vertex[0]       = x;
+   vertex[1]       = y;
+   vertex[2]       = x + w;
+   vertex[3]       = y;
+   vertex[4]       = x;
+   vertex[5]       = y + h;
+   vertex[6]       = x + w;
+   vertex[7]       = y + h;
+
+}
+
+static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LENGTH]) {
+   gl_t *gl = (gl_t*)data;
+
+   RARCH_LOG("[GL]: gl_create_border_texture 1");
+   if (!gl)
+      return false;
+
+   RARCH_LOG("[GL]: gl_create_border_texture 2");
+	gl->border_images[0] = (struct texture_image*)calloc(1, sizeof(struct texture_image));
+	gl->border_images[1] = (struct texture_image*)calloc(1, sizeof(struct texture_image));
+
+	   RARCH_LOG("[GL]: gl_create_border_texture 3");
+	for(int i=0; i<2; i++) {
+		if (!texture_image_load(gl->border_images[i], border_path[i])) {
+			RARCH_WARN("[GL_BG] cannot load border image %s", border_path[i]);
+			return false;
+		}
+	}
+
+	   RARCH_LOG("[GL]: gl_create_border_texture 4");
+   context_bind_hw_render(gl, false);
+
+   gl_deinit_border(gl);
+   RARCH_LOG("[GL]: gl_create_border_texture 5");
+   gl->border_tex = (GLuint*)calloc(BORDER_TEXTURES, sizeof(*gl->border_tex));
+   RARCH_LOG("[GL]: gl_create_border_texture 6");
+   if (!gl->border_tex)
+   {
+	   RARCH_LOG("[GL]: gl_create_border_texture 7");
+      context_bind_hw_render(gl, true);
+      return false;
+   }
+   RARCH_LOG("[GL]: gl_create_border_texture 8");
+   gl->border_vertex_coord = (GLfloat*)calloc(2 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
+   gl->border_tex_coord    = (GLfloat*)calloc(2 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
+   gl->border_color_coord  = (GLfloat*)calloc(4 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
+
+   RARCH_LOG("[GL]: gl_create_border_texture 9");
+   if (!gl->border_vertex_coord || !gl->border_tex_coord || !gl->border_color_coord)
+      return false;
+
+   RARCH_LOG("[GL]: gl_create_border_texture 10");
+   glGenTextures(BORDER_TEXTURES, gl->border_tex);
+   RARCH_LOG("[GL]: gl_create_border_texture 11");
+   for (unsigned i = 0; i < BORDER_TEXTURES; i++) {
+	  struct texture_image *image = gl->border_images[i & 1]; // alternate texture images
+	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] A", i, i % 1);
+      unsigned alignment = video_pixel_get_alignment(image->width
+            * sizeof(uint32_t));
+
+	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] B", i, i % 1);
+      gl_load_texture_data(gl->border_tex[i],
+            RARCH_WRAP_EDGE, TEXTURE_FILTER_LINEAR,
+            alignment,
+            image->width, image->height, image->pixels,
+            sizeof(uint32_t));
+
+	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] C", i, i % 1);
+      gl_border_tex_geom(gl, i, 0, 0, 1, 1);
+	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] D", i, i % 1);
+
+      gl_border_vertex_geom(gl, i, 0, 0, 1, 1);
+
+	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] E", i, i % 1);
+
+      for (unsigned j = 0; j < 16; j++)
+         gl->border_color_coord[16 * i + j] = 1.0f;
+
+   }
+   RARCH_LOG("[GL]: gl_create_border_texture 13");
+   texture_image_free(gl->border_images[0]);
+   texture_image_free(gl->border_images[1]);
+   RARCH_LOG("[GL]: gl_create_border_texture 14");
+   gl->border_images[0] = 0;
+   gl->border_images[1] = 0;
+   RARCH_LOG("[GL]: gl_create_border_texture 15");
+   context_bind_hw_render(gl, true);
+   RARCH_LOG("[GL]: gl_create_border_texture 16");
+   gl->border_inited = true;
+   return true;
+}
+
 
 static void gl_create_fbo_textures(gl_t *gl)
 {
@@ -653,12 +776,28 @@ static void gl_deinit_background(gl_t *gl)
    if (!gl->background_inited)
       return;
 
-   free(gl->background_image);
-   gl->background_image = 0;
-
    glDeleteTextures(1, &gl->background_texture);
    gl->background_texture = 0;
    gl->background_inited = false;
+}
+
+static void gl_deinit_border(gl_t *gl)
+{
+   if (!gl->border_inited)
+      return;
+
+   free(gl->border_vertex_coord);
+   free(gl->border_tex_coord);
+   free(gl->border_color_coord);
+
+   gl->border_vertex_coord = NULL;
+   gl->border_tex_coord    = NULL;
+   gl->border_color_coord  = NULL;
+
+   glDeleteTextures(2, gl->border_tex);
+   gl->border_tex[0] = 0;
+   gl->border_tex[1] = 0;
+   gl->border_inited = false;
 }
 
 
@@ -1723,6 +1862,7 @@ static bool gl_frame(void *data, const void *frame,
       gl->shader->use(gl, 1);
    } else if (settings->video.background_enable) {
 	  gl_render_background_static(gl, frame_width, frame_height);
+	  gl_render_border(gl, gl->vp.width, gl->vp.height);
 	  gl->shader->use(gl, 1);
    }
 
@@ -1736,7 +1876,7 @@ static bool gl_frame(void *data, const void *frame,
    gl->coords.vertices = 4;
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+   // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
@@ -2570,6 +2710,7 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
    if (settings->video.live_background_enable) {
       gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
    } else if (settings->video.background_enable) {
+	  gl_create_border_texture(gl, settings->video.border_path);
 	  gl_create_background_texture(gl, settings->video.background_path);
    }
 
@@ -2741,8 +2882,10 @@ static bool gl_set_shader(void *data,
    if (settings->video.live_background_enable)
       gl_deinit_fbo_background(gl);
 
-   if (settings->video.background_enable)
+   if (settings->video.background_enable) {
       gl_deinit_background(gl);
+      gl_deinit_border(gl);
+   }
 
    if (!gl->shader->init(gl, path))
    {
@@ -3209,6 +3352,65 @@ static void gl_restore_render_context(gl_t *gl) {
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
 
+static int dump_info = 20;
+
+static void gl_render_border(void *data, int vp_width, int vp_height)
+{
+   unsigned i;
+   unsigned width, height;
+   gl_t *gl = (gl_t*)data;
+   if (!gl)
+      return;
+
+   glEnable(GL_BLEND);
+
+   /* Ensure that we reset the attrib array. */
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
+   gl->coords.vertex    = gl->border_vertex_coord;
+   gl->coords.tex_coord = gl->border_tex_coord;
+   gl->coords.color     = gl->border_color_coord;
+   gl->coords.vertices  = 4 * BORDER_TEXTURES;
+   gl->shader->set_coords(&gl->coords);
+   gl->shader->set_mvp(gl, &gl->mvp_no_rot);
+
+   video_driver_get_size(&width, &height);
+
+   vp_width  = 800;
+   vp_height = 600;
+
+   GLfloat x1 = (width  - vp_width) / 2;
+   GLfloat y1 = (height - vp_height) / 2;
+   GLfloat x2 = x1 + vp_width;
+   GLfloat y2 = y1 + vp_height;
+   GLfloat bs = 82;
+
+   GLfloat x, y, w, h;
+   for (i = 0; i < 8; i++)
+   {
+
+	   switch(i) {
+	   case 0 : x = x1 - bs; y = y1; w = bs; h = bs; break;
+	   case 1 : x = x1; w = vp_width; break;
+	   case 2 : x = x2; w = bs; break;
+	   case 3 : y = y2; h = vp_height; break;
+	   case 4 : y = y2 + bs; h = bs; break;
+	   case 5 : x = x1; w = vp_width; break;
+	   case 6 : x = x1 - bs; w = bs; break;
+	   case 7 : y = y2; h = vp_height; break;
+	   }
+
+	  glViewport(x, height - y, w, h);
+
+      glBindTexture(GL_TEXTURE_2D, gl->border_tex[i & 1]);
+      glDrawArrays(GL_TRIANGLE_STRIP, 4 * i, 4);
+
+      if (dump_info > 0) dump_info --;
+   }
+
+   gl_restore_render_context(gl);
+}
+
+
 static void gl_render_background_live(void *data, int frame_width, int frame_height)
 {
    unsigned width, height;
@@ -3290,6 +3492,8 @@ static void gl_render_background_static(void *data, int frame_width, int frame_h
 
    glBindTexture(GL_TEXTURE_2D, gl->background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+   if (dump_info > 0) RARCH_LOG("screen %dx%d", width, height);
 
    gl_restore_render_context(gl);
 }

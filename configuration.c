@@ -1402,6 +1402,8 @@ static bool config_load_file(const char *path, bool set_defaults)
 
    CONFIG_GET_BOOL_BASE(conf, settings, video.background_enable, "background_enable");
    config_get_path(conf, "background_path", settings->video.background_path, sizeof(settings->video.background_path));
+   config_get_path(conf, "border_path_side",   settings->video.border_path[1], sizeof(settings->video.border_path[1]));
+   config_get_path(conf, "border_path_corner", settings->video.border_path[0], sizeof(settings->video.border_path[0]));
 
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))

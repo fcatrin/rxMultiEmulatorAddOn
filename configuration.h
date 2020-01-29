@@ -98,6 +98,8 @@ typedef struct settings
 
       bool background_enable;
       char background_path[PATH_MAX_LENGTH];
+
+      char border_path[2][PATH_MAX_LENGTH];
    } video;
 
    struct

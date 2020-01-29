@@ -274,6 +274,14 @@ typedef struct gl
    bool   background_inited;
    struct texture_image *background_image;
 
+   struct texture_image *border_images[2];
+   bool   border_inited;
+   GLuint *border_tex;
+   float *border_vertex_coord;
+   float *border_tex_coord;
+   float *border_color_coord;
+
+
 #ifdef HAVE_GL_ASYNC_READBACK
    /* PBOs used for asynchronous viewport readbacks. */
    GLuint pbo_readback[4];
