@@ -144,8 +144,11 @@ static void gl_overlay_tex_geom(void *data,
 #define BACKGROUND_SCALE 4
 static void gl_render_background_live(void *data, int frame_width, int frame_height);
 static void gl_render_background_static(void *data);
+
+#define BORDER_TEXTURES 8
 static void gl_render_border(void *data, int frame_width, int frame_height);
 static void gl_deinit_border(gl_t *gl);
+
 static void gl_restore_render_context(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
@@ -492,9 +495,8 @@ static void gl_create_background_texture(gl_t *gl, const char *path) {
 	gl->background_inited = true;
 }
 
-#define BORDER_TEXTURES 8
-
-static void gl_apply_coords(GLfloat *coords, int x, int y, int w, int h) {
+static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
+	GLfloat* coords = (GLfloat*)&gl->border_tex_coord[index * 8];
 	coords[0] = x;
 	coords[1] = y;
 	coords[2] = x + w;
@@ -503,10 +505,6 @@ static void gl_apply_coords(GLfloat *coords, int x, int y, int w, int h) {
 	coords[5] = y + h;
 	coords[6] = x + w;
 	coords[7] = y + h;
-}
-
-static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
-	gl_apply_coords((GLfloat*)&gl->border_tex_coord[index * 8], x, y, w, h);
 }
 
 static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
@@ -612,7 +610,7 @@ static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LEN
 
 
       for (unsigned j = 0; j < 16; j++)
-         gl->border_color_coord[16 * i + j] = 1.0f;
+         gl->border_color_coord[16 * i + j] = (j % 3) ? 1.0f : 0.2f;
 
    }
    texture_image_free(gl->border_images[0]);
@@ -2731,8 +2729,8 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 #endif
 
    if (settings->video.live_background_enable) {
+      gl_create_border_texture(gl, settings->video.border_path);
       gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
-	  gl_create_border_texture(gl, settings->video.border_path);
    } else if (settings->video.background_enable) {
 	  gl_create_border_texture(gl, settings->video.border_path);
 	  gl_create_background_texture(gl, settings->video.background_path);
@@ -3402,6 +3400,7 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
 
    video_driver_get_size(&width, &height);
 
+   // void 1 pixel-off problem
    vp_width -= 2;
    vp_height -= 2;
 
@@ -3412,9 +3411,7 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    GLfloat bs = 82;
 
    GLfloat x = x1, y = y1, w = bs, h = bs;
-   for (i = 0; i < 8; i++)
-   {
-
+   for (i = 0; i < 8; i++) {
 	   switch(i) {
 	   case 0 : x = x1 - bs; break;
 	   case 1 : x = x1; w = vp_width; break;
@@ -3430,7 +3427,6 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
 
       glBindTexture(GL_TEXTURE_2D, gl->border_tex[i & 1]);
       glDrawArrays(GL_TRIANGLE_STRIP, 4 * i, 4);
-
    }
 }
 
