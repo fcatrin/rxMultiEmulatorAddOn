@@ -1894,6 +1894,7 @@ static bool gl_frame(void *data, const void *frame,
 
    if (settings->video.live_background_enable) {
       gl_render_background_live(gl, frame_width, frame_height);
+	  gl_render_border(gl, gl->vp.width, gl->vp.height);
       gl->shader->use(gl, 1);
    } else if (settings->video.background_enable) {
 	  gl_render_background_static(gl, frame_width, frame_height);
@@ -2745,6 +2746,7 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 
    if (settings->video.live_background_enable) {
       gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
+	  gl_create_border_texture(gl, settings->video.border_path);
    } else if (settings->video.background_enable) {
 	  gl_create_border_texture(gl, settings->video.border_path);
 	  gl_create_background_texture(gl, settings->video.background_path);
@@ -2915,8 +2917,10 @@ static bool gl_set_shader(void *data,
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
 #endif
 
-   if (settings->video.live_background_enable)
+   if (settings->video.live_background_enable) {
       gl_deinit_fbo_background(gl);
+      gl_deinit_border(gl);
+   }
 
    if (settings->video.background_enable) {
       gl_deinit_background(gl);
