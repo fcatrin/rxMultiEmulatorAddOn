@@ -565,15 +565,12 @@ static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w,
 static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LENGTH]) {
    gl_t *gl = (gl_t*)data;
 
-   RARCH_LOG("[GL]: gl_create_border_texture 1");
    if (!gl)
       return false;
 
-   RARCH_LOG("[GL]: gl_create_border_texture 2");
 	gl->border_images[0] = (struct texture_image*)calloc(1, sizeof(struct texture_image));
 	gl->border_images[1] = (struct texture_image*)calloc(1, sizeof(struct texture_image));
 
-	   RARCH_LOG("[GL]: gl_create_border_texture 3");
 	for(int i=0; i<2; i++) {
 		if (!texture_image_load(gl->border_images[i], border_path[i])) {
 			RARCH_WARN("[GL_BG] cannot load border image %s", border_path[i]);
@@ -581,65 +578,51 @@ static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LEN
 		}
 	}
 
-	   RARCH_LOG("[GL]: gl_create_border_texture 4");
    context_bind_hw_render(gl, false);
 
    gl_deinit_border(gl);
-   RARCH_LOG("[GL]: gl_create_border_texture 5");
    gl->border_tex = (GLuint*)calloc(BORDER_TEXTURES, sizeof(*gl->border_tex));
-   RARCH_LOG("[GL]: gl_create_border_texture 6");
    if (!gl->border_tex)
    {
-	   RARCH_LOG("[GL]: gl_create_border_texture 7");
       context_bind_hw_render(gl, true);
       return false;
    }
-   RARCH_LOG("[GL]: gl_create_border_texture 8");
    gl->border_vertex_coord = (GLfloat*)calloc(2 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
    gl->border_tex_coord    = (GLfloat*)calloc(2 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
    gl->border_color_coord  = (GLfloat*)calloc(4 * 4 * BORDER_TEXTURES, sizeof(GLfloat));
 
-   RARCH_LOG("[GL]: gl_create_border_texture 9");
    if (!gl->border_vertex_coord || !gl->border_tex_coord || !gl->border_color_coord)
       return false;
 
-   RARCH_LOG("[GL]: gl_create_border_texture 10");
    glGenTextures(BORDER_TEXTURES, gl->border_tex);
-   RARCH_LOG("[GL]: gl_create_border_texture 11");
    for (unsigned i = 0; i < BORDER_TEXTURES; i++) {
 	  struct texture_image *image = gl->border_images[i & 1]; // alternate texture images
-	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] A", i, i % 1);
       unsigned alignment = video_pixel_get_alignment(image->width
             * sizeof(uint32_t));
 
-	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] B", i, i % 1);
       gl_load_texture_data(gl->border_tex[i],
             RARCH_WRAP_EDGE, TEXTURE_FILTER_LINEAR,
             alignment,
             image->width, image->height, image->pixels,
             sizeof(uint32_t));
 
-	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] C", i, i % 1);
       gl_border_tex_geom(gl, i, 0, 0, 1, 1);
-	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] D", i, i % 1);
 
       gl_border_vertex_geom(gl, i, 0, 0, 1, 1);
 
-	   RARCH_LOG("[GL]: gl_create_border_texture 12 tex[%d] image[%d] E", i, i % 1);
 
       for (unsigned j = 0; j < 16; j++)
          gl->border_color_coord[16 * i + j] = 1.0f;
 
    }
-   RARCH_LOG("[GL]: gl_create_border_texture 13");
    texture_image_free(gl->border_images[0]);
    texture_image_free(gl->border_images[1]);
-   RARCH_LOG("[GL]: gl_create_border_texture 14");
+
    gl->border_images[0] = 0;
    gl->border_images[1] = 0;
-   RARCH_LOG("[GL]: gl_create_border_texture 15");
+
    context_bind_hw_render(gl, true);
-   RARCH_LOG("[GL]: gl_create_border_texture 16");
+
    gl->border_inited = true;
    return true;
 }
