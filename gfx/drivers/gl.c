@@ -515,14 +515,49 @@ static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w,
    y               = 1.0f - y;
    h               = -h;
 
-   vertex[0]       = x;
-   vertex[1]       = y;
-   vertex[2]       = x + w;
-   vertex[3]       = y;
-   vertex[4]       = x;
-   vertex[5]       = y + h;
-   vertex[6]       = x + w;
-   vertex[7]       = y + h;
+   int rotation = index / 2;
+   switch (rotation) {
+   case 0:
+	   vertex[0]       = x;
+	   vertex[1]       = y;
+	   vertex[2]       = x + w;
+	   vertex[3]       = y;
+	   vertex[4]       = x;
+	   vertex[5]       = y + h;
+	   vertex[6]       = x + w;
+	   vertex[7]       = y + h;
+	   break;
+   case 1:
+	   vertex[0]       = x + w;
+	   vertex[1]       = y;
+	   vertex[2]       = x + w;
+	   vertex[3]       = y + h;
+	   vertex[4]       = x;
+	   vertex[5]       = y;
+	   vertex[6]       = x;
+	   vertex[7]       = y + h;
+	   break;
+   case 2:
+	   vertex[0]       = x + w;
+	   vertex[1]       = y + h;
+	   vertex[2]       = x;
+	   vertex[3]       = y + h;
+	   vertex[4]       = x + w;
+	   vertex[5]       = y;
+	   vertex[6]       = x;
+	   vertex[7]       = y;
+	   break;
+   case 3:
+	   vertex[0]       = x;
+	   vertex[1]       = y + h;
+	   vertex[2]       = x;
+	   vertex[3]       = y;
+	   vertex[4]       = x + w;
+	   vertex[5]       = y + h;
+	   vertex[6]       = x + w;
+	   vertex[7]       = y;
+	   break;
+   }
 
 }
 
@@ -1876,7 +1911,8 @@ static bool gl_frame(void *data, const void *frame,
    gl->coords.vertices = 4;
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
-   // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+   // glViewport(340, 135, 600, 450);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
@@ -3375,8 +3411,8 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
 
    video_driver_get_size(&width, &height);
 
-   vp_width  = 800;
-   vp_height = 600;
+   vp_width -= 2;
+   vp_height -= 2;
 
    GLfloat x1 = (width  - vp_width) / 2;
    GLfloat y1 = (height - vp_height) / 2;
@@ -3384,12 +3420,12 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    GLfloat y2 = y1 + vp_height;
    GLfloat bs = 82;
 
-   GLfloat x, y, w, h;
+   GLfloat x = x1, y = y1, w = bs, h = bs;
    for (i = 0; i < 8; i++)
    {
 
 	   switch(i) {
-	   case 0 : x = x1 - bs; y = y1; w = bs; h = bs; break;
+	   case 0 : x = x1 - bs; break;
 	   case 1 : x = x1; w = vp_width; break;
 	   case 2 : x = x2; w = bs; break;
 	   case 3 : y = y2; h = vp_height; break;
