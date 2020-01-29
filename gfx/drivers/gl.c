@@ -143,9 +143,10 @@ static void gl_overlay_tex_geom(void *data,
 
 #define BACKGROUND_SCALE 4
 static void gl_render_background_live(void *data, int frame_width, int frame_height);
-static void gl_render_background_static(void *data, int frame_width, int frame_height);
+static void gl_render_background_static(void *data);
 static void gl_render_border(void *data, int frame_width, int frame_height);
 static void gl_deinit_border(gl_t *gl);
+static void gl_restore_render_context(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
    coords[2] = xamt; \
@@ -1892,14 +1893,16 @@ static bool gl_frame(void *data, const void *frame,
 
    glClear(GL_COLOR_BUFFER_BIT);
 
-   if (settings->video.live_background_enable) {
-      gl_render_background_live(gl, frame_width, frame_height);
-	  gl_render_border(gl, gl->vp.width, gl->vp.height);
-      gl->shader->use(gl, 1);
-   } else if (settings->video.background_enable) {
-	  gl_render_background_static(gl, frame_width, frame_height);
-	  gl_render_border(gl, gl->vp.width, gl->vp.height);
-	  gl->shader->use(gl, 1);
+   bool has_bg_live   = settings->video.live_background_enable;
+   bool has_bg_static = settings->video.background_enable;
+   if (has_bg_live || has_bg_static) {
+	   if (has_bg_live) {
+		  gl_render_background_live(gl, frame_width, frame_height);
+	   } else if (has_bg_static) {
+		  gl_render_background_static(gl);
+	   }
+	   gl_render_border(gl, gl->vp.width, gl->vp.height);
+	   gl_restore_render_context(gl);
    }
 
    gl->shader->set_params(gl,
@@ -1912,8 +1915,8 @@ static bool gl_frame(void *data, const void *frame,
    gl->coords.vertices = 4;
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
-   // glViewport(340, 135, 600, 450);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+   // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
@@ -3383,16 +3386,17 @@ static void gl_render_overlay(void *data)
 }
 
 static void gl_restore_render_context(gl_t *gl) {
-   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    glDisable(GL_BLEND);
+   glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    gl->coords.vertex    = gl->vertex_ptr;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
    gl->coords.vertices  = 4;
-   glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
-}
 
-static int dump_info = 20;
+   glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
+
+   gl->shader->use(gl, 1);
+}
 
 static void gl_render_border(void *data, int vp_width, int vp_height)
 {
@@ -3444,10 +3448,7 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
       glBindTexture(GL_TEXTURE_2D, gl->border_tex[i & 1]);
       glDrawArrays(GL_TRIANGLE_STRIP, 4 * i, 4);
 
-      if (dump_info > 0) dump_info --;
    }
-
-   gl_restore_render_context(gl);
 }
 
 
@@ -3502,12 +3503,10 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-   gl_restore_render_context(gl);
 }
 
 
-static void gl_render_background_static(void *data, int frame_width, int frame_height)
+static void gl_render_background_static(void *data)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
@@ -3524,7 +3523,7 @@ static void gl_render_background_static(void *data, int frame_width, int frame_h
 
    gl->coords.vertex    = vertexes_flipped;
    gl->coords.vertices  = 4;
-   gl->coords.tex_coord = gl->tex_info.coord;
+   gl->coords.tex_coord = tex_coords;
    gl->coords.color     = gl->white_color_ptr;
 
    gl->shader->set_coords(&gl->coords);
@@ -3532,10 +3531,6 @@ static void gl_render_background_static(void *data, int frame_width, int frame_h
 
    glBindTexture(GL_TEXTURE_2D, gl->background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-   if (dump_info > 0) RARCH_LOG("screen %dx%d", width, height);
-
-   gl_restore_render_context(gl);
 }
 
 static const video_overlay_interface_t gl_overlay_interface = {
