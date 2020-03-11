@@ -757,7 +757,7 @@ static INLINE void android_input_poll_event_type_key(
       AInputEvent *event, int port, int keycode, int source,
       int type_event, int *handled)
 {
-   uint8_t *buf = android->pad_state[port];
+   uint8_t *buf = port >= 0 ? android->pad_state[port] : NULL;
    int action  = AKeyEvent_getAction(event);
 
    /* some controllers send both the up and down events at once
@@ -765,21 +765,24 @@ static INLINE void android_input_poll_event_type_key(
     * work around that by only using down events for meta keys (which get
     * cleared every poll anyway)
     */
-   switch (action)
-   {
-      case AKEY_EVENT_ACTION_UP:
-         BIT_CLEAR(buf, keycode);
-         break;
-      case AKEY_EVENT_ACTION_DOWN:
-         BIT_SET(buf, keycode);
-         break;
+
+   if (port >= 0) {
+	   switch (action)
+	   {
+		  case AKEY_EVENT_ACTION_UP:
+			 BIT_CLEAR(buf, keycode);
+			 break;
+		  case AKEY_EVENT_ACTION_DOWN:
+			 BIT_SET(buf, keycode);
+			 break;
+	   }
    }
 
-   if (keycode == AKEYCODE_BACK && !android->pad_states[port].ignore_back) {
+   if (keycode == AKEYCODE_BACK && (port < 0 || !android->pad_states[port].ignore_back)) {
 	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
    }
 
-   if (keycode == AKEYCODE_SEARCH && android->pad_states[port].is_nvidia) {
+   if (keycode == AKEYCODE_SEARCH && (port >=0 && android->pad_states[port].is_nvidia)) {
 	   if (action == AKEY_EVENT_ACTION_DOWN)
 		   android->is_back_pressed = true;
    }
