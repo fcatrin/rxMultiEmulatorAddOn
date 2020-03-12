@@ -55,6 +55,7 @@ typedef struct settings
 #endif
       bool smooth;
       bool force_aspect;
+      bool force_full;
       bool crop_overscan;
       float aspect_ratio;
       bool aspect_ratio_auto;

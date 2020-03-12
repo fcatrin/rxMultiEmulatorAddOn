@@ -455,6 +455,7 @@ static const bool video_smooth = true;
 
 /* On resize and fullscreen, rendering area will stay 4:3 */
 static const bool force_aspect = true; 
+static const bool force_full = false;
 
 /* Enable use of shaders. */
 #ifdef RARCH_CONSOLE

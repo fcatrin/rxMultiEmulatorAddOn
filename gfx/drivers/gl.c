@@ -1037,6 +1037,8 @@ static void gl_set_viewport(void *data, unsigned viewport_width,
    gfx_ctx_translate_aspect(gl, &device_aspect,
          viewport_width, viewport_height);
 
+   force_full |= settings->video.force_full; // patch to keep full screen when requested by user but denied by the core
+
    if (settings->video.scale_integer && !force_full)
    {
       video_viewport_get_scaled_integer(&gl->vp,
