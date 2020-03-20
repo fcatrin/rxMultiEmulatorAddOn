@@ -420,6 +420,53 @@ error:
    return result;
 }
 
+static jclass android_find_non_native_class(JNIEnv *env, char *classname) {
+	struct android_app *android_app = (struct android_app*)g_android;
+
+	jobject nativeActivity = android_app->activity->clazz;
+	jclass acl = (*env)->GetObjectClass(env, nativeActivity);
+	jmethodID getClassLoader = (*env)->GetMethodID(env, acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+
+	jobject cls = (*env)->CallObjectMethod(env, nativeActivity, getClassLoader);
+	jclass classLoader = (*env)->FindClass(env, "java/lang/ClassLoader");
+	jmethodID findClass = (*env)->GetMethodID(env, classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+	jstring strClassName = (*env)->NewStringUTF(env, classname);
+	jclass _class = (jclass)((*env)->CallObjectMethod(env, cls, findClass, strClassName));
+
+	(*env)->DeleteLocalRef(env, strClassName);
+	(*env)->DeleteLocalRef(env, classLoader);
+	return _class;
+}
+
+static void android_toast(char *message)
+{
+   jmethodID method  = NULL;
+   jclass    class   = 0;
+   jstring jmessage  = NULL;
+   JNIEnv     *env   = (JNIEnv*)jni_thread_getenv();
+
+   if (!env)
+      goto error;
+
+   class = android_find_non_native_class(env, "com.retroarch.browser.retroactivity.RetroBoxWrapper");
+   if (!class)
+      goto error;
+
+   GET_STATIC_METHOD_ID(env, method, class, "toast",
+         "(Ljava/lang/String;)V");
+   if (!method)
+      goto error;
+
+   jmessage = (*env)->NewStringUTF(env, message);
+
+   CALL_VOID_STATIC_METHOD_PARAM(env, class, method, jmessage);
+
+error:
+   (*env)->DeleteLocalRef(env, jmessage);
+   (*env)->DeleteLocalRef(env, class);
+}
+
 
 static void engine_handle_cmd(void)
 {
@@ -710,7 +757,7 @@ static INLINE void android_input_poll_event_type_key(
       AInputEvent *event, int port, int keycode, int source,
       int type_event, int *handled)
 {
-   uint8_t *buf = android->pad_state[port];
+   uint8_t *buf = port >= 0 ? android->pad_state[port] : NULL;
    int action  = AKeyEvent_getAction(event);
 
    /* some controllers send both the up and down events at once
@@ -718,21 +765,24 @@ static INLINE void android_input_poll_event_type_key(
     * work around that by only using down events for meta keys (which get
     * cleared every poll anyway)
     */
-   switch (action)
-   {
-      case AKEY_EVENT_ACTION_UP:
-         BIT_CLEAR(buf, keycode);
-         break;
-      case AKEY_EVENT_ACTION_DOWN:
-         BIT_SET(buf, keycode);
-         break;
+
+   if (port >= 0) {
+	   switch (action)
+	   {
+		  case AKEY_EVENT_ACTION_UP:
+			 BIT_CLEAR(buf, keycode);
+			 break;
+		  case AKEY_EVENT_ACTION_DOWN:
+			 BIT_SET(buf, keycode);
+			 break;
+	   }
    }
 
-   if (keycode == AKEYCODE_BACK && !android->pad_states[port].ignore_back) {
+   if (keycode == AKEYCODE_BACK && (port < 0 || !android->pad_states[port].ignore_back)) {
 	   android->is_back_pressed = action == AKEY_EVENT_ACTION_DOWN;
    }
 
-   if (keycode == AKEYCODE_SEARCH && android->pad_states[port].is_nvidia) {
+   if (keycode == AKEYCODE_SEARCH && (port >=0 && android->pad_states[port].is_nvidia)) {
 	   if (action == AKEY_EVENT_ACTION_DOWN)
 		   android->is_back_pressed = true;
    }
@@ -773,18 +823,32 @@ static int android_input_get_id_index_from_name(android_input_t *android,
    return -1;
 }
 
+static int android_is_gamepad_button(int keycode) {
+
+	static int buttons[] = {
+			RETRO_DEVICE_ID_JOYPAD_A,  RETRO_DEVICE_ID_JOYPAD_B,  RETRO_DEVICE_ID_JOYPAD_X,      RETRO_DEVICE_ID_JOYPAD_Y,
+			RETRO_DEVICE_ID_JOYPAD_L,  RETRO_DEVICE_ID_JOYPAD_R,  RETRO_DEVICE_ID_JOYPAD_L2,     RETRO_DEVICE_ID_JOYPAD_R2,
+			RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3, RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_START, -1};
+
+	for(int i=0; buttons[i]>=0; i++) {
+		if (buttons[i] == keycode) return true;
+	}
+	return false;
+}
+
 static void handle_hotplug(android_input_t *android,
       struct android_app *android_app, unsigned id,
-      int source, int *detected_port)
+      int source, int keycode, int *detected_port)
 {
    char device_name[256]        = {0};
    char name_buf[256]           = {0};
    char device_descriptor[256]  = {0};
-   unsigned port                = 0;
+   unsigned port                = android->pads_connected;
    int vendorId                 = 0;
    int productId                = 0;
    bool back_mapped             = false;
    settings_t         *settings = config_get_ptr();
+   unsigned bind;
 
    if (android->pads_connected > MAX_PADS)
    {
@@ -800,118 +864,154 @@ static void handle_hotplug(android_input_t *android,
 
    if (!android_input_get_descriptor(device_descriptor, sizeof(device_descriptor), id))
    {
-      RARCH_ERR("Could not look up device descriptor\n");
-      return;
+	  RARCH_ERR("Could not look up device descriptor\n");
+	  return;
    }
 
-   /* FIXME: Ugly hack, see other FIXME note below. */
-   if (strstr(device_name, "keypad-game-zeus") ||
-         strstr(device_name, "keypad-zeus"))
-   {
-      if (zeus_id < 0)
-      {
-         RARCH_LOG("zeus_pad 1 detected: %u\n", id);
-         zeus_id = id;
-      }
-      else
-      {
-         RARCH_LOG("zeus_pad 2 detected: %u\n", id);
-         zeus_second_id = id;
-      }
-      strlcpy(name_buf, device_name, sizeof(name_buf));
-   }
-   /* followed by a 4 (hex) char HW id */
-   else if (strstr(device_name, "iControlPad-"))
-      strlcpy(name_buf, "iControlPad HID Joystick profile", sizeof(name_buf));
-   else if (strstr(device_name, "TTT THT Arcade console 2P USB Play"))
-   {
-      //FIXME - need to do a similar thing here as we did for nVidia Shield
-      //and Xperia Play. We need to keep 'count' of the amount of similar (grouped)
-      //devices.
-      //
-      //For Xperia Play - count similar devices and bind them to the same 'user'
-      //port
-      //
-      //For nVidia Shield - see above
-      //
-      //For TTT HT - keep track of how many of these 'pads' are already
-      //connected, and based on that, assign one of them to be User 1 and
-      //the other to be User 2.
-      //
-      //If this is finally implemented right, then these port conditionals can go.
-      if (port == 0)
-         strlcpy(name_buf, "TTT THT Arcade (User 1)", sizeof(name_buf));
-      else if (port == 1)
-         strlcpy(name_buf, "TTT THT Arcade (User 2)", sizeof(name_buf));
-   }
-   else if (strstr(device_name, "360 Wireless"))
-      strlcpy(name_buf, "XBox 360 Wireless", sizeof(name_buf));
-   else if (strstr(device_name, "Microsoft"))
-   {
-      if (strstr(device_name, "Dual Strike"))
-         strlcpy(device_name, "SideWinder Dual Strike", sizeof(device_name));
-      else if (strstr(device_name, "SideWinder"))
-         strlcpy(name_buf, "SideWinder Classic", sizeof(name_buf));
-   }
-   else if (strstr(device_name, "NVIDIA Corporation NVIDIA Controller v01.01"))
-   {
-      /* Built-in shield contrlleris always user 1. FIXME: This is kinda ugly.
-       * We really need to find a way to detect useless input devices
-       * like gpio-keys in a general way.
-       */
-      port = 0;
-      strlcpy(name_buf, device_name, sizeof(name_buf));
-   }
-   else if (strstr(device_name, "Virtual") || 
-         (strstr(device_name, "gpio") && strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller v01.01")))
-   {
-      /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
-      port = 0;
-      strlcpy(name_buf, "NVIDIA Corporation NVIDIA Controller v01.01", sizeof(name_buf));
-   }
-   else if (
-         strstr(device_name, "PLAYSTATION(R)3") ||
-         strstr(device_name, "Dualshock3") ||
-         strstr(device_name, "Sixaxis")
-         )
-      strlcpy(name_buf, "PlayStation3", sizeof(name_buf));
-   else if (strstr(device_name, "MOGA"))
-      strlcpy(name_buf, "Moga IME", sizeof(name_buf));
-   else if (device_name[0] != '\0')
-      strlcpy(name_buf, device_name, sizeof(name_buf));
+   if (0) {
 
-   if (strstr(android_app->current_ime, "net.obsidianx.android.mogaime"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
-   else if (strstr(android_app->current_ime, "com.ccpcreations.android.WiiUseAndroid"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
-   else if (strstr(android_app->current_ime, "com.hexad.bluezime"))
-      strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   /* FIXME: Ugly hack, see other FIXME note below. */
+	   if (strstr(device_name, "keypad-game-zeus") ||
+			 strstr(device_name, "keypad-zeus"))
+	   {
+		  if (zeus_id < 0)
+		  {
+			 RARCH_LOG("zeus_pad 1 detected: %u\n", id);
+			 zeus_id = id;
+		  }
+		  else
+		  {
+			 RARCH_LOG("zeus_pad 2 detected: %u\n", id);
+			 zeus_second_id = id;
+		  }
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+	   }
+	   /* followed by a 4 (hex) char HW id */
+	   else if (strstr(device_name, "iControlPad-"))
+		  strlcpy(name_buf, "iControlPad HID Joystick profile", sizeof(name_buf));
+	   else if (strstr(device_name, "TTT THT Arcade console 2P USB Play"))
+	   {
+		  //FIXME - need to do a similar thing here as we did for nVidia Shield
+		  //and Xperia Play. We need to keep 'count' of the amount of similar (grouped)
+		  //devices.
+		  //
+		  //For Xperia Play - count similar devices and bind them to the same 'user'
+		  //port
+		  //
+		  //For nVidia Shield - see above
+		  //
+		  //For TTT HT - keep track of how many of these 'pads' are already
+		  //connected, and based on that, assign one of them to be User 1 and
+		  //the other to be User 2.
+		  //
+		  //If this is finally implemented right, then these port conditionals can go.
+		  if (port == 0)
+			 strlcpy(name_buf, "TTT THT Arcade (User 1)", sizeof(name_buf));
+		  else if (port == 1)
+			 strlcpy(name_buf, "TTT THT Arcade (User 2)", sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "360 Wireless"))
+		  strlcpy(name_buf, "XBox 360 Wireless", sizeof(name_buf));
+	   else if (strstr(device_name, "Microsoft"))
+	   {
+		  if (strstr(device_name, "Dual Strike"))
+			 strlcpy(device_name, "SideWinder Dual Strike", sizeof(device_name));
+		  else if (strstr(device_name, "SideWinder"))
+			 strlcpy(name_buf, "SideWinder Classic", sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "NVIDIA Corporation NVIDIA Controller v01.01"))
+	   {
+		  /* Built-in shield contrlleris always user 1. FIXME: This is kinda ugly.
+		   * We really need to find a way to detect useless input devices
+		   * like gpio-keys in a general way.
+		   */
+		  port = 0;
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+	   }
+	   else if (strstr(device_name, "Virtual") ||
+			 (strstr(device_name, "gpio") && strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller v01.01")))
+	   {
+		  /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
+		  port = 0;
+		  strlcpy(name_buf, "NVIDIA Corporation NVIDIA Controller v01.01", sizeof(name_buf));
+	   }
+	   else if (
+			 strstr(device_name, "PLAYSTATION(R)3") ||
+			 strstr(device_name, "Dualshock3") ||
+			 strstr(device_name, "Sixaxis")
+			 )
+		  strlcpy(name_buf, "PlayStation3", sizeof(name_buf));
+	   else if (strstr(device_name, "MOGA"))
+		  strlcpy(name_buf, "Moga IME", sizeof(name_buf));
+	   else if (device_name[0] != '\0')
+		  strlcpy(name_buf, device_name, sizeof(name_buf));
+
+	   if (strstr(android_app->current_ime, "net.obsidianx.android.mogaime"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   else if (strstr(android_app->current_ime, "com.ccpcreations.android.WiiUseAndroid"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+	   else if (strstr(android_app->current_ime, "com.hexad.bluezime"))
+		  strlcpy(name_buf, android_app->current_ime, sizeof(name_buf));
+
+   } else {
+	   if ((strstr(device_name, "Virtual") || strstr(device_name, "gpio")) &&
+			   strstr(android->pad_states[0].name,"NVIDIA Corporation NVIDIA Controller")) {
+		  /* If built-in shield controller is detected bind the virtual and gpio devices to the same port*/
+		  port = 0;
+		  strlcpy(name_buf, android->pad_states[0].name, sizeof(name_buf));
+	   } else if (strstr(device_name, "Virtual")) {
+		   return;
+	   }
+	   strlcpy(name_buf, device_name, sizeof(name_buf));
+   }
 
    if (name_buf[0] != '\0')
-      strlcpy(settings->input.device_names[port],
-            name_buf, sizeof(settings->input.device_names[port]));
+	  strlcpy(settings->input.device_names[port],
+			name_buf, sizeof(settings->input.device_names[port]));
 
    if (settings->input.autodetect_enable)
    {
       unsigned      autoconfigured = false;
       autoconfig_params_t params   = {{0}};
 
-      RARCH_LOG("Port %d: %s.\n", port, name_buf);
-
       strlcpy(params.name, name_buf, sizeof(params.name));
+      strlcpy(params.display_name, name_buf, sizeof(params.display_name));
+
+      for(int i=0; i<strlen(params.name); i++) {
+    	  params.name[i] = tolower(params.name[i]);
+	  }
+
+      RARCH_LOG("Port %d: %s.\n", port, params.display_name);
+
       params.idx = port;
       params.vid = vendorId;
       params.pid = productId;
       strlcpy(params.driver, android_joypad.ident, sizeof(params.driver));
       autoconfigured = input_config_autoconfigure_joypad(&params);
 
-      if (autoconfigured)
-      {
+      if (autoconfigured) {
          if (settings->input.autoconf_binds[port][RARCH_MENU_TOGGLE].joykey != 0)
             back_mapped = true;
+      } else {
+    	  return;
       }
+
+      int translated_code = -1;
+      for(bind = 0; bind < RARCH_BIND_LIST_END; bind++) {
+    	  int joykey = settings->input.autoconf_binds[port][bind].joykey;
+    	  RARCH_LOG("Looking for key code %d on bind %d = %d", keycode, bind, joykey);
+    	  if (joykey == keycode) {
+    		  translated_code = bind;
+    		  break;
+    	  }
+      }
+
+      RARCH_LOG("Translated code is %d", translated_code);
+      if (!android_is_gamepad_button(translated_code)) return;
+
    }
 
+   /*
    int preset_device = -1;
    for(int i=0; i<android->pads_connected; i++) {
 	   if (!strcmp(android->pad_states[i].descriptor, device_descriptor)
@@ -926,14 +1026,15 @@ static void handle_hotplug(android_input_t *android,
    } else {
 	   RARCH_LOG("Looking for known device descriptor %s. Found at gamepad %d", device_descriptor, preset_device+1);
    }
-
    port = preset_device>=0 ? preset_device : android->pads_connected;
+   */
+
    *detected_port = port;
 
    bool ignore_back = false;
-   unsigned bind;
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
-	   ignore_back = settings->input.binds[port][bind].joykey == AKEYCODE_BACK;
+	   int joykey = settings->input.autoconf_binds[port][bind].joykey;
+	   ignore_back = joykey == AKEYCODE_BACK;
    }
 
    if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
@@ -943,19 +1044,21 @@ static void handle_hotplug(android_input_t *android,
    android->pad_states[port].id = id;
    android->pad_states[port].port = port;
    android->pad_states[port].ignore_back = ignore_back;
-   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL || strstr(device_name, "NVIDIA") != NULL;
+   android->pad_states[port].is_nvidia = strstr(device_name, "Virtual") != NULL || strcasestr(device_name, "NVIDIA") != NULL;
    strlcpy(android->pad_states[port].name, name_buf,
          sizeof(android->pad_states[port].name));
 
-   if (preset_device<0) {
-	   strlcpy(android->pad_states[port].descriptor, device_descriptor, sizeof(android->pad_states[port].descriptor));
-	   android->pads_connected++;
-   }
+   strlcpy(android->pad_states[port].descriptor, device_descriptor, sizeof(android->pad_states[port].descriptor));
+   android->pads_connected++;
 
    RARCH_LOG("Current %d devices", android->pads_connected);
    for(int i=0; i<android->pads_connected; i++) {
 	   RARCH_LOG("Current gamepad %d: %s (%s)", i+1, android->pad_states[i].name, android->pad_states[i].descriptor);
    }
+
+   char msg[1000];
+   sprintf(msg, "%s is Player %d", device_name, port+1);
+   android_toast(msg);
 
 }
 
@@ -993,8 +1096,16 @@ static void android_input_handle_input(void *data)
          int            id = android_input_get_id(android, event);
          int          port = android_input_get_id_port(android, id, source);
 
-         if (port < 0)
-            handle_hotplug(android, android_app, id, source, &port);
+         if (port < 0) {
+        	// do hotplug only with gamepad buttons
+        	RARCH_LOG("Evaluate hotplug: start\n");
+        	if (type_event == AINPUT_EVENT_TYPE_KEY) {
+        		RARCH_LOG("Evaluate hotplug: event is key\n");
+        		int keycode = AKeyEvent_getKeyCode(event);
+        		RARCH_LOG("Evaluate hotplug: keycode is %d\n", keycode);
+				handle_hotplug(android, android_app, id, source, keycode, &port);
+        	}
+         }
 
          switch (type_event)
          {

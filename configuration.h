@@ -55,6 +55,7 @@ typedef struct settings
 #endif
       bool smooth;
       bool force_aspect;
+      bool force_full;
       bool crop_overscan;
       float aspect_ratio;
       bool aspect_ratio_auto;
@@ -95,6 +96,11 @@ typedef struct settings
       float live_background_blur;
       float live_background_brightness;
       float live_background_saturation;
+
+      bool background_enable;
+      char background_path[PATH_MAX_LENGTH];
+
+      char border_path[2][PATH_MAX_LENGTH];
    } video;
 
    struct

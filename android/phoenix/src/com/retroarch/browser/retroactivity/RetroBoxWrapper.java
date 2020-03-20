@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.retroarch.browser.preferences.util.UserPreferences;
 
@@ -18,9 +19,13 @@ public class RetroBoxWrapper extends Activity {
 	private static final String RETROARCH_PAST = "retrobox.v2.retroarch.past";
 	private static final String KEY_SIGNATURE = "signature";
 
+	private static RetroBoxWrapper instance;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		instance = this;
 		
 		String signature = getIntent().getStringExtra("RETROBOX_SIGNATURE");
 		String lastSignature = getLastSignature();
@@ -65,6 +70,16 @@ public class RetroBoxWrapper extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d("RetroArch", "onActivityResult.finish()");
 		finish();
+	}
+
+	public static void toast(final String message) {
+		instance.runOnUiThread(new Runnable(){
+
+			@Override
+			public void run() {
+				Toast.makeText(instance, message, Toast.LENGTH_LONG).show();
+			}
+		});
 	}
 
 }

@@ -455,6 +455,7 @@ static const bool video_smooth = true;
 
 /* On resize and fullscreen, rendering area will stay 4:3 */
 static const bool force_aspect = true; 
+static const bool force_full = false;
 
 /* Enable use of shaders. */
 #ifdef RARCH_CONSOLE
@@ -574,6 +575,7 @@ static const float live_background_blur = 0.75;
 static const float live_background_brightness = 0.9;
 static const float live_background_saturation = 0.9;
 
+static const bool  background_enable = false;
 
 /* OSD-messages. */
 static const bool font_enable = true;

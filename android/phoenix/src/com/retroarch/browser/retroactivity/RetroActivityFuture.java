@@ -60,9 +60,9 @@ public final class RetroActivityFuture extends NativeActivity {
 		
 		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
 			eventCommand(EventCommand.SCREENSHOT.ordinal());
-			toast(this, getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
+			RetroBoxWrapper.toast(getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
 		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
-			toast(this, getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
+			RetroBoxWrapper.toast(getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
 		}
 
 		Log.d("MENU", "RetroActivityFuture onResume end threadId:" + Thread.currentThread().getName());
@@ -179,7 +179,7 @@ public final class RetroActivityFuture extends NativeActivity {
 						@Override
 						public void run() {
 							String msg = getString(R.string.emu_disk_inserted_n).replace("{n}", String.valueOf(diskNumber+1));
-							toast(RetroActivityFuture.this, msg);
+							RetroBoxWrapper.toast(msg);
 						}
 					});
 				}
@@ -223,10 +223,6 @@ public final class RetroActivityFuture extends NativeActivity {
         case RESULT_CANCEL_ID : break;
         }
 
-	}
-	
-	public static void toast(Context context, String message) {
-		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
 	}
 	
 	public void onRetroArchExit() {

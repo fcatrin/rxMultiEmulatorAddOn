@@ -485,6 +485,7 @@ static void config_set_defaults(void)
 #endif
    settings->video.smooth                      = video_smooth;
    settings->video.force_aspect                = force_aspect;
+   settings->video.force_full                  = force_full;
    settings->video.scale_integer               = scale_integer;
    settings->video.crop_overscan               = crop_overscan;
    settings->video.aspect_ratio                = aspect_ratio;
@@ -517,6 +518,8 @@ static void config_set_defaults(void)
    settings->video.live_background_blur        = live_background_blur;
    settings->video.live_background_brightness  = live_background_brightness;
    settings->video.live_background_saturation  = live_background_saturation;
+
+   settings->video.background_enable           = background_enable;
 
    settings->audio.enable                      = audio_enable;
    settings->audio.mute_enable                 = false;
@@ -1317,6 +1320,7 @@ static bool config_load_file(const char *path, bool set_defaults)
 #endif
    CONFIG_GET_BOOL_BASE(conf, settings, video.smooth, "video_smooth");
    CONFIG_GET_BOOL_BASE(conf, settings, video.force_aspect, "video_force_aspect");
+   CONFIG_GET_BOOL_BASE(conf, settings, video.force_full,   "video_force_full");
    CONFIG_GET_BOOL_BASE(conf, settings, video.scale_integer, "video_scale_integer");
    CONFIG_GET_BOOL_BASE(conf, settings, video.crop_overscan, "video_crop_overscan");
    CONFIG_GET_FLOAT_BASE(conf, settings, video.aspect_ratio, "video_aspect_ratio");
@@ -1397,6 +1401,11 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_blur, "live_background_blur");
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_brightness, "live_background_brightness");
    CONFIG_GET_FLOAT_BASE(conf, settings, video.live_background_saturation, "live_background_saturation");
+
+   CONFIG_GET_BOOL_BASE(conf, settings, video.background_enable, "background_enable");
+   config_get_path(conf, "background_path", settings->video.background_path, sizeof(settings->video.background_path));
+   config_get_path(conf, "border_path_side",   settings->video.border_path[1], sizeof(settings->video.border_path[1]));
+   config_get_path(conf, "border_path_corner", settings->video.border_path[0], sizeof(settings->video.border_path[0]));
 
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))
