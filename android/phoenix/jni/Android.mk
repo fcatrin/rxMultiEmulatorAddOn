@@ -13,6 +13,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 HAVE_NEON := 1
 HAVE_LOGGER := 1
+GLES := 3
 
 include $(CLEAR_VARS)
 ifeq ($(TARGET_ARCH),arm)
