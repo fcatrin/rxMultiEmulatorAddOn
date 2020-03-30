@@ -3493,6 +3493,9 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    if (!gl)
       return;
 
+   global_t   *global   = global_get_ptr();
+   if (!global->show_rewind_icon && !global->show_forward_icon) return;
+
    glEnable(GL_BLEND);
 
    /* Ensure that we reset the attrib array. */
@@ -3513,6 +3516,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    GLfloat y = height - margin_y - icon_size;
 
    for(unsigned int i=0; i<REWIND_FORWARD_TEXTURES; i++) {
+	   if ((i == 0 && !global->show_rewind_icon) || (i == 1 && !global->show_forward_icon)) continue;
+
 	   GLfloat x = i == 0 ? margin_x : (width - margin_x - icon_size);
 	   glViewport(x, y, icon_size, icon_size);
 
