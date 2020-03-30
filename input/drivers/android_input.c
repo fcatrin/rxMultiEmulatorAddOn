@@ -113,6 +113,8 @@ typedef struct android_input
    ASensorEventQueue *sensorEventQueue;
    const input_device_driver_t *joypad;
    bool is_back_pressed;
+   int16_t joypad_0_start_keycode;
+   bool joypad_0_start_pressed;
 } android_input_t;
 
 static void frontend_android_get_version_sdk(int32_t *sdk);
@@ -787,6 +789,10 @@ static INLINE void android_input_poll_event_type_key(
 		   android->is_back_pressed = true;
    }
 
+   if (keycode == android->joypad_0_start_keycode) {
+	   android->joypad_0_start_pressed = action == AKEY_EVENT_ACTION_DOWN;
+   }
+
    if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
       *handled = 0;
 }
@@ -1035,6 +1041,11 @@ static void handle_hotplug(android_input_t *android,
    for(bind = 0; !ignore_back && bind < RARCH_BIND_LIST_END; bind++) {
 	   int joykey = settings->input.autoconf_binds[port][bind].joykey;
 	   ignore_back = joykey == AKEYCODE_BACK;
+   }
+
+   if (port == 0) {
+	   android->joypad_0_start_keycode = settings->input.autoconf_binds[0][RETRO_DEVICE_ID_JOYPAD_START].joykey;
+	   android->joypad_0_start_pressed = false;
    }
 
    if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
@@ -1318,6 +1329,20 @@ static bool android_input_meta_key_pressed(void *data, int key)
 		bool isPressed = android->is_back_pressed;
 		android->is_back_pressed = false;
 		return isPressed;
+	}
+
+	// Doing this via config didn't work and I gave up finding why
+	// Binding code for this version at least is a real mess
+	// So... forgive this uglyness
+
+	if (!android->joypad_0_start_pressed) {
+		if (key == RARCH_REWIND && android->trigger_state[0][0]) {
+			return true;
+		}
+
+		if (key == RARCH_FAST_FORWARD_HOLD_KEY && android->trigger_state[0][1]) {
+			return true;
+		}
 	}
 
 	return false;

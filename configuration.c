@@ -1084,6 +1084,8 @@ static void read_keybinds_keyboard(config_file_t *conf, unsigned user,
 
    prefix = input_config_get_prefix(user, input_config_bind_map[idx].meta);
 
+   RARCH_LOG("rewind read_keybinds_keyboard %s", input_config_bind_map[idx].base);
+
    if (prefix)
       input_config_parse_key(conf, prefix,
             input_config_bind_map[idx].base, bind);
@@ -1102,6 +1104,7 @@ static void read_keybinds_button(config_file_t *conf, unsigned user,
    prefix = input_config_get_prefix(user,
          input_config_bind_map[idx].meta);
 
+   RARCH_LOG("rewind read_keybinds_button %s for %s", prefix, input_config_bind_map[idx].base);
    if (prefix)
       input_config_parse_joy_button(conf, prefix,
             input_config_bind_map[idx].base, bind);
