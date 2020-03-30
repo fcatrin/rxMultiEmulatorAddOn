@@ -29,7 +29,7 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_SENDING_COMMAND:
          return "Enviando comando";
       case MSG_GOT_INVALID_DISK_INDEX:
-         return "Õndice de disco inv·lido.";
+         return "√çndice de disco inv√°lido.";
       case MSG_FAILED_TO_REMOVE_DISK_FROM_TRAY:
          return "Falha ao remover disco da bandeja.";
       case MSG_REMOVED_DISK_FROM_TRAY:
@@ -47,11 +47,11 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_LOADING_STATE:
          return "Carregando estado";
       case MSG_FAILED_TO_LOAD_MOVIE_FILE:
-         return "Falha ao carregar vÌdeo";
+         return "Falha ao carregar v√≠deo";
       case MSG_FAILED_TO_LOAD_CONTENT:
-         return "Falha ao carregar conte˙do";
+         return "Falha ao carregar conte√∫do";
       case MSG_COULD_NOT_READ_CONTENT_FILE:
-         return "Incapaz de ler arquivo de conte˙do";
+         return "Incapaz de ler arquivo de conte√∫do";
       case MSG_GRAB_MOUSE_STATE:
          return "Obter estado do mouse";
       case MSG_PAUSED:
@@ -63,9 +63,9 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_FAILED_TO_UNMUTE_AUDIO:
          return "Falha ao desativar mudo.";
       case MSG_AUDIO_MUTED:
-         return "¡udio mudo.";
+         return "√Åudio mudo.";
       case MSG_AUDIO_UNMUTED:
-         return "¡udio normal.";
+         return "√Åudio normal.";
       case MSG_RESET:
          return "Reiniciar";
       case MSG_FAILED_TO_LOAD_STATE:
@@ -77,9 +77,9 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_STATE_SIZE:
          return "Tamanho do estado";
       case MSG_BLOCKING_SRAM_OVERWRITE:
-         return "Bloqueando SobrescriÁ„o de SRAM";
+         return "Bloqueando Sobrescri√ß√£o de SRAM";
       case MSG_CORE_DOES_NOT_SUPPORT_SAVESTATES:
-         return "O core n„o suporta savestates.";
+         return "O core n√£o suporta savestates.";
       case MSG_SAVED_STATE_TO_SLOT:
          return "Estado salvo no slot";
       case MSG_SAVED_SUCCESSFULLY_TO:
@@ -87,17 +87,17 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_BYTES:
          return "bytes";
       case MSG_CONFIG_DIRECTORY_NOT_SET:
-         return "DiretÛrio de configuraÁıes n„o definido. Incapaz de salvar.";
+         return "Diret√≥rio de configura√ß√µes n√£o definido. Incapaz de salvar.";
       case MSG_SKIPPING_SRAM_LOAD:
          return "Ignorando carregamento de SRAM.";
       case MSG_APPENDED_DISK:
          return "Disco anexado";
       case MSG_STARTING_MOVIE_PLAYBACK:
-         return "Iniciando reproduÁ„o de vÌdeo.";
+         return "Iniciando reprodu√ß√£o de v√≠deo.";
       case MSG_FAILED_TO_REMOVE_TEMPORARY_FILE:
-         return "Falha ao remover arquivo tempor·rio";
+         return "Falha ao remover arquivo tempor√°rio";
       case MSG_REMOVING_TEMPORARY_CONTENT_FILE:
-         return "Removendo conte˙do tempor·rio";
+         return "Removendo conte√∫do tempor√°rio";
       case MSG_LOADED_STATE_FROM_SLOT:
          return "Estado carregado do slot";
       case MSG_DOWNLOAD_PROGRESS:
@@ -105,9 +105,9 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_COULD_NOT_PROCESS_ZIP_FILE:
          return "Incapaz de processar arquivo ZIP.";
       case MSG_DOWNLOAD_COMPLETE:
-         return "Download concluÌdo";
+         return "Download conclu√≠do";
       case MSG_SCANNING_OF_DIRECTORY_FINISHED:
-         return "Exame de diretÛrio concluÌdo";
+         return "Exame de diret√≥rio conclu√≠do";
       case MSG_SCANNING:
          return "Examinando";
       case MSG_REDIRECTING_CHEATFILE_TO:
@@ -123,17 +123,17 @@ const char *msg_hash_to_str_pt(uint32_t hash)
       case MSG_FAILED_TO_APPLY_SHADER:
          return "Falha ao aplicar shader.";
       case MSG_STARTING_MOVIE_RECORD_TO:
-         return "Iniciando gravaÁ„o de vÌdeo em";
+         return "Iniciando grava√ß√£o de v√≠deo em";
       case MSG_FAILED_TO_START_MOVIE_RECORD:
-         return "Falha ao iniciar gravaÁ„o de vÌdeo.";
+         return "Falha ao iniciar grava√ß√£o de v√≠deo.";
       case MSG_STATE_SLOT:
          return "Slot de estado";
       case MSG_RESTARTING_RECORDING_DUE_TO_DRIVER_REINIT:
-         return "Reiniciando gravaÁ„o devido a reinÌcio de driver.";
+         return "Reiniciando grava√ß√£o devido a rein√≠cio de driver.";
       case MSG_SLOW_MOTION:
-         return "C‚mera lenta.";
+         return "C√¢mera lenta.";
       case MSG_SLOW_MOTION_REWIND:
-         return "Retrocesso em c‚mera lenta.";
+         return "Retrocesso em c√¢mera lenta.";
       case MSG_REWINDING:
          return "Retrocedendo.";
       case MSG_REWIND_REACHED_END:
