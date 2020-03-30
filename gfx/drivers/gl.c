@@ -3446,10 +3446,13 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    gl->shader->use(gl, GL_SHADER_STOCK_BLUR);
 
    // draw scaled down into FBO
-   glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
-   glViewport(0, 0, frame_width/BACKGROUND_SCALE, frame_height/BACKGROUND_SCALE);
 
-   gl->coords.vertex    = vertexes;
+   int divider = frame_height >= 480 ? 2 : 1;
+
+   glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
+   glViewport(0, 0, frame_width/BACKGROUND_SCALE/divider, frame_height/BACKGROUND_SCALE/divider);
+
+   gl->coords.vertex    = gl->vertex_ptr;
    gl->coords.vertices  = 4;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
@@ -3472,9 +3475,9 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    // now draw to background fiting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-   glViewport(-64, -64, width + 128, height + 128);
+   glViewport(-64, -64, width*divider + 128, height*divider + 128);
 
-   gl->coords.vertex    = vertexes_flipped;
+   gl->coords.vertex    = vertexes;
    gl->coords.vertices  = 4;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
@@ -3485,7 +3488,6 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
-
 
 static void gl_render_background_static(void *data)
 {
