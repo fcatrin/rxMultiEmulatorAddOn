@@ -281,6 +281,13 @@ typedef struct gl
    float *border_tex_coord;
    float *border_color_coord;
 
+   struct texture_image *rewind_forward_images[2];
+   bool   rewind_forward_inited;
+   GLuint *rewind_forward_tex;
+   float *rewind_forward_vertex_coord;
+   float *rewind_forward_tex_coord;
+   float *rewind_forward_color_coord;
+
 
 #ifdef HAVE_GL_ASYNC_READBACK
    /* PBOs used for asynchronous viewport readbacks. */

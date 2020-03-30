@@ -1410,6 +1410,9 @@ static bool config_load_file(const char *path, bool set_defaults)
    config_get_path(conf, "border_path_side",   settings->video.border_path[1], sizeof(settings->video.border_path[1]));
    config_get_path(conf, "border_path_corner", settings->video.border_path[0], sizeof(settings->video.border_path[0]));
 
+   config_get_path(conf, "rewind_icon_path",   settings->video.rewind_forward_path[0], sizeof(settings->video.rewind_forward_path[0]));
+   config_get_path(conf, "forward_icon_path",  settings->video.rewind_forward_path[1], sizeof(settings->video.rewind_forward_path[1]));
+
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))
       *settings->video.shader_dir = '\0';
