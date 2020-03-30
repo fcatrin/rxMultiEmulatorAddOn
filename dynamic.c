@@ -755,7 +755,7 @@ bool rarch_environment_cb(unsigned cmd, void *data)
          break;
 
       case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
-         if (!settings->system_directory || settings->system_directory[0] == '\0')
+         if (settings->system_directory[0] == '\0')
          {
             RARCH_WARN("SYSTEM DIR is empty, fill assume CONTENT DIR %s\n",global->fullpath);
             fill_pathname_basedir(settings->system_directory, global->fullpath,
