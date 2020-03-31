@@ -539,9 +539,10 @@ static int do_state_checks(driver_t *driver, settings_t *settings,
             cmd->rewind_pressed))
       return 1;
 
-   global->show_forward_icon = check_fast_forward_button(driver,
-         cmd->fastforward_pressed,
-         cmd->hold_pressed, cmd->old_hold_pressed);
+   global->show_forward_icon = settings->fastforward_enable ?
+		 check_fast_forward_button(driver,
+            cmd->fastforward_pressed,
+            cmd->hold_pressed, cmd->old_hold_pressed) : false;
 
    check_stateslots(settings, cmd->state_slot_increase,
          cmd->state_slot_decrease);

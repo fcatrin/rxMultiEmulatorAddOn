@@ -649,6 +649,8 @@ static const bool fps_show = false;
  * depending on the save state buffer. */
 static const bool rewind_enable = false;
 
+static const bool fastforward_enable = false;
+
 /* The buffer size for the rewind buffer. This needs to be about 
  * 15-20MB per minute. Very game dependant. */
 static const unsigned rewind_buffer_size = 20 << 20; /* 20MiB */

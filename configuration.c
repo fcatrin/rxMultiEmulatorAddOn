@@ -546,6 +546,7 @@ static void config_set_defaults(void)
    settings->rewind_buffer_size                = rewind_buffer_size;
    settings->rewind_granularity                = rewind_granularity;
    settings->slowmotion_ratio                  = slowmotion_ratio;
+   settings->fastforward_enable                = fastforward_enable;
    settings->fastforward_ratio                 = fastforward_ratio;
    settings->fastforward_ratio_throttle_enable = fastforward_ratio_throttle_enable;
    settings->pause_nonactive                   = pause_nonactive;
@@ -1631,6 +1632,8 @@ static bool config_load_file(const char *path, bool set_defaults)
    if (settings->slowmotion_ratio < 1.0f)
       settings->slowmotion_ratio = 1.0f;
 
+   CONFIG_GET_BOOL_BASE(conf, settings, fastforward_enable, "fastforward_enable");
+
    CONFIG_GET_FLOAT_BASE(conf, settings, fastforward_ratio, "fastforward_ratio");
 
    /* Sanitize fastforward_ratio value - previously range was -1
@@ -2503,6 +2506,7 @@ bool config_save_file(const char *path)
    config_set_path(conf,  "cursor_directory", settings->cursor_directory);
    config_set_path(conf,  "content_history_dir", settings->content_history_directory);
    config_set_bool(conf,  "rewind_enable", settings->rewind_enable);
+   config_set_bool(conf,  "fastforward_enable", settings->fastforward_enable);
    config_set_int(conf,   "audio_latency", settings->audio.latency);
    config_set_bool(conf,  "audio_sync",    settings->audio.sync);
    config_set_bool(conf,  "audio_minix",    settings->audio.is_minix);

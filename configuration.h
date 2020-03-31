@@ -329,6 +329,8 @@ typedef struct settings
    size_t rewind_buffer_size;
    unsigned rewind_granularity;
 
+   bool fastforward_enable;
+
    float slowmotion_ratio;
    float fastforward_ratio;
    bool fastforward_ratio_throttle_enable;
