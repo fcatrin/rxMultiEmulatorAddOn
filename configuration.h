@@ -243,6 +243,8 @@ typedef struct settings
       bool join_device_ids;
       bool netplay_client_swap_input;
 
+      unsigned rewind_forward_combo;
+
       unsigned turbo_period;
       unsigned turbo_duty_cycle;
 

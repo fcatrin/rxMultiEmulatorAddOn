@@ -744,6 +744,8 @@ static const bool input_autodetect_enable = true;
  */
 static const bool input_join_device_ids = false;
 
+static const bool input_rewind_forward_combo = 0;
+
 /* Show the input descriptors set by the core instead 
  * of the default ones. */
 static const bool input_descriptor_label_show = true;

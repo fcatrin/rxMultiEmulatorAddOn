@@ -48,6 +48,12 @@
 #define AMOTION_EVENT_ACTION_HOVER_EXIT  10
 #define RETRO_DEVICE_ID_MOUSE_HOVER      16
 
+enum {
+	COMBO_REWIND_FORWARD_SIMPLE,
+	COMBO_REWIND_FORWARD_SELECT,
+	COMBO_REWIND_FORWARD_R3,
+};
+
 typedef struct
 {
    float x;
@@ -113,8 +119,13 @@ typedef struct android_input
    ASensorEventQueue *sensorEventQueue;
    const input_device_driver_t *joypad;
    bool is_back_pressed;
-   int16_t joypad_0_start_keycode;
-   bool joypad_0_start_pressed;
+
+   int16_t joypad_0_select_keycode;
+   int16_t joypad_0_r3_keycode;
+
+   bool joypad_0_select_pressed;
+   bool joypad_0_r3_pressed;
+
 } android_input_t;
 
 static void frontend_android_get_version_sdk(int32_t *sdk);
@@ -789,8 +800,13 @@ static INLINE void android_input_poll_event_type_key(
 		   android->is_back_pressed = true;
    }
 
-   if (keycode == android->joypad_0_start_keycode) {
-	   android->joypad_0_start_pressed = action == AKEY_EVENT_ACTION_DOWN;
+   if (port == 0) {
+	   if (keycode == android->joypad_0_select_keycode) {
+		   android->joypad_0_select_pressed = action == AKEY_EVENT_ACTION_DOWN;
+	   }
+	   if (keycode == android->joypad_0_r3_keycode) {
+		   android->joypad_0_r3_pressed = action == AKEY_EVENT_ACTION_DOWN;
+	   }
    }
 
    if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
@@ -1044,8 +1060,10 @@ static void handle_hotplug(android_input_t *android,
    }
 
    if (port == 0) {
-	   android->joypad_0_start_keycode = settings->input.autoconf_binds[0][RETRO_DEVICE_ID_JOYPAD_START].joykey;
-	   android->joypad_0_start_pressed = false;
+	   android->joypad_0_select_keycode = settings->input.autoconf_binds[0][RETRO_DEVICE_ID_JOYPAD_SELECT].joykey;
+	   android->joypad_0_r3_keycode     = settings->input.autoconf_binds[0][RETRO_DEVICE_ID_JOYPAD_R3].joykey;
+	   android->joypad_0_select_pressed = false;
+	   android->joypad_0_r3_pressed     = false;
    }
 
    if (!ignore_back && !back_mapped && settings->input.back_as_menu_toggle_enable) {
@@ -1335,13 +1353,23 @@ static bool android_input_meta_key_pressed(void *data, int key)
 	// Binding code for this version at least is a real mess
 	// So... forgive this uglyness
 
-	if (!android->joypad_0_start_pressed) {
-		if (key == RARCH_REWIND && android->trigger_state[0][0]) {
-			return true;
-		}
+	bool isRewind      = key == RARCH_REWIND;
+	bool isFastForward = key == RARCH_FAST_FORWARD_HOLD_KEY;
+	if (isRewind || isFastForward) {
+		settings_t *settings = config_get_ptr();
 
-		if (key == RARCH_FAST_FORWARD_HOLD_KEY && android->trigger_state[0][1]) {
-			return true;
+		bool isL2 = android->trigger_state[0][0];
+		bool isR2 = android->trigger_state[0][1];
+
+		int combo_mode = settings->input.rewind_forward_combo;
+		bool combo =
+				(combo_mode == COMBO_REWIND_FORWARD_SIMPLE) ||
+				(combo_mode == COMBO_REWIND_FORWARD_SELECT && android->joypad_0_select_pressed) ||
+				(combo_mode == COMBO_REWIND_FORWARD_R3     && android->joypad_0_r3_pressed);
+
+		if (combo) {
+			if (isL2 && isRewind) return true;
+			if (isR2 && isFastForward) return true;
 		}
 	}
 
