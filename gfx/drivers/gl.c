@@ -3524,6 +3524,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
 	   glBindTexture(GL_TEXTURE_2D, gl->rewind_forward_tex[i]);
 	   glDrawArrays(GL_TRIANGLE_STRIP, 4 * i, 4);
    }
+
+   gl_restore_render_context(gl);
 }
 
 static void gl_render_border(void *data, int vp_width, int vp_height)
