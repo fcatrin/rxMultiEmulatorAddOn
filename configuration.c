@@ -546,6 +546,7 @@ static void config_set_defaults(void)
    settings->rewind_buffer_size                = rewind_buffer_size;
    settings->rewind_granularity                = rewind_granularity;
    settings->slowmotion_ratio                  = slowmotion_ratio;
+   settings->fastforward_enable                = fastforward_enable;
    settings->fastforward_ratio                 = fastforward_ratio;
    settings->fastforward_ratio_throttle_enable = fastforward_ratio_throttle_enable;
    settings->pause_nonactive                   = pause_nonactive;
@@ -649,6 +650,7 @@ static void config_set_defaults(void)
    settings->input.overlay_scale                   = 1.0f;
    settings->input.autodetect_enable               = input_autodetect_enable;
    settings->input.join_device_ids                 = input_join_device_ids;
+   settings->input.rewind_forward_combo            = input_rewind_forward_combo;
    *settings->input.keyboard_layout                = '\0';
 
    for (i = 0; i < MAX_USERS; i++)
@@ -1084,6 +1086,8 @@ static void read_keybinds_keyboard(config_file_t *conf, unsigned user,
 
    prefix = input_config_get_prefix(user, input_config_bind_map[idx].meta);
 
+   RARCH_LOG("rewind read_keybinds_keyboard %s", input_config_bind_map[idx].base);
+
    if (prefix)
       input_config_parse_key(conf, prefix,
             input_config_bind_map[idx].base, bind);
@@ -1102,6 +1106,7 @@ static void read_keybinds_button(config_file_t *conf, unsigned user,
    prefix = input_config_get_prefix(user,
          input_config_bind_map[idx].meta);
 
+   RARCH_LOG("rewind read_keybinds_button %s for %s", prefix, input_config_bind_map[idx].base);
    if (prefix)
       input_config_parse_joy_button(conf, prefix,
             input_config_bind_map[idx].base, bind);
@@ -1407,6 +1412,9 @@ static bool config_load_file(const char *path, bool set_defaults)
    config_get_path(conf, "border_path_side",   settings->video.border_path[1], sizeof(settings->video.border_path[1]));
    config_get_path(conf, "border_path_corner", settings->video.border_path[0], sizeof(settings->video.border_path[0]));
 
+   config_get_path(conf, "rewind_icon_path",   settings->video.rewind_forward_path[0], sizeof(settings->video.rewind_forward_path[0]));
+   config_get_path(conf, "forward_icon_path",  settings->video.rewind_forward_path[1], sizeof(settings->video.rewind_forward_path[1]));
+
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))
       *settings->video.shader_dir = '\0';
@@ -1625,6 +1633,8 @@ static bool config_load_file(const char *path, bool set_defaults)
    if (settings->slowmotion_ratio < 1.0f)
       settings->slowmotion_ratio = 1.0f;
 
+   CONFIG_GET_BOOL_BASE(conf, settings, fastforward_enable, "fastforward_enable");
+
    CONFIG_GET_FLOAT_BASE(conf, settings, fastforward_ratio, "fastforward_ratio");
 
    /* Sanitize fastforward_ratio value - previously range was -1
@@ -1666,7 +1676,7 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_BOOL_BASE(conf, settings, input.join_device_ids, "input_join_device_ids");
    CONFIG_GET_PATH_BASE(conf, settings, input.autoconfig_dir, "joypad_autoconfig_dir");
 
-   RARCH_LOG("read from config input_join_device_ids %s\n", settings->input.join_device_ids?"TRUE":"FALSE");
+   CONFIG_GET_INT_BASE(conf, settings, input.rewind_forward_combo, "input_rewind_forward_combo");
 
    if (!global->has_set_username)
       CONFIG_GET_PATH_BASE(conf, settings, username, "netplay_nickname");
@@ -2497,6 +2507,7 @@ bool config_save_file(const char *path)
    config_set_path(conf,  "cursor_directory", settings->cursor_directory);
    config_set_path(conf,  "content_history_dir", settings->content_history_directory);
    config_set_bool(conf,  "rewind_enable", settings->rewind_enable);
+   config_set_bool(conf,  "fastforward_enable", settings->fastforward_enable);
    config_set_int(conf,   "audio_latency", settings->audio.latency);
    config_set_bool(conf,  "audio_sync",    settings->audio.sync);
    config_set_bool(conf,  "audio_minix",    settings->audio.is_minix);

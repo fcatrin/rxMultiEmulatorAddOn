@@ -101,6 +101,7 @@ typedef struct settings
       char background_path[PATH_MAX_LENGTH];
 
       char border_path[2][PATH_MAX_LENGTH];
+      char rewind_forward_path[2][PATH_MAX_LENGTH];
    } video;
 
    struct
@@ -242,6 +243,8 @@ typedef struct settings
       bool join_device_ids;
       bool netplay_client_swap_input;
 
+      unsigned rewind_forward_combo;
+
       unsigned turbo_period;
       unsigned turbo_duty_cycle;
 
@@ -327,6 +330,8 @@ typedef struct settings
    bool rewind_enable;
    size_t rewind_buffer_size;
    unsigned rewind_granularity;
+
+   bool fastforward_enable;
 
    float slowmotion_ratio;
    float fastforward_ratio;

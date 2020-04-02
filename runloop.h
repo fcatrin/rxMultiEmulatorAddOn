@@ -128,6 +128,9 @@ typedef struct global
    /* show save / load state message only if triggered by shortcut */
    bool show_state_message;
 
+   bool show_rewind_icon;
+   bool show_forward_icon;
+
    /* full filename for savestate screen shot */
    char savestate_path_shot[PATH_MAX_LENGTH];
 

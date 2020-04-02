@@ -649,6 +649,8 @@ static const bool fps_show = false;
  * depending on the save state buffer. */
 static const bool rewind_enable = false;
 
+static const bool fastforward_enable = false;
+
 /* The buffer size for the rewind buffer. This needs to be about 
  * 15-20MB per minute. Very game dependant. */
 static const unsigned rewind_buffer_size = 20 << 20; /* 20MiB */
@@ -741,6 +743,8 @@ static const bool input_autodetect_enable = true;
  * like tha Archos Gamepad 2
  */
 static const bool input_join_device_ids = false;
+
+static const bool input_rewind_forward_combo = 0;
 
 /* Show the input descriptors set by the core instead 
  * of the default ones. */

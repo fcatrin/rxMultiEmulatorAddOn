@@ -149,6 +149,10 @@ static void gl_render_background_static(void *data);
 static void gl_render_border(void *data, int frame_width, int frame_height);
 static void gl_deinit_border(gl_t *gl);
 
+#define REWIND_FORWARD_TEXTURES 2
+static void gl_deinit_rewind_forward(gl_t *gl);
+static void gl_render_rewind_forward(void *data, int frame_width, int frame_height);
+
 static void gl_restore_render_context(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
@@ -495,8 +499,7 @@ static void gl_create_background_texture(gl_t *gl, const char *path) {
 	gl->background_inited = true;
 }
 
-static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
-	GLfloat* coords = (GLfloat*)&gl->border_tex_coord[index * 8];
+static void gl_rect_tex_geom(gl_t *gl, GLfloat *coords, int x, int y, int w, int h) {
 	coords[0] = x;
 	coords[1] = y;
 	coords[2] = x + w;
@@ -505,6 +508,23 @@ static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, in
 	coords[5] = y + h;
 	coords[6] = x + w;
 	coords[7] = y + h;
+}
+
+static void gl_rect_vertex_geom(gl_t *gl, GLfloat *vertex, int x, int y, int w, int h) {
+	y = 1.0f - y;
+	h = -h;
+	vertex[0] = x;
+	vertex[1] = y;
+	vertex[2] = x + w;
+	vertex[3] = y;
+	vertex[4] = x;
+	vertex[5] = y + h;
+	vertex[6] = x + w;
+	vertex[7] = y + h;
+}
+
+static void gl_border_tex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
+	gl_rect_tex_geom(gl, &gl->border_tex_coord[index * 8], x, y, w, h);
 }
 
 static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w, int h) {
@@ -560,6 +580,66 @@ static void gl_border_vertex_geom(gl_t *gl, unsigned index, int x, int y, int w,
 
 }
 
+static bool gl_create_rewind_forward_textures(void *data, char rewind_forward_path[][PATH_MAX_LENGTH]) {
+	gl_t *gl = (gl_t*)data;
+
+	if (!gl)
+	   return false;
+
+
+	for(unsigned int i=0; i<REWIND_FORWARD_TEXTURES; i++) {
+		gl->rewind_forward_images[i]  = (struct texture_image*)calloc(1, sizeof(struct texture_image));
+		if (!texture_image_load(gl->rewind_forward_images[i], rewind_forward_path[i])) {
+			RARCH_WARN("[GL] cannot load image %s", rewind_forward_path[i]);
+		}
+	}
+
+	context_bind_hw_render(gl, false);
+	gl_deinit_rewind_forward(gl);
+
+	gl->rewind_forward_tex  = (GLuint*)calloc(REWIND_FORWARD_TEXTURES, sizeof(*gl->rewind_forward_tex));
+	if (!gl->rewind_forward_tex) {
+		context_bind_hw_render(gl, true);
+		return false;
+	}
+
+	gl->rewind_forward_vertex_coord = (GLfloat*)calloc(2 * 4 * REWIND_FORWARD_TEXTURES, sizeof(GLfloat));
+	gl->rewind_forward_tex_coord    = (GLfloat*)calloc(2 * 4 * REWIND_FORWARD_TEXTURES, sizeof(GLfloat));
+	gl->rewind_forward_color_coord  = (GLfloat*)calloc(4 * 4 * REWIND_FORWARD_TEXTURES, sizeof(GLfloat));
+	if (!gl->rewind_forward_vertex_coord || !gl->rewind_forward_tex_coord || !gl->rewind_forward_color_coord)
+		return false;
+
+
+	glGenTextures(REWIND_FORWARD_TEXTURES, gl->rewind_forward_tex);
+	for (unsigned i = 0; i < REWIND_FORWARD_TEXTURES; i++) {
+		struct texture_image *image = gl->rewind_forward_images[i];
+		unsigned alignment = video_pixel_get_alignment(image->width * sizeof(uint32_t));
+
+		gl_load_texture_data(gl->rewind_forward_tex[i],
+	            RARCH_WRAP_EDGE, TEXTURE_FILTER_LINEAR,
+	            alignment,
+	            image->width, image->height, image->pixels,
+	            sizeof(uint32_t));
+
+		gl_rect_tex_geom   (gl, (GLfloat *)&gl->rewind_forward_tex_coord[i*8],    0, 0, 1, 1);
+		gl_rect_vertex_geom(gl, (GLfloat *)&gl->rewind_forward_vertex_coord[i*8], 0, 0, 1, 1);
+
+		for (unsigned j = 0; j < 16; j++)
+	         gl->rewind_forward_color_coord[16 * i + j] = ((j & 3) == 3) ? 1.0f : 0.92f;
+
+	}
+
+	for(unsigned int i=0; i<REWIND_FORWARD_TEXTURES; i++) {
+		texture_image_free(gl->rewind_forward_images[i]);
+		gl->rewind_forward_images[i] = 0;
+	}
+
+	context_bind_hw_render(gl, true);
+
+	gl->rewind_forward_inited = true;
+	return true;
+}
+
 static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LENGTH]) {
    gl_t *gl = (gl_t*)data;
 
@@ -610,7 +690,7 @@ static bool gl_create_border_texture(void *data, char border_path[][PATH_MAX_LEN
 
 
       for (unsigned j = 0; j < 16; j++)
-         gl->border_color_coord[16 * i + j] = (j % 3) ? 1.0f : 0.2f;
+         gl->border_color_coord[16 * i + j] = ((j & 3) == 3) ? 1.0f : 0.2f;
 
    }
    texture_image_free(gl->border_images[0]);
@@ -815,6 +895,25 @@ static void gl_deinit_border(gl_t *gl)
    gl->border_tex[0] = 0;
    gl->border_tex[1] = 0;
    gl->border_inited = false;
+}
+
+static void gl_deinit_rewind_forward(gl_t *gl)
+{
+   if (!gl->rewind_forward_inited)
+      return;
+
+   free(gl->rewind_forward_vertex_coord);
+   free(gl->rewind_forward_tex_coord);
+   free(gl->rewind_forward_color_coord);
+
+   gl->rewind_forward_vertex_coord = NULL;
+   gl->rewind_forward_tex_coord    = NULL;
+   gl->rewind_forward_color_coord  = NULL;
+
+   glDeleteTextures(2, gl->rewind_forward_tex);
+   gl->rewind_forward_tex[0] = 0;
+   gl->rewind_forward_tex[1] = 0;
+   gl->rewind_forward_inited = false;
 }
 
 
@@ -1901,6 +2000,8 @@ static bool gl_frame(void *data, const void *frame,
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
+
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
@@ -2738,6 +2839,8 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 	  gl_create_background_texture(gl, settings->video.background_path);
    }
 
+   gl_create_rewind_forward_textures(gl, settings->video.rewind_forward_path);
+
    gfx_ctx_input_driver(gl, input, input_data);
    
    if (settings->video.font_enable)
@@ -2912,6 +3015,8 @@ static bool gl_set_shader(void *data,
       gl_deinit_background(gl);
       gl_deinit_border(gl);
    }
+
+   gl_deinit_rewind_forward(gl);
 
    if (!gl->shader->init(gl, path))
    {
@@ -3381,6 +3486,48 @@ static void gl_restore_render_context(gl_t *gl) {
    gl->shader->use(gl, 1);
 }
 
+static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
+{
+   unsigned width, height;
+   gl_t *gl = (gl_t*)data;
+   if (!gl)
+      return;
+
+   global_t   *global   = global_get_ptr();
+   if (!global->show_rewind_icon && !global->show_forward_icon) return;
+
+   glEnable(GL_BLEND);
+
+   /* Ensure that we reset the attrib array. */
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
+   gl->coords.vertex    = gl->rewind_forward_vertex_coord;
+   gl->coords.tex_coord = gl->rewind_forward_tex_coord;
+   gl->coords.color     = gl->rewind_forward_color_coord;
+   gl->coords.vertices  = 4 * REWIND_FORWARD_TEXTURES;
+   gl->shader->set_coords(&gl->coords);
+   gl->shader->set_mvp(gl, &gl->mvp_no_rot);
+
+   video_driver_get_size(&width, &height);
+
+   int icon_size = height / 8;
+   int margin_x = 56;
+   int margin_y = 48;
+
+   GLfloat y = height - margin_y - icon_size;
+
+   for(unsigned int i=0; i<REWIND_FORWARD_TEXTURES; i++) {
+	   if ((i == 0 && !global->show_rewind_icon) || (i == 1 && !global->show_forward_icon)) continue;
+
+	   GLfloat x = i == 0 ? margin_x : (width - margin_x - icon_size);
+	   glViewport(x, y, icon_size, icon_size);
+
+	   glBindTexture(GL_TEXTURE_2D, gl->rewind_forward_tex[i]);
+	   glDrawArrays(GL_TRIANGLE_STRIP, 4 * i, 4);
+   }
+
+   gl_restore_render_context(gl);
+}
+
 static void gl_render_border(void *data, int vp_width, int vp_height)
 {
    unsigned i;
@@ -3446,10 +3593,13 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    gl->shader->use(gl, GL_SHADER_STOCK_BLUR);
 
    // draw scaled down into FBO
-   glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
-   glViewport(0, 0, frame_width/BACKGROUND_SCALE, frame_height/BACKGROUND_SCALE);
 
-   gl->coords.vertex    = vertexes;
+   int divider = frame_height >= 480 ? 2 : 1;
+
+   glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
+   glViewport(0, 0, frame_width/BACKGROUND_SCALE/divider, frame_height/BACKGROUND_SCALE/divider);
+
+   gl->coords.vertex    = gl->vertex_ptr;
    gl->coords.vertices  = 4;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
@@ -3472,9 +3622,9 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    // now draw to background fiting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-   glViewport(-64, -64, width + 128, height + 128);
+   glViewport(-64, -64, width*divider + 128, height*divider + 128);
 
-   gl->coords.vertex    = vertexes_flipped;
+   gl->coords.vertex    = vertexes;
    gl->coords.vertices  = 4;
    gl->coords.tex_coord = gl->tex_info.coord;
    gl->coords.color     = gl->white_color_ptr;
@@ -3485,7 +3635,6 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
-
 
 static void gl_render_background_static(void *data)
 {

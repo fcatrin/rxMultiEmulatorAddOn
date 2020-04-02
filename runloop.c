@@ -99,7 +99,7 @@ static bool check_pause(driver_t *driver, settings_t *settings,
  * Checks if the fast forward key has been pressed for this frame. 
  *
  **/
-static void check_fast_forward_button(driver_t *driver,
+static bool check_fast_forward_button(driver_t *driver,
       bool fastforward_pressed,
       bool hold_pressed, bool old_hold_pressed)
 {
@@ -112,9 +112,10 @@ static void check_fast_forward_button(driver_t *driver,
    else if (old_hold_pressed != hold_pressed)
       driver->nonblock_state = hold_pressed;
    else
-      return;
+      return driver->nonblock_state;
 
    driver_set_nonblock_state(driver->nonblock_state);
+   return driver->nonblock_state;
 }
 
 /**
@@ -142,10 +143,11 @@ static void check_stateslots(settings_t *settings,
  *
  * Checks if rewind toggle/hold was being pressed and/or held.
  **/
-static void check_rewind(settings_t *settings,
+static bool check_rewind(settings_t *settings,
       global_t *global, runloop_t *runloop, bool pressed)
 {
    static bool first = true;
+   bool ret = false;
 
    if (global->rewind.frame_is_reverse)
    {
@@ -156,11 +158,11 @@ static void check_rewind(settings_t *settings,
    if (first)
    {
       first = false;
-      return;
+      return ret;
    }
 
    if (!global->rewind.state)
-      return;
+      return ret;
 
    if (pressed)
    {
@@ -171,8 +173,6 @@ static void check_rewind(settings_t *settings,
          global->rewind.frame_is_reverse = true;
          audio_driver_setup_rewind();
 
-         rarch_main_msg_queue_push_new(MSG_REWINDING, 0,
-               runloop->is_paused ? 1 : 30, true);
          pretro_unserialize(buf, global->rewind.size);
 
          if (global->bsv.movie)
@@ -181,6 +181,7 @@ static void check_rewind(settings_t *settings,
       else
          rarch_main_msg_queue_push_new(MSG_REWIND_REACHED_END,
                0, 30, true);
+      ret = true;
    }
    else
    {
@@ -204,6 +205,7 @@ static void check_rewind(settings_t *settings,
    }
 
    retro_set_rewind_callbacks();
+   return ret;
 }
 
 /**
@@ -537,9 +539,11 @@ static int do_state_checks(driver_t *driver, settings_t *settings,
             cmd->rewind_pressed))
       return 1;
 
-   check_fast_forward_button(driver,
-         cmd->fastforward_pressed,
-         cmd->hold_pressed, cmd->old_hold_pressed);
+   global->show_forward_icon = settings->fastforward_enable ?
+		 check_fast_forward_button(driver,
+            cmd->fastforward_pressed,
+            cmd->hold_pressed, cmd->old_hold_pressed) : false;
+
    check_stateslots(settings, cmd->state_slot_increase,
          cmd->state_slot_decrease);
 
@@ -555,7 +559,8 @@ static int do_state_checks(driver_t *driver, settings_t *settings,
    }
    global->show_state_message = false;
 
-   check_rewind(settings, global, runloop, cmd->rewind_pressed);
+   global->show_rewind_icon = check_rewind(settings, global, runloop, cmd->rewind_pressed);
+
    check_slowmotion(settings, global, runloop,
          cmd->slowmotion_pressed);
 

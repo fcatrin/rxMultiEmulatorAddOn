@@ -1,3 +1,5 @@
+GLES := 3
+
 ifeq ($(GLES),3)
    ifndef NDK_GL_HEADER_VER
       APP_PLATFORM := android-18

@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="xtvapps.prg.retroarch"
     android:sharedUserId="xtvapps.prg.user"
-    android:versionCode="12262"
-    android:versionName="1.2.2-62">
+    android:versionCode="12265"
+    android:versionName="1.2.2-65">
     
     <uses-feature android:glEsVersion="0x00020000" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>

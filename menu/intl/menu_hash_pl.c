@@ -32,11 +32,11 @@ const char *menu_hash_to_str_pl(uint32_t hash)
    switch (hash)
    {
       case MENU_LABEL_VALUE_OVERLAY_AUTOLOAD_PREFERRED:
-         return "Automatycznie wczytaj preferowan± nak³adkê";
+         return "Automatycznie wczytaj preferowanÂ± nakÂ³adkÃª";
       case MENU_LABEL_VALUE_UPDATE_CORE_INFO_FILES:
          return "Aktualizuj pliki informacji o rdzeniach";
       case MENU_LABEL_VALUE_DOWNLOAD_CORE_CONTENT:
-         return "Pobierz tre¶ci";
+         return "Pobierz treÂ¶ci";
       case MENU_LABEL_VALUE_SCAN_THIS_DIRECTORY:
          return "<Przeszukaj ten katalog>";
       case MENU_LABEL_VALUE_SCAN_FILE:
@@ -44,11 +44,11 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SCAN_DIRECTORY:
          return "Przeszukaj katalog";
       case MENU_LABEL_VALUE_ADD_CONTENT_LIST:
-         return "Dodaj tre¶æ";
+         return "Dodaj treÂ¶Ã¦";
       case MENU_LABEL_VALUE_INFORMATION_LIST:
          return "Informacje";
       case MENU_LABEL_VALUE_USE_BUILTIN_PLAYER:
-         return "U¿yj wbudowanego odtwarzacza mediów";
+         return "UÂ¿yj wbudowanego odtwarzacza mediÃ³w";
       case MENU_LABEL_VALUE_CONTENT_SETTINGS:
          return "Szybkie menu";
       case MENU_LABEL_VALUE_RDB_ENTRY_CRC32:
@@ -56,23 +56,23 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_RDB_ENTRY_MD5:
          return "MD5";
       case MENU_LABEL_VALUE_LOAD_CONTENT_LIST:
-         return "Wczytaj tre¶æ";
+         return "Wczytaj treÂ¶Ã¦";
       case MENU_LABEL_VALUE_LOAD_ARCHIVE:
          return "Wczytaj archiwum";
       case MENU_LABEL_VALUE_OPEN_ARCHIVE:
-         return "Otwórz archiwum";
+         return "OtwÃ³rz archiwum";
       case MENU_VALUE_ASK_ARCHIVE:
          return "Pytaj";
       case MENU_LABEL_VALUE_PRIVACY_SETTINGS:
-         return "Ustawienia prywatno¶ci";
+         return "Ustawienia prywatnoÂ¶ci";
       case MENU_VALUE_HORIZONTAL_MENU: /* Don't change. Breaks everything. (Would be: "Menu poziome") */
          return "Horizontal Menu";
       case MENU_LABEL_VALUE_NO_SETTINGS_FOUND:
-         return "Nie znaleziono ustawieñ.";
+         return "Nie znaleziono ustawieÃ±.";
       case MENU_LABEL_VALUE_NO_PERFORMANCE_COUNTERS:
-         return "Brak liczników wydajno¶ci.";
+         return "Brak licznikÃ³w wydajnoÂ¶ci.";
       case MENU_LABEL_VALUE_DRIVER_SETTINGS:
-         return "Ustawienia kontrolerów";
+         return "Ustawienia kontrolerÃ³w";
       case MENU_LABEL_VALUE_CONFIGURATION_SETTINGS:
          return "Ustawienia konfiguracji";
       case MENU_LABEL_VALUE_CORE_SETTINGS:
@@ -86,17 +86,17 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_REWIND_SETTINGS:
          return "Ustawienia przewijania";
       case MENU_LABEL_VALUE_CUSTOM_VIEWPORT_1:
-         return "Ustaw lewy górny róg";
+         return "Ustaw lewy gÃ³rny rÃ³g";
       case MENU_LABEL_VALUE_CUSTOM_VIEWPORT_2:
-         return "Ustaw prawy dolny róg";
+         return "Ustaw prawy dolny rÃ³g";
       case MENU_VALUE_SHADER:
          return "Shader";
       case MENU_VALUE_CHEAT:
          return "Cheat";
       case MENU_VALUE_USER:
-         return "U¿ytkownik";
+         return "UÂ¿ytkownik";
       case MENU_LABEL_VALUE_SYSTEM_BGM_ENABLE:
-         return "W³±cz BGM systemu";
+         return "WÂ³Â±cz BGM systemu";
       case MENU_VALUE_RETROPAD:
          return "RetroPad";
       case MENU_VALUE_RETROKEYBOARD:
@@ -106,27 +106,27 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_INPUT_BIND_MODE:
          return "Tryb bindowania";
       case MENU_LABEL_VALUE_AUTOCONFIG_DESCRIPTOR_LABEL_SHOW:
-         return "Wy¶wietl opisy przycisków autokonfiguracji";
+         return "WyÂ¶wietl opisy przyciskÃ³w autokonfiguracji";
       case MENU_LABEL_VALUE_INPUT_DESCRIPTOR_LABEL_SHOW:
-         return "Wy¶wietl opisy przycisków dla tego rdzenia";
+         return "WyÂ¶wietl opisy przyciskÃ³w dla tego rdzenia";
       case MENU_LABEL_VALUE_INPUT_DESCRIPTOR_HIDE_UNBOUND:
          return "Ukryj nieprzypisane przyciski";
       case MENU_LABEL_VALUE_VIDEO_FONT_ENABLE:
-         return "Wy¶wietlaj wiadomo¶ci OSD";
+         return "WyÂ¶wietlaj wiadomoÂ¶ci OSD";
       case MENU_LABEL_VALUE_VIDEO_FONT_PATH:
-         return "Czcionka wiadomo¶ci OSD";
+         return "Czcionka wiadomoÂ¶ci OSD";
       case MENU_LABEL_VALUE_VIDEO_FONT_SIZE:
-         return "Rozmiar wiadomo¶ci OSD";
+         return "Rozmiar wiadomoÂ¶ci OSD";
       case MENU_LABEL_VALUE_VIDEO_MESSAGE_POS_X:
-         return "Wspó³rzêdna X dla wiadomo¶ci OSD";
+         return "WspÃ³Â³rzÃªdna X dla wiadomoÂ¶ci OSD";
       case MENU_LABEL_VALUE_VIDEO_MESSAGE_POS_Y:
-         return "Wspó³rzêdna Y dla wiadomo¶ci OSD";
+         return "WspÃ³Â³rzÃªdna Y dla wiadomoÂ¶ci OSD";
       case MENU_LABEL_VALUE_VIDEO_SOFT_FILTER:
-         return "W³±cz filtr programowy";
+         return "WÂ³Â±cz filtr programowy";
       case MENU_LABEL_VALUE_VIDEO_FILTER_FLICKER:
          return "Filtr migotania";
       case MENU_VALUE_DIRECTORY_CONTENT:
-         return "<Katalog tre¶ci>";
+         return "<Katalog treÂ¶ci>";
       case MENU_VALUE_UNKNOWN:
          return "Nieznane";
       case MENU_VALUE_DONT_CARE:
@@ -134,41 +134,41 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_VALUE_LINEAR:
          return "Liniowe";
       case MENU_VALUE_NEAREST:
-         return "Najbli¿sze";
+         return "NajbliÂ¿sze";
       case MENU_VALUE_DIRECTORY_DEFAULT:
-         return "<Domy¶lny>";
+         return "<DomyÂ¶lny>";
       case MENU_VALUE_DIRECTORY_NONE:
-         return "<¯aden>";
+         return "<Â¯aden>";
       case MENU_VALUE_NOT_AVAILABLE:
          return "B/D";
       case MENU_LABEL_VALUE_INPUT_REMAPPING_DIRECTORY:
-         return "Katalog plików remapowania";
+         return "Katalog plikÃ³w remapowania";
       case MENU_LABEL_VALUE_JOYPAD_AUTOCONFIG_DIR:
-         return "Katalog autokonfiguracji kontrolerów gier";
+         return "Katalog autokonfiguracji kontrolerÃ³w gier";
       case MENU_LABEL_VALUE_RECORDING_CONFIG_DIRECTORY:
          return "Katalog konfiguracji nagrywania";
       case MENU_LABEL_VALUE_RECORDING_OUTPUT_DIRECTORY:
-         return "Katalog wyj¶ciowy nagrywania";
+         return "Katalog wyjÂ¶ciowy nagrywania";
       case MENU_LABEL_VALUE_SCREENSHOT_DIRECTORY:
-         return "Katalog zrzutów";
+         return "Katalog zrzutÃ³w";
       case MENU_LABEL_VALUE_PLAYLIST_DIRECTORY:
          return "Katalog historii";
       case MENU_LABEL_VALUE_SAVEFILE_DIRECTORY:
-         return "Katalog zapisów tre¶ci";
+         return "Katalog zapisÃ³w treÂ¶ci";
       case MENU_LABEL_VALUE_SAVESTATE_DIRECTORY:
-         return "Katalog zapisanych stanów";
+         return "Katalog zapisanych stanÃ³w";
       case MENU_LABEL_VALUE_STDIN_CMD_ENABLE:
          return "Komendy stdin";
       case MENU_LABEL_VALUE_VIDEO_DRIVER:
          return "Kontroler wideo";
       case MENU_LABEL_VALUE_RECORD_ENABLE:
-         return "W³±cz nagrywanie";
+         return "WÂ³Â±cz nagrywanie";
       case MENU_LABEL_VALUE_VIDEO_GPU_RECORD:
-         return "W³±cz nagrywanie z u¿yciem GPU";
+         return "WÂ³Â±cz nagrywanie z uÂ¿yciem GPU";
       case MENU_LABEL_VALUE_RECORD_PATH:
-         return "¦cie¿ka nagrywania";
+         return "Â¦cieÂ¿ka nagrywania";
       case MENU_LABEL_VALUE_RECORD_USE_OUTPUT_DIRECTORY:
-         return "U¿ywaj katalogu wyj¶ciowego nagrywania";
+         return "UÂ¿ywaj katalogu wyjÂ¶ciowego nagrywania";
       case MENU_LABEL_VALUE_RECORD_CONFIG:
          return "Konfiguracja nagrywania";
       case MENU_LABEL_VALUE_VIDEO_POST_FILTER_RECORD:
@@ -176,13 +176,13 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_CORE_ASSETS_DIRECTORY:
          return "Katalog pobranych";
       case MENU_LABEL_VALUE_ASSETS_DIRECTORY:
-         return "Katalog assetów";
+         return "Katalog assetÃ³w";
       case MENU_LABEL_VALUE_DYNAMIC_WALLPAPERS_DIRECTORY:
          return "Katalog dynamicznych tapet";
       case MENU_LABEL_VALUE_BOXARTS_DIRECTORY:
-         return "Katalog ok³adek";
+         return "Katalog okÂ³adek";
       case MENU_LABEL_VALUE_RGUI_BROWSER_DIRECTORY:
-         return "Katalog przegl±darki";
+         return "Katalog przeglÂ±darki";
       case MENU_LABEL_VALUE_RGUI_CONFIG_DIRECTORY:
          return "Katalog zapisanych konfiguracji";
       case MENU_LABEL_VALUE_LIBRETRO_INFO_PATH:
@@ -192,25 +192,25 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_CURSOR_DIRECTORY:
          return "Katalog z kursorami";
       case MENU_LABEL_VALUE_CONTENT_DATABASE_DIRECTORY:
-         return "Katalog bazy danych tre¶ci";
+         return "Katalog bazy danych treÂ¶ci";
       case MENU_LABEL_VALUE_SYSTEM_DIRECTORY:
          return "Katalog systemu";
       case MENU_LABEL_VALUE_CHEAT_DATABASE_PATH:
-         return "Katalog z plikami cheatów";
+         return "Katalog z plikami cheatÃ³w";
       case MENU_LABEL_VALUE_EXTRACTION_DIRECTORY:
-         return "Katalog do wypakowywania archiwów";
+         return "Katalog do wypakowywania archiwÃ³w";
       case MENU_LABEL_VALUE_AUDIO_FILTER_DIR:
-         return "Katalog filtrów audio";
+         return "Katalog filtrÃ³w audio";
       case MENU_LABEL_VALUE_VIDEO_SHADER_DIR:
-         return "Katalog shaderów";
+         return "Katalog shaderÃ³w";
       case MENU_LABEL_VALUE_VIDEO_FILTER_DIR:
-         return "Katalog filtrów wideo";
+         return "Katalog filtrÃ³w wideo";
       case MENU_LABEL_VALUE_OVERLAY_DIRECTORY:
-         return "Katalog nak³adek";
+         return "Katalog nakÂ³adek";
       case MENU_LABEL_VALUE_OSK_OVERLAY_DIRECTORY:
          return "Katalog klawiatur ekranowych";
       case MENU_LABEL_VALUE_NETPLAY_CLIENT_SWAP_INPUT:
-         return "Zamieñ kontrolery w grze sieciowej";
+         return "ZamieÃ± kontrolery w grze sieciowej";
       case MENU_LABEL_VALUE_NETPLAY_SPECTATOR_MODE_ENABLE:
          return "Tryb obserwatora gry sieciowej";
       case MENU_LABEL_VALUE_NETPLAY_IP_ADDRESS:
@@ -218,39 +218,39 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_NETPLAY_TCP_UDP_PORT:
          return "Port TCP/UDP gry sieciowej";
       case MENU_LABEL_VALUE_NETPLAY_ENABLE:
-         return "W³±cz grê sieciow±";
+         return "WÂ³Â±cz grÃª sieciowÂ±";
       case MENU_LABEL_VALUE_NETPLAY_DELAY_FRAMES:
-         return "Opóxnione klatki w grze sieciowej";
+         return "OpÃ³xnione klatki w grze sieciowej";
       case MENU_LABEL_VALUE_NETPLAY_MODE:
          return "Tryb klienta gry sieciowej";
       case MENU_LABEL_VALUE_RGUI_SHOW_START_SCREEN:
          return "Pokazuj ekran startowy";
       case MENU_LABEL_VALUE_TITLE_COLOR:
-         return "Kolor tytu³u menu";
+         return "Kolor tytuÂ³u menu";
       case MENU_LABEL_VALUE_ENTRY_HOVER_COLOR:
          return "Kolor zaznaczonego elementu menu";
       case MENU_LABEL_VALUE_TIMEDATE_ENABLE:
-         return "Wy¶wietl czas/datê";
+         return "WyÂ¶wietl czas/datÃª";
       case MENU_LABEL_VALUE_THREADED_DATA_RUNLOOP_ENABLE:
-         return "Osobny w±tek odbierania danych";
+         return "Osobny wÂ±tek odbierania danych";
       case MENU_LABEL_VALUE_ENTRY_NORMAL_COLOR:
-         return "Zwyk³y kolor elementu menu";
+         return "ZwykÂ³y kolor elementu menu";
       case MENU_LABEL_VALUE_SHOW_ADVANCED_SETTINGS:
-         return "Poka¿ zaawansowane ustawienia";
+         return "PokaÂ¿ zaawansowane ustawienia";
       case MENU_LABEL_VALUE_MOUSE_ENABLE:
-         return "Obs³uga myszy";
+         return "ObsÂ³uga myszy";
       case MENU_LABEL_VALUE_POINTER_ENABLE:
-         return "Obs³uga dotyku";
+         return "ObsÂ³uga dotyku";
       case MENU_LABEL_VALUE_CORE_ENABLE:
-         return "Wy¶wietlaj nazwê rdzenia";
+         return "WyÂ¶wietlaj nazwÃª rdzenia";
       case MENU_LABEL_VALUE_DPI_OVERRIDE_ENABLE:
-         return "Pomiñ wykryte DPI";
+         return "PomiÃ± wykryte DPI";
       case MENU_LABEL_VALUE_DPI_OVERRIDE_VALUE:
-         return "W³asne DPI";
+         return "WÂ³asne DPI";
       case MENU_LABEL_VALUE_SUSPEND_SCREENSAVER_ENABLE:
          return "Wstrzymaj wygaszacz";
       case MENU_LABEL_VALUE_VIDEO_DISABLE_COMPOSITION:
-         return "Wy³±cz efekty kompozycji pulpitu";
+         return "WyÂ³Â±cz efekty kompozycji pulpitu";
       case MENU_LABEL_VALUE_PAUSE_NONACTIVE:
          return "Wstrzymaj gdy w tle";
       case MENU_LABEL_VALUE_UI_COMPANION_START_ON_BOOT:
@@ -264,63 +264,63 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_NETWORK_CMD_PORT:
          return "Port dla komend sieciowych";
       case MENU_LABEL_VALUE_HISTORY_LIST_ENABLE:
-         return "W³±cz historiê tre¶ci";
+         return "WÂ³Â±cz historiÃª treÂ¶ci";
       case MENU_LABEL_VALUE_CONTENT_HISTORY_SIZE:
-         return "Rozmiar historii tre¶ci";
+         return "Rozmiar historii treÂ¶ci";
       case MENU_LABEL_VALUE_VIDEO_REFRESH_RATE_AUTO:
-         return "Szacowana czêstotliwo¶æ od¶wie¿ania monitora";
+         return "Szacowana czÃªstotliwoÂ¶Ã¦ odÂ¶wieÂ¿ania monitora";
       case MENU_LABEL_VALUE_DUMMY_ON_CORE_SHUTDOWN:
          return "Atrapa rdzenia przy zatrzymaniu rdzenia";
       case MENU_LABEL_VALUE_CORE_SET_SUPPORTS_NO_CONTENT_ENABLE:
          return "Nie uruchamiaj rdzenia automatycznie";
       case MENU_LABEL_VALUE_FRAME_THROTTLE_ENABLE:
-         return "Limituj maksymaln± szybko¶æ dzia³ania";
+         return "Limituj maksymalnÂ± szybkoÂ¶Ã¦ dziaÂ³ania";
       case MENU_LABEL_VALUE_FASTFORWARD_RATIO:
-         return "Maksymalna szybko¶æ dzia³ania";
+         return "Maksymalna szybkoÂ¶Ã¦ dziaÂ³ania";
       case MENU_LABEL_VALUE_AUTO_REMAPS_ENABLE:
          return "Automatycznie wczytuj pliki remapowania";
       case MENU_LABEL_VALUE_SLOWMOTION_RATIO:
-         return "Wspó³czynnik spowolnienia";
+         return "WspÃ³Â³czynnik spowolnienia";
       case MENU_LABEL_VALUE_CORE_SPECIFIC_CONFIG:
-         return "Osobna konfiguracja dla ka¿dego rdzenia";
+         return "Osobna konfiguracja dla kaÂ¿dego rdzenia";
       case MENU_LABEL_VALUE_AUTO_OVERRIDES_ENABLE:
          return "Load Override Files Automatically"; /* this one's rather complicated */
       case MENU_LABEL_VALUE_CONFIG_SAVE_ON_EXIT:
-         return "Zapisz konfiguracjê przy wyj¶ciu";
+         return "Zapisz konfiguracjÃª przy wyjÂ¶ciu";
       case MENU_LABEL_VALUE_VIDEO_SMOOTH:
-         return "Sprzêtowe filtrowanie dwuliniowe";
+         return "SprzÃªtowe filtrowanie dwuliniowe";
       case MENU_LABEL_VALUE_VIDEO_GAMMA:
          return "Gamma wideo";
       case MENU_LABEL_VALUE_VIDEO_ALLOW_ROTATE:
-         return "Zezwól na obrót";
+         return "ZezwÃ³l na obrÃ³t";
       case MENU_LABEL_VALUE_VIDEO_HARD_SYNC:
-         return "¦cis³a synchronizacja GPU";
+         return "Â¦cisÂ³a synchronizacja GPU";
       case MENU_LABEL_VALUE_VIDEO_SWAP_INTERVAL:
          return "VSync Swap Interval";
       case MENU_LABEL_VALUE_VIDEO_VSYNC:
          return "Synchronizacja pionowa";
       case MENU_LABEL_VALUE_VIDEO_THREADED:
-         return "Osobny w±tek wideo";
+         return "Osobny wÂ±tek wideo";
       case MENU_LABEL_VALUE_VIDEO_ROTATION:
-         return "Obrót";
+         return "ObrÃ³t";
       case MENU_LABEL_VALUE_VIDEO_GPU_SCREENSHOT:
          return "Wykonuj zrzuty ekranu z wykorzystaniem GPU";
       case MENU_LABEL_VALUE_VIDEO_CROP_OVERSCAN:
          return "Wytnij overscan (restart)";
       case MENU_LABEL_VALUE_VIDEO_ASPECT_RATIO_INDEX:
-         return "Indeks wspó³czynnika proporcji";
+         return "Indeks wspÃ³Â³czynnika proporcji";
       case MENU_LABEL_VALUE_VIDEO_ASPECT_RATIO_AUTO:
-         return "Auto wspó³czynnik proporcji";
+         return "Auto wspÃ³Â³czynnik proporcji";
       case MENU_LABEL_VALUE_VIDEO_FORCE_ASPECT:
-         return "Wymu¶ wspó³czynnik proporcji";
+         return "WymuÂ¶ wspÃ³Â³czynnik proporcji";
       case MENU_LABEL_VALUE_VIDEO_REFRESH_RATE:
-         return "Czêstotliwo¶æ od¶wie¿ania";
+         return "CzÃªstotliwoÂ¶Ã¦ odÂ¶wieÂ¿ania";
       case MENU_LABEL_VALUE_VIDEO_FORCE_SRGB_DISABLE:
-         return "Wymu¶ wy³±czenie sRGB FBO";
+         return "WymuÂ¶ wyÂ³Â±czenie sRGB FBO";
       case MENU_LABEL_VALUE_VIDEO_WINDOWED_FULLSCREEN:
-         return "Tryb pe³nego ekranu w oknie";
+         return "Tryb peÂ³nego ekranu w oknie";
       case MENU_LABEL_VALUE_PAL60_ENABLE:
-         return "U¿yj trybu PAL60";
+         return "UÂ¿yj trybu PAL60";
       case MENU_LABEL_VALUE_VIDEO_VFILTER:
          return "Redukcja migotania";
       case MENU_LABEL_VALUE_VIDEO_VI_WIDTH:
@@ -334,17 +334,17 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SORT_SAVESTATES_ENABLE:
          return "Sortuj zapisane stany w folderach";
       case MENU_LABEL_VALUE_VIDEO_FULLSCREEN:
-         return "Pe³ny ekran";
+         return "PeÂ³ny ekran";
       case MENU_LABEL_VALUE_VIDEO_SCALE:
          return "Skala w oknie";
       case MENU_LABEL_VALUE_VIDEO_SCALE_INTEGER:
-         return "Skaluj w liczbach ca³kowitych";
+         return "Skaluj w liczbach caÂ³kowitych";
       case MENU_LABEL_VALUE_PERFCNT_ENABLE:
-         return "Liczniki wydajno¶ci";
+         return "Liczniki wydajnoÂ¶ci";
       case MENU_LABEL_VALUE_LIBRETRO_LOG_LEVEL:
          return "Poziom logowania rdzenia";
       case MENU_LABEL_VALUE_LOG_VERBOSITY:
-         return "Szczegó³owo¶æ logowania";
+         return "SzczegÃ³Â³owoÂ¶Ã¦ logowania";
       case MENU_LABEL_VALUE_SAVESTATE_AUTO_LOAD:
          return "Automatyczne wczytywanie stanu";
       case MENU_LABEL_VALUE_SAVESTATE_AUTO_INDEX:
@@ -352,7 +352,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SAVESTATE_AUTO_SAVE:
          return "Automatyczny zapis stanu";
       case MENU_LABEL_VALUE_AUTOSAVE_INTERVAL:
-         return "Czêstotliwo¶æ automatycznego zapisu SaveRAM";
+         return "CzÃªstotliwoÂ¶Ã¦ automatycznego zapisu SaveRAM";
       case MENU_LABEL_VALUE_BLOCK_SRAM_OVERWRITE:
          return "Nie nadpisuj SaveRAM przy wczytywaniu stanu";
       case MENU_LABEL_VALUE_VIDEO_SHARED_CONTEXT:
@@ -360,95 +360,95 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_RESTART_RETROARCH:
          return "Uruchom ponownie RetroArch";
       case MENU_LABEL_VALUE_NETPLAY_NICKNAME:
-         return "Nazwa u¿ytkownika";
+         return "Nazwa uÂ¿ytkownika";
       case MENU_LABEL_VALUE_USER_LANGUAGE:
-         return "Jêzyk";
+         return "JÃªzyk";
       case MENU_LABEL_VALUE_CAMERA_ALLOW:
-         return "Zezwalaj na dostêp do kamerki";
+         return "Zezwalaj na dostÃªp do kamerki";
       case MENU_LABEL_VALUE_LOCATION_ALLOW:
-         return "Zezwalaj na dostêp do lokalizacji";
+         return "Zezwalaj na dostÃªp do lokalizacji";
       case MENU_LABEL_VALUE_PAUSE_LIBRETRO:
-         return "Pauzuj przy wej¶ciu do menu";
+         return "Pauzuj przy wejÂ¶ciu do menu";
       case MENU_LABEL_VALUE_INPUT_OSK_OVERLAY_ENABLE:
-         return "Wy¶wietlaj klawiaturê ekranow±";
+         return "WyÂ¶wietlaj klawiaturÃª ekranowÂ±";
       case MENU_LABEL_VALUE_INPUT_OVERLAY_ENABLE:
-         return "Wy¶wietlaj nak³adkê";
+         return "WyÂ¶wietlaj nakÂ³adkÃª";
       case MENU_LABEL_VALUE_VIDEO_MONITOR_INDEX:
          return "Indeks monitora";
       case MENU_LABEL_VALUE_VIDEO_FRAME_DELAY:
-         return "Opó¼nienie klatek";
+         return "OpÃ³Â¼nienie klatek";
       case MENU_LABEL_VALUE_INPUT_DUTY_CYCLE:
          return "Cykl zmian";
       case MENU_LABEL_VALUE_INPUT_TURBO_PERIOD:
          return "Okres turbo";
       case MENU_LABEL_VALUE_INPUT_AXIS_THRESHOLD:
-         return "Próg osi";
+         return "PrÃ³g osi";
       case MENU_LABEL_VALUE_INPUT_REMAP_BINDS_ENABLE:
-         return "W³±cz remapowanie bindów";
+         return "WÂ³Â±cz remapowanie bindÃ³w";
       case MENU_LABEL_VALUE_INPUT_MAX_USERS:
-         return "Maksymalna liczba u¿ytkowników";
+         return "Maksymalna liczba uÂ¿ytkownikÃ³w";
       case MENU_LABEL_VALUE_INPUT_AUTODETECT_ENABLE:
-         return "W³±cz autokonfiguracjê";
+         return "WÂ³Â±cz autokonfiguracjÃª";
       case MENU_LABEL_VALUE_AUDIO_OUTPUT_RATE:
-         return "Czêstotliwo¶æ próbkowania d¼wiêku (KHz)";
+         return "CzÃªstotliwoÂ¶Ã¦ prÃ³bkowania dÂ¼wiÃªku (KHz)";
       case MENU_LABEL_VALUE_AUDIO_MAX_TIMING_SKEW:
          return "Audio Maximum Timing Skew";
       case MENU_LABEL_VALUE_CHEAT_NUM_PASSES:
-         return "Liczba przebiegów cheatów";
+         return "Liczba przebiegÃ³w cheatÃ³w";
       case MENU_LABEL_VALUE_REMAP_FILE_SAVE_CORE:
          return "Zapisz plik remapowania dla rdzenia";
       case MENU_LABEL_VALUE_REMAP_FILE_SAVE_GAME:
          return "Zapisz plik remapowania dla gry";
       case MENU_LABEL_VALUE_CHEAT_APPLY_CHANGES:
-         return "Zastosuj zmiany cheatów";
+         return "Zastosuj zmiany cheatÃ³w";
       case MENU_LABEL_VALUE_SHADER_APPLY_CHANGES:
-         return "Zastosuj zmiany shaderów";
+         return "Zastosuj zmiany shaderÃ³w";
       case MENU_LABEL_VALUE_REWIND_ENABLE:
-         return "W³±cz przewijanie";
+         return "WÂ³Â±cz przewijanie";
       case MENU_LABEL_VALUE_CONTENT_COLLECTION_LIST:
          return "Wybierz z kolekcji";
       case MENU_LABEL_VALUE_DETECT_CORE_LIST:
-         return "Wybierz plik i dopasuj rdzeñ";
+         return "Wybierz plik i dopasuj rdzeÃ±";
       case MENU_LABEL_VALUE_DOWNLOADED_FILE_DETECT_CORE_LIST:
-         return "Wybierz pobrany plik i dopasuj rdzeñ"; /* this makes little sense */
+         return "Wybierz pobrany plik i dopasuj rdzeÃ±"; /* this makes little sense */
       case MENU_LABEL_VALUE_LOAD_CONTENT_HISTORY:
-         return "Wczytaj z ostatnio u¿ywanych";
+         return "Wczytaj z ostatnio uÂ¿ywanych";
       case MENU_LABEL_VALUE_AUDIO_ENABLE:
-         return "W³±cz d¼wiêk";
+         return "WÂ³Â±cz dÂ¼wiÃªk";
       case MENU_LABEL_VALUE_FPS_SHOW:
-         return "Wy¶wietlaj FPS";
+         return "WyÂ¶wietlaj FPS";
       case MENU_LABEL_VALUE_AUDIO_MUTE:
-         return "Wycisz d¼wiêk";
+         return "Wycisz dÂ¼wiÃªk";
       case MENU_LABEL_VALUE_AUDIO_VOLUME:
-         return "Poziom g³o¶no¶ci (dB)";
+         return "Poziom gÂ³oÂ¶noÂ¶ci (dB)";
       case MENU_LABEL_VALUE_AUDIO_SYNC:
-         return "W³±cz synchronizacjê d¼wiêku";
+         return "WÂ³Â±cz synchronizacjÃª dÂ¼wiÃªku";
       case MENU_LABEL_VALUE_AUDIO_RATE_CONTROL_DELTA:
          return "Audio Rate Control Delta";
       case MENU_LABEL_VALUE_VIDEO_SHADER_NUM_PASSES:
-         return "Liczba przebiegów shadera";
+         return "Liczba przebiegÃ³w shadera";
       case MENU_LABEL_VALUE_RDB_ENTRY_SHA1:
          return "SHA1";
       case MENU_LABEL_VALUE_CONFIGURATIONS:
-         return "Wczytaj konfiguracjê";
+         return "Wczytaj konfiguracjÃª";
       case MENU_LABEL_VALUE_REWIND_GRANULARITY:
-         return "P³ynno¶æ przewijania";
+         return "PÂ³ynnoÂ¶Ã¦ przewijania";
       case MENU_LABEL_VALUE_REMAP_FILE_LOAD:
          return "Wczytaj plik remapowania";
       case MENU_LABEL_VALUE_REMAP_FILE_SAVE_AS:
          return "Zapisz plik remapowania jako";
       case MENU_LABEL_VALUE_CUSTOM_RATIO:
-         return "W³±sny wspó³czynnik";
+         return "WÂ³Â±sny wspÃ³Â³czynnik";
       case MENU_LABEL_VALUE_USE_THIS_DIRECTORY:
-         return "<U¿yj tego katalogu>";
+         return "<UÂ¿yj tego katalogu>";
       case MENU_LABEL_VALUE_RDB_ENTRY_START_CONTENT:
-         return "Uruchom tre¶æ";
+         return "Uruchom treÂ¶Ã¦";
       case MENU_LABEL_VALUE_DISK_OPTIONS:
          return "Opcje dysku rdzenia";
       case MENU_LABEL_VALUE_CORE_OPTIONS:
          return "Opcje rdzenia";
       case MENU_LABEL_VALUE_CORE_CHEAT_OPTIONS:
-         return "Opcje cheatów rdzenia";
+         return "Opcje cheatÃ³w rdzenia";
       case MENU_LABEL_VALUE_CHEAT_FILE_LOAD:
          return "Wczytaj plik z cheatami";
       case MENU_LABEL_VALUE_CHEAT_FILE_SAVE_AS:
@@ -458,7 +458,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_TAKE_SCREENSHOT:
          return "Zapisz zrzut";
       case MENU_LABEL_VALUE_RESUME:
-         return "Wznów";
+         return "WznÃ³w";
       case MENU_LABEL_VALUE_DISK_INDEX:
          return "Indeks dysku";
       case MENU_LABEL_VALUE_FRONTEND_COUNTERS:
@@ -468,43 +468,43 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_DISK_CYCLE_TRAY_STATUS:
          return "Disk Cycle Tray Status";
       case MENU_LABEL_VALUE_NO_PLAYLIST_ENTRIES_AVAILABLE:
-         return "Brak wpisów w playli¶cie.";
+         return "Brak wpisÃ³w w playliÂ¶cie.";
       case MENU_LABEL_VALUE_NO_CORE_INFORMATION_AVAILABLE:
          return "Brak informacji o rdzeniu.";
       case MENU_LABEL_VALUE_NO_CORE_OPTIONS_AVAILABLE:
-         return "Brak dostêpnych opcji rdzenia.";
+         return "Brak dostÃªpnych opcji rdzenia.";
       case MENU_LABEL_VALUE_NO_CORES_AVAILABLE:
-         return "Brak dostêpnych rdzeni.";
+         return "Brak dostÃªpnych rdzeni.";
       case MENU_VALUE_NO_CORE:
          return "Brak rdzenia";
       case MENU_LABEL_VALUE_DATABASE_MANAGER:
-         return "Mened¿er bazy danych";
+         return "MenedÂ¿er bazy danych";
       case MENU_LABEL_VALUE_CURSOR_MANAGER:
-         return "Mened¿er kursorów";
-      case MENU_VALUE_MAIN_MENU: /* Don't change. Breaks everything. (Would be: "Menu g³ówne") */
+         return "MenedÂ¿er kursorÃ³w";
+      case MENU_VALUE_MAIN_MENU: /* Don't change. Breaks everything. (Would be: "Menu gÂ³Ã³wne") */
          return "Main Menu"; 
       case MENU_LABEL_VALUE_SETTINGS:
          return "Ustawienia";
       case MENU_LABEL_VALUE_QUIT_RETROARCH:
-         return "Opu¶æ RetroArch";
+         return "OpuÂ¶Ã¦ RetroArch";
       case MENU_LABEL_VALUE_HELP:
          return "Pooc";
       case MENU_LABEL_VALUE_SAVE_NEW_CONFIG:
-         return "Zapisz now± konfiguracjê";
+         return "Zapisz nowÂ± konfiguracjÃª";
       case MENU_LABEL_VALUE_RESTART_CONTENT:
-         return "Restartuj tre¶æ";
+         return "Restartuj treÂ¶Ã¦";
       case MENU_LABEL_VALUE_CORE_UPDATER_LIST:
          return "Aktualizator rdzeni";
       case MENU_LABEL_VALUE_CORE_UPDATER_BUILDBOT_URL:
          return "URL rdzeni buildbota";
       case MENU_LABEL_VALUE_BUILDBOT_ASSETS_URL:
-         return "URL assetów buildbota";
+         return "URL assetÃ³w buildbota";
       case MENU_LABEL_VALUE_NAVIGATION_WRAPAROUND_HORIZONTAL:
          return "Zawijanie nawigacji poziomo";
       case MENU_LABEL_VALUE_NAVIGATION_WRAPAROUND_VERTICAL:
          return "Zawijanie nawigacji pionowo";
       case MENU_LABEL_VALUE_NAVIGATION_BROWSER_FILTER_SUPPORTED_EXTENSIONS_ENABLE:
-         return "Filtruj wed³ug wspieranych rozszerzeñ";
+         return "Filtruj wedÂ³ug wspieranych rozszerzeÃ±";
       case MENU_LABEL_VALUE_CORE_UPDATER_AUTO_EXTRACT_ARCHIVE:
          return "Automatycznie wypakowuj pobierane archiwa";
       case MENU_LABEL_VALUE_SYSTEM_INFORMATION:
@@ -516,13 +516,13 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_DIRECTORY_NOT_FOUND:
          return "Nie znaleziono katalogu.";
       case MENU_LABEL_VALUE_NO_ITEMS:
-         return "Brak elementów.";
+         return "Brak elementÃ³w.";
       case MENU_LABEL_VALUE_CORE_LIST:
-         return "Wczytaj rdzeñ";
+         return "Wczytaj rdzeÃ±";
       case MENU_LABEL_VALUE_LOAD_CONTENT:
          return "Wybierz plik";
       case MENU_LABEL_VALUE_CLOSE_CONTENT:
-         return "Zamknij tre¶æ";
+         return "Zamknij treÂ¶Ã¦";
       case MENU_LABEL_VALUE_MANAGEMENT:
          return "Ustawienia bazy danych";
       case MENU_LABEL_VALUE_SAVE_STATE:
@@ -530,15 +530,15 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_LOAD_STATE:
          return "Wczytaj stan";
       case MENU_LABEL_VALUE_RESUME_CONTENT:
-         return "Wznów tre¶æ";
+         return "WznÃ³w treÂ¶Ã¦";
       case MENU_LABEL_VALUE_INPUT_DRIVER:
-         return "Kontroler wej¶cia";
+         return "Kontroler wejÂ¶cia";
       case MENU_LABEL_VALUE_AUDIO_DRIVER:
-         return "Kontroler d¼wiêku";
+         return "Kontroler dÂ¼wiÃªku";
       case MENU_LABEL_VALUE_JOYPAD_DRIVER:
-         return "Kontroler gamepadów";
+         return "Kontroler gamepadÃ³w";
       case MENU_LABEL_VALUE_AUDIO_RESAMPLER_DRIVER:
-         return "Kontroler resamplera d¼wiêku";
+         return "Kontroler resamplera dÂ¼wiÃªku";
       case MENU_LABEL_VALUE_RECORD_DRIVER:
          return "Kontroler nagrywania";
       case MENU_LABEL_VALUE_MENU_DRIVER:
@@ -548,39 +548,39 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_LOCATION_DRIVER:
          return "Kontroler lokalizacji";
       case MENU_LABEL_VALUE_UNABLE_TO_READ_COMPRESSED_FILE:
-         return "Nie uda³o siê odczytaæ skompresowanego pliku.";
+         return "Nie udaÂ³o siÃª odczytaÃ¦ skompresowanego pliku.";
       case MENU_LABEL_VALUE_OVERLAY_SCALE:
-         return "Skala nak³adki";
+         return "Skala nakÂ³adki";
       case MENU_LABEL_VALUE_OVERLAY_PRESET:
-         return "Preset nak³adki";
+         return "Preset nakÂ³adki";
       case MENU_LABEL_VALUE_AUDIO_LATENCY:
-         return "Opó¼nienie d¼wiêku (ms)";
+         return "OpÃ³Â¼nienie dÂ¼wiÃªku (ms)";
       case MENU_LABEL_VALUE_AUDIO_DEVICE:
-         return "Urz±dzenie audio";
+         return "UrzÂ±dzenie audio";
       case MENU_LABEL_VALUE_KEYBOARD_OVERLAY_PRESET:
          return "Preset klawiatury ekranowej";
       case MENU_LABEL_VALUE_OVERLAY_OPACITY:
-         return "Nieprze¼roczysto¶æ nak³adki";
+         return "NieprzeÂ¼roczystoÂ¶Ã¦ nakÂ³adki";
       case MENU_LABEL_VALUE_MENU_WALLPAPER:
          return "Tapeta menu";
       case MENU_LABEL_VALUE_DYNAMIC_WALLPAPER:
          return "Dynamiczna tapeta";
       case MENU_LABEL_VALUE_BOXART:
-         return "Wy¶wietlaj ok³adkê";
+         return "WyÂ¶wietlaj okÂ³adkÃª";
       case MENU_LABEL_VALUE_CORE_INPUT_REMAPPING_OPTIONS:
          return "Opcje remapowania kontrolera rdzenia"; /* this is quite bad */
       case MENU_LABEL_VALUE_SHADER_OPTIONS:
          return "Opcje shadera";
       case MENU_LABEL_VALUE_VIDEO_SHADER_PARAMETERS:
-         return "Podgl±d parametrów shadera";
+         return "PodglÂ±d parametrÃ³w shadera";
       case MENU_LABEL_VALUE_VIDEO_SHADER_PRESET_PARAMETERS:
          return "Parametry shadera menu";
       case MENU_LABEL_VALUE_VIDEO_SHADER_PRESET_SAVE_AS:
          return "Zapisz preset shadera jako";
       case MENU_LABEL_VALUE_NO_SHADER_PARAMETERS:
-         return "Brak parametrów shadera.";
+         return "Brak parametrÃ³w shadera.";
       case MENU_LABEL_VALUE_VIDEO_SHADER_PRESET:
-         return "Wczytaj preset shaderów";
+         return "Wczytaj preset shaderÃ³w";
       case MENU_LABEL_VALUE_VIDEO_FILTER:
          return "Filtr obrazu";
       case MENU_LABEL_VALUE_AUDIO_DSP_PLUGIN:
@@ -589,9 +589,9 @@ const char *menu_hash_to_str_pl(uint32_t hash)
          return "Rozpoczynanie pobierania: ";
       case MENU_VALUE_SECONDS:
          return "sekund";
-      case MENU_VALUE_ON: /* Don't change. Needed for XMB atm. (Would be: "W£¡CZONE") */
+      case MENU_VALUE_ON: /* Don't change. Needed for XMB atm. (Would be: "WÂ£Â¡CZONE") */
          return "ON";
-      case MENU_VALUE_OFF: /* Don't change. Needed for XMB atm. (Would be: "WY£¡CZONE") */
+      case MENU_VALUE_OFF: /* Don't change. Needed for XMB atm. (Would be: "WYÂ£Â¡CZONE") */
          return "OFF";
       case MENU_LABEL_VALUE_UPDATE_ASSETS:
          return "Aktualizuj assety";
@@ -604,7 +604,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_UPDATE_DATABASES:
          return "Aktualizuj bazy danych";
       case MENU_LABEL_VALUE_UPDATE_OVERLAYS:
-         return "Aktualizuj nak³adki graficzne";
+         return "Aktualizuj nakÂ³adki graficzne";
       case MENU_LABEL_VALUE_UPDATE_CG_SHADERS:
          return "Aktualizuj shadery Cg";
       case MENU_LABEL_VALUE_UPDATE_GLSL_SHADERS:
@@ -636,7 +636,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SYSTEM_INFO_GIT_VERSION:
          return "Wersja git";
       case MENU_LABEL_VALUE_SYSTEM_INFO_CPU_FEATURES:
-         return "W³a¶ciwo¶ci CPU";
+         return "WÂ³aÂ¶ciwoÂ¶ci CPU";
       case MENU_LABEL_VALUE_SYSTEM_INFO_FRONTEND_IDENTIFIER:
          return "Identyfikator frontendu";
       case MENU_LABEL_VALUE_SYSTEM_INFO_FRONTEND_NAME:
@@ -646,29 +646,29 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SYSTEM_INFO_RETRORATING_LEVEL:
          return "Poziom RetroRating";
       case MENU_LABEL_VALUE_SYSTEM_INFO_POWER_SOURCE:
-         return "¬ród³o zasilania";
+         return "Â¬rÃ³dÂ³o zasilania";
       case MENU_LABEL_VALUE_SYSTEM_INFO_POWER_SOURCE_NO_SOURCE:
-         return "Brak ¼ród³a";
+         return "Brak Â¼rÃ³dÂ³a";
       case MENU_LABEL_VALUE_SYSTEM_INFO_POWER_SOURCE_CHARGING:
-         return "£adowanie";
+         return "Â£adowanie";
       case MENU_LABEL_VALUE_SYSTEM_INFO_POWER_SOURCE_CHARGED:
-         return "Na³adowano";
+         return "NaÂ³adowano";
       case MENU_LABEL_VALUE_SYSTEM_INFO_POWER_SOURCE_DISCHARGING:
          return "Na baterii";
       case MENU_LABEL_VALUE_SYSTEM_INFO_VIDEO_CONTEXT_DRIVER:
          return "Kontroler wideo";
       case MENU_LABEL_VALUE_SYSTEM_INFO_DISPLAY_METRIC_MM_WIDTH:
-         return "Metryczna szeroko¶æ wy¶wietlacza (mm)";
+         return "Metryczna szerokoÂ¶Ã¦ wyÂ¶wietlacza (mm)";
       case MENU_LABEL_VALUE_SYSTEM_INFO_DISPLAY_METRIC_MM_HEIGHT:
-         return "Metryczna wysoko¶æ wy¶wietlacza (mm)";
+         return "Metryczna wysokoÂ¶Ã¦ wyÂ¶wietlacza (mm)";
       case MENU_LABEL_VALUE_SYSTEM_INFO_DISPLAY_METRIC_DPI:
-         return "Metryczne DPI wy¶wietlacza";
+         return "Metryczne DPI wyÂ¶wietlacza";
       case MENU_LABEL_VALUE_SYSTEM_INFO_LIBRETRODB_SUPPORT:
          return "Wsparcie LibretroDB";
       case MENU_LABEL_VALUE_SYSTEM_INFO_OVERLAY_SUPPORT:
-         return "Wsparcie nak³adek graficznych";
+         return "Wsparcie nakÂ³adek graficznych";
       case MENU_LABEL_VALUE_SYSTEM_INFO_COMMAND_IFACE_SUPPORT:
-         return "Wsparcie interfejsu wiersza poleceñ";
+         return "Wsparcie interfejsu wiersza poleceÃ±";
       case MENU_LABEL_VALUE_SYSTEM_INFO_NETWORK_COMMAND_IFACE_SUPPORT:
          return "Wsparcie interfejsu komend sieciowych";
       case MENU_LABEL_VALUE_SYSTEM_INFO_COCOA_SUPPORT:
@@ -684,7 +684,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SYSTEM_INFO_OPENGLES_SUPPORT:
          return "Wsparcie OpenGL ES";
       case MENU_LABEL_VALUE_SYSTEM_INFO_THREADING_SUPPORT:
-         return "Wsparcie wielu w±tków";
+         return "Wsparcie wielu wÂ±tkÃ³w";
       case MENU_LABEL_VALUE_SYSTEM_INFO_KMS_SUPPORT:
          return "Wsparcie KMS/EGL";
       case MENU_LABEL_VALUE_SYSTEM_INFO_UDEV_SUPPORT:
@@ -736,7 +736,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_SYSTEM_INFO_SDL_IMAGE_SUPPORT:
          return "Wsparcie SDL image";
       case MENU_LABEL_VALUE_SYSTEM_INFO_FBO_SUPPORT:
-         return "Wsparcie renderowania do tekstury w OpenGL/Direct3D (wielokrotne przebiegi shaderów)";
+         return "Wsparcie renderowania do tekstury w OpenGL/Direct3D (wielokrotne przebiegi shaderÃ³w)";
       case MENU_LABEL_VALUE_SYSTEM_INFO_FFMPEG_SUPPORT:
          return "Wsparcie FFmpeg";
       case MENU_LABEL_VALUE_SYSTEM_INFO_CORETEXT_SUPPORT:
@@ -758,13 +758,13 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_VALUE_BACK:
          return "WSTECZ";
       case MENU_LABEL_VALUE_SCREEN_RESOLUTION:
-         return "Rozdzielczo¶æ ekranu";
+         return "RozdzielczoÂ¶Ã¦ ekranu";
       case MENU_VALUE_DISABLED:
-         return "Wy³±czone";
+         return "WyÂ³Â±czone";
       case MENU_VALUE_PORT:
          return "Port";
       case MENU_VALUE_NONE:
-         return "¯aden";
+         return "Â¯aden";
       case MENU_LABEL_VALUE_RDB_ENTRY_DEVELOPER:
          return "Deweloper";
       case MENU_LABEL_VALUE_RDB_ENTRY_PUBLISHER:
@@ -778,13 +778,13 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_RDB_ENTRY_FRANCHISE:
          return "Franczyza";
       case MENU_LABEL_VALUE_RDB_ENTRY_RELEASE_MONTH:
-         return "Miesi±c wydania";
+         return "MiesiÂ±c wydania";
       case MENU_LABEL_VALUE_RDB_ENTRY_RELEASE_YEAR:
          return "Rok wydania";
       case MENU_VALUE_TRUE:
          return "Prawda";
       case MENU_VALUE_FALSE:
-         return "Fa³sz";
+         return "FaÂ³sz";
       case MENU_VALUE_MISSING:
          return "Brak";
       case MENU_VALUE_PRESENT:
@@ -796,19 +796,19 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_VALUE_STATUS:
          return "Status";
       case MENU_LABEL_VALUE_AUDIO_SETTINGS:
-         return "Ustawienia d¼wiêku";
+         return "Ustawienia dÂ¼wiÃªku";
       case MENU_LABEL_VALUE_INPUT_SETTINGS:
          return "Ustawienia wprowadzania";
       case MENU_LABEL_VALUE_ONSCREEN_DISPLAY_SETTINGS:
          return "Ustawienia OSD";
       case MENU_LABEL_VALUE_OVERLAY_SETTINGS:
-         return "Ustawienia przycisków ekranowych";
+         return "Ustawienia przyciskÃ³w ekranowych";
       case MENU_LABEL_VALUE_MENU_SETTINGS:
          return "Ustawienia menu";
       case MENU_LABEL_VALUE_MULTIMEDIA_SETTINGS:
-         return "Ustawienia multimediów";
+         return "Ustawienia multimediÃ³w";
       case MENU_LABEL_VALUE_UI_SETTINGS:
-         return "Ustawienia interfejsu u¿ytkownika";
+         return "Ustawienia interfejsu uÂ¿ytkownika";
       case MENU_LABEL_VALUE_MENU_FILE_BROWSER_SETTINGS:
          return "Menu File Browser Settings";
       case MENU_LABEL_VALUE_CORE_UPDATER_SETTINGS:
@@ -818,39 +818,39 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_LABEL_VALUE_PLAYLIST_SETTINGS:
          return "Ustawienia playlisty";
       case MENU_LABEL_VALUE_USER_SETTINGS:
-         return "Ustawienia u¿ytkownika";
+         return "Ustawienia uÂ¿ytkownika";
       case MENU_LABEL_VALUE_DIRECTORY_SETTINGS:
-         return "Ustawienia katalogów";
+         return "Ustawienia katalogÃ³w";
       case MENU_LABEL_VALUE_RECORDING_SETTINGS:
          return "Ustawienia nagrywania";
       case MENU_LABEL_VALUE_NO_INFORMATION_AVAILABLE:
-         return "Brak dostêpnych informacji.";
+         return "Brak dostÃªpnych informacji.";
       case MENU_LABEL_VALUE_INPUT_USER_BINDS:
-         return "Wprowad¼ bindy dla u¿ytkownika %u";
+         return "WprowadÂ¼ bindy dla uÂ¿ytkownika %u";
       case MENU_VALUE_LANG_ENGLISH:
          return "angielski";
       case MENU_VALUE_LANG_JAPANESE:
-         return "japoñski";
+         return "japoÃ±ski";
       case MENU_VALUE_LANG_FRENCH:
          return "francuski";
       case MENU_VALUE_LANG_SPANISH:
-         return "hiszpañski";
+         return "hiszpaÃ±ski";
       case MENU_VALUE_LANG_GERMAN:
          return "niemiecki";
       case MENU_VALUE_LANG_ITALIAN:
-         return "w³oski";
+         return "wÂ³oski";
       case MENU_VALUE_LANG_DUTCH:
-         return "duñski";
+         return "duÃ±ski";
       case MENU_VALUE_LANG_PORTUGUESE:
          return "portugalski";
       case MENU_VALUE_LANG_RUSSIAN:
          return "rosyjski";
       case MENU_VALUE_LANG_KOREAN:
-         return "koreañski";
+         return "koreaÃ±ski";
       case MENU_VALUE_LANG_CHINESE_TRADITIONAL:
-         return "chiñski (Tradycyjny)";
+         return "chiÃ±ski (Tradycyjny)";
       case MENU_VALUE_LANG_CHINESE_SIMPLIFIED:
-         return "chiñ¶ki (Uproszczony)";
+         return "chiÃ±Â¶ki (Uproszczony)";
       case MENU_VALUE_LANG_ESPERANTO:
          return "esperanto";
       case MENU_VALUE_LEFT_ANALOG:
@@ -864,7 +864,7 @@ const char *menu_hash_to_str_pl(uint32_t hash)
       case MENU_VALUE_SEARCH:
          return "Szukaj:";
       case MENU_LABEL_VALUE_USE_BUILTIN_IMAGE_VIEWER:
-         return "U¿yj wbudowanej przegl±darki obrazów";
+         return "UÂ¿yj wbudowanej przeglÂ±darki obrazÃ³w";
       default:
          break;
    }

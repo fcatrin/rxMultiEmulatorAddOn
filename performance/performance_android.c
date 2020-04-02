@@ -47,7 +47,7 @@
  */
 #include <sys/system_properties.h>
 #ifdef __arm__
-#include <machine/cpu-features.h>
+// #include <machine/cpu-features.h>
 #endif
 #include <pthread.h>
 #include "performance_android.h"
