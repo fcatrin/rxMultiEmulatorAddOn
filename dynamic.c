@@ -1286,6 +1286,13 @@ bool rarch_environment_cb(unsigned cmd, void *data)
 
          break;
 
+      case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
+            {
+               // RARCH_LOG("RETRO_ENVIRONMENT_GET_FASTFORWARDING %d\n", global->show_forward_icon);
+               *(bool *)data = global->show_forward_icon;
+            }
+            break;
+
       default:
          RARCH_LOG("Environ UNSUPPORTED (#%u).\n", cmd);
          return false;
