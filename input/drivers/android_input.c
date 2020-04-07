@@ -1021,14 +1021,12 @@ static void handle_hotplug(android_input_t *android,
       int translated_code = -1;
       for(bind = 0; bind < RARCH_BIND_LIST_END; bind++) {
     	  int joykey = settings->input.autoconf_binds[port][bind].joykey;
-    	  RARCH_LOG("Looking for key code %d on bind %d = %d", keycode, bind, joykey);
     	  if (joykey == keycode) {
     		  translated_code = bind;
     		  break;
     	  }
       }
 
-      RARCH_LOG("Translated code is %d", translated_code);
       if (!android_is_gamepad_button(translated_code)) return;
 
    }

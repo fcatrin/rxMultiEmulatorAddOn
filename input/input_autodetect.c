@@ -86,7 +86,7 @@ static int input_try_autoconfigure_joypad_from_conf(config_file_t *conf,
    }
 
    /* Check for name match */
-   RARCH_LOG("Autoconf: compare name %s with param name %s\n", ident, params->name);
+   // RARCH_LOG("Autoconf: compare name %s with param name %s\n", ident, params->name);
    if (!strcmp(ident, params->name))
    {
       score += 2;
@@ -104,7 +104,7 @@ static int input_try_autoconfigure_joypad_from_conf(config_file_t *conf,
 #endif
       }
    }
-   RARCH_LOG("Autoconf: configuration score=%d\n", score);
+   // RARCH_LOG("Autoconf: configuration score=%d\n", score);
    return score;
 }
 
