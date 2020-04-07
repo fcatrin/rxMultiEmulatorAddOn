@@ -1001,11 +1001,6 @@ void save_state_filename_prepare() {
 	strlcpy(global->savestate_path_shot, path, sizeof(global->savestate_path_shot));
 }
 
-void save_state_filename_reset() {
-	global_t *global = global_get_ptr();
-	strcpy(global->savestate_path_shot, "");
-}
-
 static void event_main_state(unsigned cmd)
 {
    char msg[PATH_MAX_LENGTH]  = {0};
@@ -1019,6 +1014,8 @@ static void event_main_state(unsigned cmd)
       {
          case EVENT_CMD_SAVE_STATE:
             event_save_state(global->savestate_path_shot, msg, sizeof(msg));
+            global->savestate_delayed_shot = 2;
+            RARCH_LOG("screenshot EVENT_CMD_SAVE_STATE");
             break;
          case EVENT_CMD_LOAD_STATE:
             event_load_state(global->savestate_path_shot, msg, sizeof(msg));

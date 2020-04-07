@@ -548,16 +548,10 @@ static int do_state_checks(driver_t *driver, settings_t *settings,
          cmd->state_slot_decrease);
 
    if (cmd->save_state_pressed) {
-	  global->show_state_message = true;
-	  save_state_filename_prepare();
-      event_command(EVENT_CMD_TAKE_SCREENSHOT);
       event_command(EVENT_CMD_SAVE_STATE);
-      save_state_filename_reset();
    } else if (cmd->load_state_pressed) {
-	   global->show_state_message = true;
-	   event_command(EVENT_CMD_LOAD_STATE);
+	  event_command(EVENT_CMD_LOAD_STATE);
    }
-   global->show_state_message = false;
 
    global->show_rewind_icon = check_rewind(settings, global, runloop, cmd->rewind_pressed);
 
@@ -1007,6 +1001,15 @@ static bool rarch_main_cmd_get_state_screenshot_button_combo (
    return true;
 }
 
+static bool rarch_main_check_delayed_screenshot() {
+	global_t *global = global_get_ptr();
+
+	if (global->savestate_delayed_shot > 0) {
+		global->savestate_delayed_shot--;
+		if (global->savestate_delayed_shot == 0) return true;
+	}
+	return false;
+}
 
 static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
       retro_input_t input, retro_input_t old_input,
@@ -1026,7 +1029,8 @@ static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
    cmd->quit_key_pressed            = BIT64_GET(input, RARCH_QUIT_KEY);
 
    cmd->screenshot_pressed          = BIT64_GET(trigger_input, RARCH_SCREENSHOT) ||
-		   	   	   	   	   	   	   	  rarch_main_cmd_get_state_screenshot_button_combo(input);
+		   	   	   	   	   	   	   	  rarch_main_cmd_get_state_screenshot_button_combo(input) ||
+									  rarch_main_check_delayed_screenshot();
 
    cmd->mute_pressed                = BIT64_GET(trigger_input, RARCH_MUTE);
    cmd->osk_pressed                 = BIT64_GET(trigger_input, RARCH_OSK);
