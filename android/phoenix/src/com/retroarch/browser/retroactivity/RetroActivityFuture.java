@@ -59,7 +59,6 @@ public final class RetroActivityFuture extends NativeActivity {
 		super.onResume();
 		
 		if (optionId == EventCommand.SAVE_STATE.ordinal()) {
-			eventCommand(EventCommand.SCREENSHOT.ordinal());
 			RetroBoxWrapper.toast(getString(R.string.emu_slot_saved).replace("{n}", String.valueOf(saveSlot+1)));
 		} else if (optionId == EventCommand.LOAD_STATE.ordinal()) {
 			RetroBoxWrapper.toast(getString(R.string.emu_slot_loaded).replace("{n}", String.valueOf(saveSlot+1)));
