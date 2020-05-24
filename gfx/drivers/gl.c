@@ -153,6 +153,7 @@ static void gl_deinit_border(gl_t *gl);
 static void gl_deinit_rewind_forward(gl_t *gl);
 static void gl_render_rewind_forward(void *data, int frame_width, int frame_height);
 
+static void gl_save_render_context(gl_t *gl);
 static void gl_restore_render_context(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
@@ -1978,6 +1979,7 @@ static bool gl_frame(void *data, const void *frame,
    bool has_bg_live   = settings->video.live_background_enable;
    bool has_bg_static = settings->video.background_enable;
    if (has_bg_live || has_bg_static) {
+	   gl_save_render_context(gl);
 	   if (has_bg_live) {
 		  gl_render_background_live(gl, frame_width, frame_height);
 	   } else if (has_bg_static) {
@@ -3473,13 +3475,20 @@ static void gl_render_overlay(void *data)
       glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
 
+static void gl_save_render_context(gl_t *gl) {
+   gl->coords_saved.vertex    = gl->coords.vertex;
+   gl->coords_saved.tex_coord = gl->coords.tex_coord;
+   gl->coords_saved.color     = gl->coords.color;
+   gl->coords_saved.vertices  = gl->coords.vertices;
+}
+
 static void gl_restore_render_context(gl_t *gl) {
    glDisable(GL_BLEND);
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
-   gl->coords.vertex    = gl->vertex_ptr;
-   gl->coords.tex_coord = gl->tex_info.coord;
-   gl->coords.color     = gl->white_color_ptr;
-   gl->coords.vertices  = 4;
+   gl->coords.vertex    = gl->coords_saved.vertex;
+   gl->coords.tex_coord = gl->coords_saved.tex_coord;
+   gl->coords.color     = gl->coords_saved.color;
+   gl->coords.vertices  = gl->coords_saved.vertices;
 
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 
@@ -3492,6 +3501,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    gl_t *gl = (gl_t*)data;
    if (!gl)
       return;
+
+   gl_save_render_context(gl);
 
    global_t   *global   = global_get_ptr();
    if (!global->show_rewind_icon && !global->show_forward_icon) return;
