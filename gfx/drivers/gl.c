@@ -443,14 +443,14 @@ static void gl_compute_fbo_geometry(gl_t *gl, unsigned width, unsigned height,
    }
 }
 
-static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h) {
+static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h, int divider) {
 	glGenTextures(1, &gl->fbo_background_texture);
 	glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	RARCH_WARN("[FBO_BG] gl_create_fbo_background_textures %d x %d", tex_w, tex_h);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w/BACKGROUND_SCALE, tex_h/BACKGROUND_SCALE, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w/BACKGROUND_SCALE/divider, tex_h/BACKGROUND_SCALE/divider, 0,
 	                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -2835,7 +2835,6 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 
    if (settings->video.live_background_enable) {
       gl_create_border_texture(gl, settings->video.border_path);
-      gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
    } else if (settings->video.background_enable) {
 	  gl_create_border_texture(gl, settings->video.border_path);
 	  gl_create_background_texture(gl, settings->video.background_path);
@@ -3590,7 +3589,6 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    }
 }
 
-
 static void gl_render_background_live(void *data, int frame_width, int frame_height)
 {
    unsigned width, height;
@@ -3598,15 +3596,17 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    if (!gl)
       return;
 
+   int divider = frame_height >= 480 ? 2 : 1;
+   if (!gl->fbo_background_inited) {
+      gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h, divider);
+   }
+
    video_driver_get_size(&width, &height);
 
    glEnable(GL_BLEND);
    gl->shader->use(gl, GL_SHADER_STOCK_BLUR);
 
    // draw scaled down into FBO
-
-   int divider = frame_height >= 480 ? 2 : 1;
-
    glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
    glViewport(0, 0, frame_width/BACKGROUND_SCALE/divider, frame_height/BACKGROUND_SCALE/divider);
 
@@ -3633,7 +3633,9 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    // now draw to background fiting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-   glViewport(-64, -64, width*divider + 128, height*divider + 128);
+
+   int offset = 64;
+   glViewport(-offset, -offset, width + 2*offset, height + 2*offset);
 
    gl->coords.vertex    = vertexes;
    gl->coords.vertices  = 4;
