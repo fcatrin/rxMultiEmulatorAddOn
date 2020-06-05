@@ -3596,7 +3596,9 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    if (!gl)
       return;
 
-   int divider = frame_height >= 480 ? 2 : 1;
+   int divider = 1;
+   if (frame_height >= 480) divider = frame_height / 240;
+
    if (!gl->fbo_background_inited) {
       gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h, divider);
    }
