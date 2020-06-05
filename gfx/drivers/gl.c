@@ -59,6 +59,12 @@
 
 #include "../video_shader_driver.h"
 
+#ifdef HAVE_NANOVG
+#include <gfx/nanovg/nanovg.h>
+#include <gfx/nanovg/nanovg_gl.h>
+static struct NVGcontext* vg;
+#endif
+
 #ifndef GL_SYNC_GPU_COMMANDS_COMPLETE
 #define GL_SYNC_GPU_COMMANDS_COMPLETE     0x9117
 #endif
@@ -2008,6 +2014,17 @@ static bool gl_frame(void *data, const void *frame,
    if (gl->fbo_inited)
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
 #endif
+
+   if (vg == NULL) {
+	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+   }
+
+   nvgBeginFrame(vg, gl->vp.width, gl->vp.height, 1.0f);
+   nvgBeginPath(vg);
+   nvgRoundedRect(vg, 10, 10, 320, 240, 4);
+   nvgFillColor(vg, nvgRGBA(128, 132, 209, 250));
+   nvgFill(vg);
+   nvgEndFrame(vg);
 
    gl_set_prev_texture(gl, &gl->tex_info);
 
