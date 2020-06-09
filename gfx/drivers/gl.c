@@ -62,6 +62,7 @@
 #ifdef HAVE_NANOVG
 #include <gfx/nanovg/nanovg.h>
 #include <gfx/nanovg/nanovg_gl.h>
+#include <input/vkey/vkey.h>
 static struct NVGcontext* vg;
 #endif
 
@@ -2017,13 +2018,13 @@ static bool gl_frame(void *data, const void *frame,
 
    if (vg == NULL) {
 	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+	   vkey_init(vg, "/sdcard/roboto.ttf");
    }
 
    nvgBeginFrame(vg, gl->vp.width, gl->vp.height, 1.0f);
-   nvgBeginPath(vg);
-   nvgRoundedRect(vg, 10, 10, 320, 240, 4);
-   nvgFillColor(vg, nvgRGBA(128, 132, 209, 250));
-   nvgFill(vg);
+   int keyboard_height = gl->vp.height / 4;
+   vkey_render(vg, 0, gl->vp.height - keyboard_height, gl->vp.width, keyboard_height);
+
    nvgEndFrame(vg);
 
    gl_set_prev_texture(gl, &gl->tex_info);
