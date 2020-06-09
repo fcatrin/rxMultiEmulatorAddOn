@@ -8,9 +8,14 @@
 #define VKEY_STATE_SELECTED 2
 #define KEY_RADIUS 4
 
-#define KEY_BACKGROUND_R 20
-#define KEY_BACKGROUND_G 20
-#define KEY_BACKGROUND_B 20
+#define BACKGROUND_R 20
+#define BACKGROUND_G 20
+#define BACKGROUND_B 20
+#define BACKGROUND_A 255
+
+#define KEY_BACKGROUND_R 10
+#define KEY_BACKGROUND_G 10
+#define KEY_BACKGROUND_B 10
 #define KEY_BACKGROUND_A 255
 
 #define KEY_TEXT_R 250
@@ -95,6 +100,12 @@ static void draw_button(struct NVGcontext* vg, struct vkey_button *button, int x
 void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 	nvgFontSize(vg, FONT_SIZE);
 	nvgFontFace(vg, FONT_ALIAS);
+
+	// draw keyboard background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, width, height, 0);
+	nvgFillColor(vg, nvgRGBA(BACKGROUND_R, BACKGROUND_G, BACKGROUND_B, BACKGROUND_A));
+	nvgFill(vg);
 
 	struct vkey_layout *layout = vkeyboard->layout[vkeyboard->active_layout];
 

@@ -2021,9 +2021,11 @@ static bool gl_frame(void *data, const void *frame,
 	   vkey_init(vg, settings->video.retrox_font_path);
    }
 
-   nvgBeginFrame(vg, gl->vp.width, gl->vp.height, 1.0f);
-   int keyboard_height = gl->vp.height / 4;
-   vkey_render(vg, 0, gl->vp.height - keyboard_height, gl->vp.width, keyboard_height);
+   glViewport(0, 0, width, height);
+
+   nvgBeginFrame(vg, width, height, 1.0f);
+   int keyboard_height = height / 4;
+   vkey_render(vg, 0, height - keyboard_height, width, keyboard_height);
 
    nvgEndFrame(vg);
 
