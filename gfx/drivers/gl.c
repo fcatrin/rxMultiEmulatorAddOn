@@ -2018,7 +2018,7 @@ static bool gl_frame(void *data, const void *frame,
 
    if (vg == NULL) {
 	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-	   vkey_init(vg, "/sdcard/roboto.ttf");
+	   vkey_init(vg, settings->video.retrox_font_path);
    }
 
    nvgBeginFrame(vg, gl->vp.width, gl->vp.height, 1.0f);
