@@ -1,7 +1,7 @@
 #include "vkey.h"
 
 #define FONT_ALIAS "default"
-#define FONT_SIZE 20
+#define FONT_SIZE 18
 
 #define KEY_PADDING       2
 #define KEYBOARD_PADDING  8
@@ -10,19 +10,19 @@
 #define VKEY_STATE_SELECTED 2
 #define KEY_RADIUS 4
 
-#define BACKGROUND_R 0x22
-#define BACKGROUND_G 0x1F
-#define BACKGROUND_B 0x1C
+#define BACKGROUND_R 0x10
+#define BACKGROUND_G 0x0E
+#define BACKGROUND_B 0x0F
 #define BACKGROUND_A 255
 
-#define KEY_BACKGROUND_R 0x1A
-#define KEY_BACKGROUND_G 0x17
-#define KEY_BACKGROUND_B 0x12
+#define KEY_BACKGROUND_R 0x0A
+#define KEY_BACKGROUND_G 0x08
+#define KEY_BACKGROUND_B 0x09
 #define KEY_BACKGROUND_A 255
 
-#define KEY_TEXT_R 0x6E
-#define KEY_TEXT_G 0x68
-#define KEY_TEXT_B 0x68
+#define KEY_TEXT_R 0x7E
+#define KEY_TEXT_G 0x78
+#define KEY_TEXT_B 0x78
 #define KEY_TEXT_A 255
 
 static struct vkeyboard *vkeyboard;
@@ -88,28 +88,23 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 	width  -= KEYBOARD_PADDING * 2;
 	height -= KEYBOARD_PADDING * 2 ;
 
-
 	struct vkey_layout *layout = vkeyboard->layout[vkeyboard->active_layout];
-
-	RARCH_LOG("vkey rows %d", layout->rows);
 
 	int row_height = height / layout->rows;
 	int py = y;
 	for(int row = 0; row < layout->rows; row++) {
 		struct vkey_button **keys = layout->keys[row];
 		int cols = get_cols(keys);
-		int key_size = width / cols;
-
-		RARCH_LOG("vkey row[%d] cols %d", row, cols);
+		int row_size = get_row_size(keys);
+		int key_size = width / row_size;
 
 		int px = x;
 		for(int col=0; col<cols; col++) {
 			struct vkey_button *button = keys[col];
 			int key_width = key_size * button->size;
 			if (col+1 == cols) {
-				key_width = width - px;
+				key_width = width + KEYBOARD_PADDING - px;
 			}
-			RARCH_LOG("vkey [%d, %d] = %s", row, col, button->label);
 			draw_button(vg, button, px, py, key_width, row_height);
 			px += key_width;
 		}
@@ -138,7 +133,3 @@ struct vkey_button **keyb_create_row(char *labels[]) {
 	RARCH_LOG("keyb row created with %d keys", count);
 	return row;
 }
-
-
-
-

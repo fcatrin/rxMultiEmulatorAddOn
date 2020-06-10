@@ -16,6 +16,19 @@ static struct vkeyboard keyb_c64 = {
 		{&layout_1}, 0
 };
 
+static void set_key_size(struct vkey_layout *layout, char *label, int size) {
+	for(int row=0; row<layout->rows; row++) {
+		int col = 0;
+		struct vkey_button *button;
+		while ((button = layout_1.keys[row][col++]) != NULL) {
+			if (!strcmp(button->label, label)) {
+				button->size = size;
+			}
+			col++;
+		}
+	}
+}
+
 struct vkeyboard *vkey_init_c64() {
 	int rows = 0;
 	while(key_rows[rows]) rows++;
@@ -28,6 +41,11 @@ struct vkeyboard *vkey_init_c64() {
 	}
 	layout_1.rows = rows;
 
+	set_key_size(&layout_1, "CTRL", 2);
+	set_key_size(&layout_1, "RESTORE", 2);
+	set_key_size(&layout_1, "RETURN", 2);
+	set_key_size(&layout_1, "SHIFT", 2);
+	set_key_size(&layout_1, "SPACE", 4);
 
 	return &keyb_c64;
 }
