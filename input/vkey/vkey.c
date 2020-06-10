@@ -1,25 +1,28 @@
 #include "vkey.h"
 
 #define FONT_ALIAS "default"
-#define FONT_SIZE 24
+#define FONT_SIZE 20
+
+#define KEY_PADDING       2
+#define KEYBOARD_PADDING  8
 
 #define VKEY_STATE_PRESSED  1
 #define VKEY_STATE_SELECTED 2
 #define KEY_RADIUS 4
 
-#define BACKGROUND_R 20
-#define BACKGROUND_G 20
-#define BACKGROUND_B 20
+#define BACKGROUND_R 0x22
+#define BACKGROUND_G 0x1F
+#define BACKGROUND_B 0x1C
 #define BACKGROUND_A 255
 
-#define KEY_BACKGROUND_R 10
-#define KEY_BACKGROUND_G 10
-#define KEY_BACKGROUND_B 10
+#define KEY_BACKGROUND_R 0x1A
+#define KEY_BACKGROUND_G 0x17
+#define KEY_BACKGROUND_B 0x12
 #define KEY_BACKGROUND_A 255
 
-#define KEY_TEXT_R 250
-#define KEY_TEXT_G 250
-#define KEY_TEXT_B 250
+#define KEY_TEXT_R 0x6E
+#define KEY_TEXT_G 0x68
+#define KEY_TEXT_B 0x68
 #define KEY_TEXT_A 255
 
 static struct vkeyboard *vkeyboard;
@@ -40,10 +43,10 @@ static int get_row_size(struct vkey_button *keys[]) {
 static void draw_button(struct NVGcontext* vg, struct vkey_button *button, int x, int y, int width, int height) {
 
 	// emulate margins
-	x += 2;
-	y += 2;
-	width -=4;
-	height -=4;
+	x += KEY_PADDING;
+	y += KEY_PADDING;
+	width  -= KEY_PADDING * 2;
+	height -= KEY_PADDING * 2 ;
 
 	// draw key background
 	nvgBeginPath(vg);
@@ -79,6 +82,13 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 	nvgFillColor(vg, nvgRGBA(BACKGROUND_R, BACKGROUND_G, BACKGROUND_B, BACKGROUND_A));
 	nvgFill(vg);
 
+	// use padding
+	x += KEYBOARD_PADDING;
+	y += KEYBOARD_PADDING;
+	width  -= KEYBOARD_PADDING * 2;
+	height -= KEYBOARD_PADDING * 2 ;
+
+
 	struct vkey_layout *layout = vkeyboard->layout[vkeyboard->active_layout];
 
 	RARCH_LOG("vkey rows %d", layout->rows);
@@ -108,30 +118,6 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 }
 
 void vkey_init(struct NVGcontext* vg, char *font_path, struct vkeyboard *keyboard) {
-	/*
-	static struct vkey_button a = {"a", {97, 0}, 1, 0};
-	static struct vkey_button b = {"b", {98, 0}, 1, 0};
-	static struct vkey_button c = {"c", {99, 0}, 1, 0};
-	static struct vkey_button d = {"d", {100, 0}, 1, 0};
-	static struct vkey_button e = {"e", {101, 0}, 1, 0};
-
-	static struct vkey_button *row1[] = {
-			&a, &b, &c, NULL
-	};
-
-	static struct vkey_button *row2[] = {
-			&d, &e, NULL
-	};
-
-	static struct vkey_layout layout_1 = {
-			{row1, row2}, 2
-	};
-	static struct vkeyboard keyb_pc = {
-			{&layout_1}, 0
-	};
-
-	vkeyboard = &keyb_pc;
-*/
 	vkeyboard = keyboard;
 	nvgCreateFont(vg, FONT_ALIAS, font_path);
 }
