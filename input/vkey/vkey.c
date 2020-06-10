@@ -1,5 +1,4 @@
-#include <gfx/drivers/gl_common.h>
-#include <gfx/nanovg/nanovg.h>
+#include "vkey.h"
 
 #define FONT_ALIAS "default"
 #define FONT_SIZE 24
@@ -23,34 +22,7 @@
 #define KEY_TEXT_B 250
 #define KEY_TEXT_A 255
 
-struct vkey {
-	int key_code;
-	int modifier;
-};
-
-struct vkey_event {
-	struct vkey *vkey;
-	int down;
-};
-
-struct vkey_button {
-	char *label;
-	struct vkey vkey;
-	int size;
-	int state; //
-};
-
-struct vkey_layout {
-	struct vkey_button **keys[5];
-	int rows;
-};
-
-struct vkeyboard {
-	struct vkey_layout *layout[3];
-	int active_layout;
-};
-
-struct vkeyboard *vkeyboard;
+static struct vkeyboard *vkeyboard;
 
 static int get_cols(struct vkey_button *keys[]) {
 	int col = 0;
@@ -109,12 +81,16 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 
 	struct vkey_layout *layout = vkeyboard->layout[vkeyboard->active_layout];
 
+	RARCH_LOG("vkey rows %d", layout->rows);
+
 	int row_height = height / layout->rows;
 	int py = y;
 	for(int row = 0; row < layout->rows; row++) {
 		struct vkey_button **keys = layout->keys[row];
 		int cols = get_cols(keys);
 		int key_size = width / cols;
+
+		RARCH_LOG("vkey row[%d] cols %d", row, cols);
 
 		int px = x;
 		for(int col=0; col<cols; col++) {
@@ -123,6 +99,7 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 			if (col+1 == cols) {
 				key_width = width - px;
 			}
+			RARCH_LOG("vkey [%d, %d] = %s", row, col, button->label);
 			draw_button(vg, button, px, py, key_width, row_height);
 			px += key_width;
 		}
@@ -130,7 +107,8 @@ void vkey_render(struct NVGcontext* vg, int x, int y, int width, int height) {
 	}
 }
 
-void vkey_init(struct NVGcontext* vg, char *font_path) {
+void vkey_init(struct NVGcontext* vg, char *font_path, struct vkeyboard *keyboard) {
+	/*
 	static struct vkey_button a = {"a", {97, 0}, 1, 0};
 	static struct vkey_button b = {"b", {98, 0}, 1, 0};
 	static struct vkey_button c = {"c", {99, 0}, 1, 0};
@@ -153,11 +131,27 @@ void vkey_init(struct NVGcontext* vg, char *font_path) {
 	};
 
 	vkeyboard = &keyb_pc;
-
+*/
+	vkeyboard = keyboard;
 	nvgCreateFont(vg, FONT_ALIAS, font_path);
 }
 
+struct vkey_button **keyb_create_row(char *labels[]) {
+	int count = 0;
+	while(labels[count]) count++;
 
+	struct vkey_button **row = calloc(count+1, sizeof(struct vkey_button*));
+	for(int i=0; i<count; i++) {
+		struct vkey_button *button = calloc(1, sizeof(struct vkey_button));
+		row[i] = button;
+		button->label = labels[i];
+		RARCH_LOG("keyb create key %s", button->label);
+		button->size = 1;
+	}
+	row[count] = NULL;
+	RARCH_LOG("keyb row created with %d keys", count);
+	return row;
+}
 
 
 

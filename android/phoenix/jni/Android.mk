@@ -47,6 +47,7 @@ LOCAL_MODULE := retroarch-activity
 LOCAL_SRC_FILES  +=	cheats/cheats.c
 LOCAL_SRC_FILES  +=	$(RARCH_DIR)/gfx/nanovg/nanovg.c
 LOCAL_SRC_FILES  +=	$(RARCH_DIR)/input/vkey/vkey.c
+LOCAL_SRC_FILES  +=	$(RARCH_DIR)/input/vkey/vkey_c64.c
 LOCAL_SRC_FILES  +=	$(RARCH_DIR)/griffin/griffin.c
 
 ifeq ($(HAVE_LOGGER), 1)

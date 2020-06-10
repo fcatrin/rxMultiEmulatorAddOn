@@ -63,6 +63,7 @@
 #include <gfx/nanovg/nanovg.h>
 #include <gfx/nanovg/nanovg_gl.h>
 #include <input/vkey/vkey.h>
+#include <input/vkey/vkey_c64.h>
 static struct NVGcontext* vg;
 #endif
 
@@ -2018,7 +2019,7 @@ static bool gl_frame(void *data, const void *frame,
 
    if (vg == NULL) {
 	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-	   vkey_init(vg, settings->video.retrox_font_path);
+	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
    }
 
    glViewport(0, 0, width, height);
