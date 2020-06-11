@@ -224,7 +224,6 @@ bool rpng_load_image_argb_iterate(FILE **fd, struct rpng_t *rpng)
 
                   if (!png_read_trns_fio(fd, rpng->palette, chunk.size))
 				      return false;
-                  }
                }
 
              /* TODO: support colorkey in grayscale and truecolor images */
