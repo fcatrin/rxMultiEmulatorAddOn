@@ -140,6 +140,26 @@ static bool png_read_plte_fio(FILE **fd, uint32_t *buffer, unsigned entries)
    return true;
 }
 
+static bool png_read_trns_fio(FILE **fd, uint32_t *palette, unsigned entries)
+{
+   unsigned i;
+   uint8_t buf[entries];
+   FILE *file = *fd;
+
+   if (fread(buf, 1, entries, file) != entries)
+      return false;
+
+   for (i = 0; i < entries; i++, palette++)
+   {
+      *palette = (*palette & 0x00ffffff) | buf[i] << 24;
+   }
+
+   if (fseek(file, sizeof(uint32_t), SEEK_CUR) < 0)
+      return false;
+
+   return true;
+}
+
 bool rpng_load_image_argb_iterate(FILE **fd, struct rpng_t *rpng)
 {
    struct png_chunk chunk = {0};
@@ -180,7 +200,7 @@ bool rpng_load_image_argb_iterate(FILE **fd, struct rpng_t *rpng)
          break;
 
       case PNG_CHUNK_PLTE:
-         if (!rpng->has_ihdr || rpng->has_plte || rpng->has_iend || rpng->has_idat)
+         if (!rpng->has_ihdr || rpng->has_plte || rpng->has_iend || rpng->has_idat || rpng->has_trns)
             return false;
 
          if (chunk.size % 3)
@@ -191,7 +211,26 @@ bool rpng_load_image_argb_iterate(FILE **fd, struct rpng_t *rpng)
 
          rpng->has_plte = true;
          break;
+      case PNG_CHUNK_tRNS:
+         {
+            if (rpng->has_idat)
+               return false;
 
+            if (rpng->ihdr.color_type == PNG_IHDR_COLOR_PLT)
+               {
+               /* we should compare with the number of palette entries */
+                  if (chunk.size > 256)
+                	  return false;
+
+                  if (!png_read_trns_fio(fd, rpng->palette, chunk.size))
+				      return false;
+                  }
+               }
+
+             /* TODO: support colorkey in grayscale and truecolor images */
+             rpng->has_trns = true;
+         }
+		 break;
       case PNG_CHUNK_IDAT:
          if (!rpng->has_ihdr || rpng->has_iend || (rpng->ihdr.color_type == PNG_IHDR_COLOR_PLT && !rpng->has_plte))
             return false;
