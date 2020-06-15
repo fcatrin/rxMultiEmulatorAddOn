@@ -2017,6 +2017,7 @@ static bool gl_frame(void *data, const void *frame,
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
 #endif
 
+   /*
    if (vg == NULL) {
 	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
@@ -2029,6 +2030,7 @@ static bool gl_frame(void *data, const void *frame,
    vkey_render(vg, 0, height - keyboard_height, width, keyboard_height);
 
    nvgEndFrame(vg);
+   */
 
    gl_set_prev_texture(gl, &gl->tex_info);
 
