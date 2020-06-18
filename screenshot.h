@@ -26,11 +26,11 @@ extern "C" {
 #endif
 
 bool screenshot_dump(const char *folder, const void *frame, 
-      unsigned width, unsigned height, int pitch, bool bgr24);
+      unsigned width, unsigned height, int pitch, bool bgr24, bool is_thumbnail);
 
 void screenshot_generate_filename(char *filename, size_t size);
 
-bool take_screenshot(void);
+bool take_screenshot();
 
 #ifdef __cplusplus
 }

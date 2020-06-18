@@ -178,7 +178,7 @@ end:
 }
 #endif
 
-static bool take_screenshot_viewport(void)
+static bool take_screenshot_viewport(bool is_thumbnail)
 {
    char screenshot_path[PATH_MAX_LENGTH] = {0};
    const char *screenshot_dir            = NULL;
@@ -210,7 +210,7 @@ static bool take_screenshot_viewport(void)
 
    /* Data read from viewport is in bottom-up order, suitable for BMP. */
    if (!screenshot_dump(screenshot_dir, buffer, vp.width, vp.height,
-            vp.width * 3, true))
+            vp.width * 3, true, is_thumbnail))
       goto done;
 
    retval = true;
@@ -221,7 +221,7 @@ done:
    return retval;
 }
 
-static bool take_screenshot_raw(void)
+static bool take_screenshot_raw(bool is_thumbnail)
 {
    unsigned width, height;
    size_t pitch;
@@ -247,7 +247,7 @@ static bool take_screenshot_raw(void)
     */
    return screenshot_dump(screenshot_dir,
          (const uint8_t*)data + (height - 1) * pitch,
-         width, height, -pitch, false);
+         width, height, -pitch, false, is_thumbnail);
 }
 
 /**
@@ -288,10 +288,13 @@ bool take_screenshot(void)
          video_driver_cached_frame();
    }
 
+   bool is_thumbnail = global->screenshot_is_thumbnail;
+   global->screenshot_is_thumbnail = false;
+
    if (viewport_read)
-      ret = take_screenshot_viewport();
+      ret = take_screenshot_viewport(is_thumbnail);
    else if (!video_driver_cached_frame_has_valid_fb())
-      ret = take_screenshot_raw();
+      ret = take_screenshot_raw(is_thumbnail);
    else if (driver->video->read_frame_raw)
    {
       unsigned old_width, old_height;
@@ -311,7 +314,7 @@ bool take_screenshot(void)
       if (frame_data)
       {
          video_driver_cached_frame_set_ptr(frame_data);
-         ret = take_screenshot_raw();
+         ret = take_screenshot_raw(is_thumbnail);
          free(frame_data);
       }
       else
@@ -346,7 +349,7 @@ bool take_screenshot(void)
 
 /* Take frame bottom-up. */
 bool screenshot_dump(const char *folder, const void *frame,
-      unsigned width, unsigned height, int pitch, bool bgr24)
+      unsigned width, unsigned height, int pitch, bool bgr24, bool is_thumbnail)
 {
    char filename[PATH_MAX_LENGTH] = {0};
    char shotname[PATH_MAX_LENGTH] = {0};
@@ -401,12 +404,20 @@ bool screenshot_dump(const char *folder, const void *frame,
 
    scaler.in_width    = width;
    scaler.in_height   = height;
-   scaler.out_width   = width;
-   scaler.out_height  = height;
    scaler.in_stride   = -pitch;
-   scaler.out_stride  = width * 3;
    scaler.out_fmt     = SCALER_FMT_BGR24;
    scaler.scaler_type = SCALER_TYPE_POINT;
+
+   if (is_thumbnail) {
+	   float ratio = (float)width / height;
+	   scaler.out_height = 240;
+	   scaler.out_width  = scaler.out_height * ratio;
+	   scaler.out_stride = scaler.out_width * 3;
+   } else {
+	   scaler.out_width  = width;
+	   scaler.out_height = height;
+	   scaler.out_stride = width * 3;
+   }
 
    if (bgr24)
       scaler.in_fmt = SCALER_FMT_BGR24;
@@ -422,7 +433,7 @@ bool screenshot_dump(const char *folder, const void *frame,
 
    RARCH_LOG("Using RPNG for PNG screenshots.\n");
    ret = rpng_save_image_bgr24(filename,
-         out_buffer, width, height, width * 3);
+         out_buffer, scaler.out_width, scaler.out_height, scaler.out_stride);
    if (!ret)
       RARCH_ERR("Failed to take screenshot.\n");
    free(out_buffer);
