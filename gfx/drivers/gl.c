@@ -2017,21 +2017,6 @@ static bool gl_frame(void *data, const void *frame,
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
 #endif
 
-   /*
-   if (vg == NULL) {
-	   vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
-   }
-
-   glViewport(0, 0, width, height);
-
-   nvgBeginFrame(vg, width, height, 1.0f);
-   int keyboard_height = height / 4;
-   vkey_render(vg, 0, height - keyboard_height, width, keyboard_height);
-
-   nvgEndFrame(vg);
-   */
-
    gl_set_prev_texture(gl, &gl->tex_info);
 
 #if defined(HAVE_MENU)
@@ -2052,6 +2037,28 @@ static bool gl_frame(void *data, const void *frame,
    if (gl->overlay_enable)
       gl_render_overlay(gl);
 #endif
+
+   glViewport(0, 0, width, height);
+
+   nvgBeginFrame(vg, width, height, 1.0f);
+   nvgSave(vg);
+   int keyboard_height = height / 4;
+   vkey_render(vg, 0, height - keyboard_height, width, keyboard_height);
+   nvgRestore(vg);
+   nvgEndFrame(vg);
+
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glBlendEquation(GL_FUNC_ADD);
+
+   /*
+   glDisable(GL_BLEND);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glBindTexture(GL_TEXTURE_2D, 0);
+   glDisable(GL_STENCIL_TEST);
+   glDisable(GL_DITHER);
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+   */
 
    gfx_ctx_update_window_title(gl);
 
@@ -2864,6 +2871,11 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
    }
 
    gl_create_rewind_forward_textures(gl, settings->video.rewind_forward_path);
+
+   if (vg == NULL) {
+	   vg = nvgCreateGLES2(NVG_ANTIALIAS);
+	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
+   }
 
    gfx_ctx_input_driver(gl, input, input_data);
    
