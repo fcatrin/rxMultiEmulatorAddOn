@@ -624,6 +624,29 @@ static void engine_handle_cmd(void)
    }
 }
 
+
+const struct rarch_key_map rarch_key_map_android[] = {
+   { AKEYCODE_0, RETROK_0 },
+   { AKEYCODE_1, RETROK_1 },
+   { AKEYCODE_2, RETROK_2 },
+   { AKEYCODE_3, RETROK_3 },
+   { AKEYCODE_4, RETROK_4 },
+   { AKEYCODE_5, RETROK_5 },
+   { AKEYCODE_6, RETROK_6 },
+   { AKEYCODE_7, RETROK_7 },
+   { AKEYCODE_8, RETROK_8 },
+   { AKEYCODE_9, RETROK_9 },
+   { AKEYCODE_A, RETROK_a },
+   { AKEYCODE_B, RETROK_b },
+   { AKEYCODE_C, RETROK_c },
+   { AKEYCODE_D, RETROK_d },
+   { AKEYCODE_E, RETROK_e },
+   { AKEYCODE_F, RETROK_f },
+   { AKEYCODE_G, RETROK_g },
+   { AKEYCODE_H, RETROK_h },
+   { 0, RETROK_UNKNOWN },
+};
+
 static void *android_input_init(void)
 {
    int32_t sdk;
@@ -663,6 +686,8 @@ static void *android_input_init(void)
       engine_lookup_name = android_input_lookup_name;
    else
       engine_lookup_name = android_input_lookup_name_prekitkat;
+
+   input_keymaps_init_keyboard_lut(rarch_key_map_android);
 
    return android;
 }
@@ -1324,6 +1349,9 @@ static int16_t android_input_state(void *data,
         	 return clicked;
         }
         break;
+        case RETRO_DEVICE_KEYBOARD:
+       	   RARCH_LOG("state check for input %d = %s", id, "nonx");
+       	break;
    }
 
    return 0;
@@ -1333,6 +1361,8 @@ static bool android_input_key_pressed(void *data, int key)
 {
    android_input_t *android = (android_input_t*)data;
    settings_t *settings     = config_get_ptr();
+
+   /* it seems that this is only for gamepad buttons */
 
    return input_joypad_pressed(android->joypad,
             0, settings->input.binds[0], key);
@@ -1394,6 +1424,7 @@ static uint64_t android_input_get_capabilities(void *data)
    return
       (1 << RETRO_DEVICE_JOYPAD)  |
       (1 << RETRO_DEVICE_POINTER) |
+      (1 << RETRO_DEVICE_KEYBOARD) |
       (1 << RETRO_DEVICE_ANALOG);
 }
 
