@@ -102,6 +102,8 @@ typedef struct settings
 
       char border_path[2][PATH_MAX_LENGTH];
       char rewind_forward_path[2][PATH_MAX_LENGTH];
+
+      char retrox_font_path[PATH_MAX_LENGTH];
    } video;
 
    struct

@@ -1412,6 +1412,8 @@ static bool config_load_file(const char *path, bool set_defaults)
    config_get_path(conf, "rewind_icon_path",   settings->video.rewind_forward_path[0], sizeof(settings->video.rewind_forward_path[0]));
    config_get_path(conf, "forward_icon_path",  settings->video.rewind_forward_path[1], sizeof(settings->video.rewind_forward_path[1]));
 
+   config_get_path(conf, "retrox_font_path", settings->video.retrox_font_path, sizeof(settings->video.retrox_font_path));
+
    config_get_path(conf, "video_shader_dir", settings->video.shader_dir, sizeof(settings->video.shader_dir));
    if (!strcmp(settings->video.shader_dir, "default"))
       *settings->video.shader_dir = '\0';

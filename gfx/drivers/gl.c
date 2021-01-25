@@ -59,6 +59,14 @@
 
 #include "../video_shader_driver.h"
 
+#ifdef HAVE_VKEY
+#include <gfx/nanovg/nanovg.h>
+#include <gfx/nanovg/nanovg_gl.h>
+#include <input/vkey/vkey.h>
+#include <input/vkey/vkey_c64.h>
+static struct NVGcontext* vg;
+#endif
+
 #ifndef GL_SYNC_GPU_COMMANDS_COMPLETE
 #define GL_SYNC_GPU_COMMANDS_COMPLETE     0x9117
 #endif
@@ -153,6 +161,7 @@ static void gl_deinit_border(gl_t *gl);
 static void gl_deinit_rewind_forward(gl_t *gl);
 static void gl_render_rewind_forward(void *data, int frame_width, int frame_height);
 
+static void gl_save_render_context(gl_t *gl);
 static void gl_restore_render_context(gl_t *gl);
 
 #define set_texture_coords(coords, xamt, yamt) \
@@ -442,14 +451,14 @@ static void gl_compute_fbo_geometry(gl_t *gl, unsigned width, unsigned height,
    }
 }
 
-static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h) {
+static void gl_create_fbo_background_textures(gl_t *gl, int tex_w, int tex_h, int divider) {
 	glGenTextures(1, &gl->fbo_background_texture);
 	glBindTexture(GL_TEXTURE_2D, gl->fbo_background_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	RARCH_WARN("[FBO_BG] gl_create_fbo_background_textures %d x %d", tex_w, tex_h);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w/BACKGROUND_SCALE, tex_h/BACKGROUND_SCALE, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w/BACKGROUND_SCALE/divider, tex_h/BACKGROUND_SCALE/divider, 0,
 	                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1978,6 +1987,7 @@ static bool gl_frame(void *data, const void *frame,
    bool has_bg_live   = settings->video.live_background_enable;
    bool has_bg_static = settings->video.background_enable;
    if (has_bg_live || has_bg_static) {
+	   gl_save_render_context(gl);
 	   if (has_bg_live) {
 		  gl_render_background_live(gl, frame_width, frame_height);
 	   } else if (has_bg_static) {
@@ -2026,6 +2036,31 @@ static bool gl_frame(void *data, const void *frame,
 #ifdef HAVE_OVERLAY
    if (gl->overlay_enable)
       gl_render_overlay(gl);
+#endif
+
+   glViewport(0, 0, width, height);
+
+#ifdef HAVE_VKEY
+   nvgBeginFrame(vg, width, height, 1.0f);
+   nvgSave(vg);
+   int keyboard_height = height / 4;
+   vkey_render(vg, 0, height - keyboard_height, width, keyboard_height);
+   nvgRestore(vg);
+   nvgEndFrame(vg);
+
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glBlendEquation(GL_FUNC_ADD);
+
+   /*
+   glDisable(GL_BLEND);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glBindTexture(GL_TEXTURE_2D, 0);
+   glDisable(GL_STENCIL_TEST);
+   glDisable(GL_DITHER);
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+   */
+
 #endif
 
    gfx_ctx_update_window_title(gl);
@@ -2833,13 +2868,19 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 
    if (settings->video.live_background_enable) {
       gl_create_border_texture(gl, settings->video.border_path);
-      gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h);
    } else if (settings->video.background_enable) {
 	  gl_create_border_texture(gl, settings->video.border_path);
 	  gl_create_background_texture(gl, settings->video.background_path);
    }
 
    gl_create_rewind_forward_textures(gl, settings->video.rewind_forward_path);
+
+#ifdef HAVE_VKEY
+   if (vg == NULL) {
+	   vg = nvgCreateGLES2(NVG_ANTIALIAS);
+	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
+   }
+#endif
 
    gfx_ctx_input_driver(gl, input, input_data);
    
@@ -3473,13 +3514,20 @@ static void gl_render_overlay(void *data)
       glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 }
 
+static void gl_save_render_context(gl_t *gl) {
+   gl->coords_saved.vertex    = gl->coords.vertex;
+   gl->coords_saved.tex_coord = gl->coords.tex_coord;
+   gl->coords_saved.color     = gl->coords.color;
+   gl->coords_saved.vertices  = gl->coords.vertices;
+}
+
 static void gl_restore_render_context(gl_t *gl) {
    glDisable(GL_BLEND);
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
-   gl->coords.vertex    = gl->vertex_ptr;
-   gl->coords.tex_coord = gl->tex_info.coord;
-   gl->coords.color     = gl->white_color_ptr;
-   gl->coords.vertices  = 4;
+   gl->coords.vertex    = gl->coords_saved.vertex;
+   gl->coords.tex_coord = gl->coords_saved.tex_coord;
+   gl->coords.color     = gl->coords_saved.color;
+   gl->coords.vertices  = gl->coords_saved.vertices;
 
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 
@@ -3492,6 +3540,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    gl_t *gl = (gl_t*)data;
    if (!gl)
       return;
+
+   gl_save_render_context(gl);
 
    global_t   *global   = global_get_ptr();
    if (!global->show_rewind_icon && !global->show_forward_icon) return;
@@ -3579,7 +3629,6 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    }
 }
 
-
 static void gl_render_background_live(void *data, int frame_width, int frame_height)
 {
    unsigned width, height;
@@ -3587,15 +3636,19 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
    if (!gl)
       return;
 
+   int divider = 1;
+   if (frame_height >= 480) divider = frame_height / 240;
+
+   if (!gl->fbo_background_inited) {
+      gl_create_fbo_background_textures(gl, gl->tex_w, gl->tex_h, divider);
+   }
+
    video_driver_get_size(&width, &height);
 
    glEnable(GL_BLEND);
    gl->shader->use(gl, GL_SHADER_STOCK_BLUR);
 
    // draw scaled down into FBO
-
-   int divider = frame_height >= 480 ? 2 : 1;
-
    glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo_background);
    glViewport(0, 0, frame_width/BACKGROUND_SCALE/divider, frame_height/BACKGROUND_SCALE/divider);
 
@@ -3622,7 +3675,9 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    // now draw to background fiting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-   glViewport(-64, -64, width*divider + 128, height*divider + 128);
+
+   int offset = 64;
+   glViewport(-offset, -offset, width + 2*offset, height + 2*offset);
 
    gl->coords.vertex    = vertexes;
    gl->coords.vertices  = 4;

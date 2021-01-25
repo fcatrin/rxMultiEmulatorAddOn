@@ -134,6 +134,7 @@ typedef struct global
    /* full filename for savestate screen shot */
    char savestate_path_shot[PATH_MAX_LENGTH];
    int  savestate_delayed_shot;
+   int  screenshot_is_thumbnail;
 
    /* Used on reentrancy to use a savestate dir. */
    char savefile_dir[PATH_MAX_LENGTH];

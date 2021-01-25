@@ -237,6 +237,7 @@ typedef struct gl
    math_matrix_4x4 mvp, mvp_no_rot;
 
    struct gfx_coords coords;
+   struct gfx_coords coords_saved;
    const float *vertex_ptr;
    const float *white_color_ptr;
 

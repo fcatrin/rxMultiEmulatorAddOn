@@ -1006,7 +1006,10 @@ static bool rarch_main_check_delayed_screenshot() {
 
 	if (global->savestate_delayed_shot > 0) {
 		global->savestate_delayed_shot--;
-		if (global->savestate_delayed_shot == 0) return true;
+		if (global->savestate_delayed_shot == 0) {
+			global->screenshot_is_thumbnail = true;
+			return true;
+		}
 	}
 	return false;
 }

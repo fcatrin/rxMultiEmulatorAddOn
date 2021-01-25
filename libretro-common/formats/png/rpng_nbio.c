@@ -98,6 +98,18 @@ static bool png_read_plte_into_buf(uint8_t *buf,
    return true;
 }
 
+static bool png_read_trns_into_buf(uint8_t *buf, uint32_t *palette, unsigned entries)
+{
+   unsigned i;
+
+   for (i = 0; i < entries; i++, buf++, palette++)
+   {
+      *palette = (*palette & 0x00ffffff) | *buf << 24;
+   }
+
+   return true;
+}
+
 bool rpng_nbio_load_image_argb_iterate(uint8_t *buf, struct rpng_t *rpng, unsigned *ret)
 {
    unsigned i;
@@ -143,19 +155,39 @@ bool rpng_nbio_load_image_argb_iterate(uint8_t *buf, struct rpng_t *rpng, unsign
          {
             unsigned entries = chunk.size / 3;
 
-            if (!rpng->has_ihdr || rpng->has_plte || rpng->has_iend || rpng->has_idat)
+            if (!rpng->has_ihdr || rpng->has_plte || rpng->has_iend || rpng->has_idat || rpng->has_trns)
                goto error;
 
             if (chunk.size % 3)
                goto error;
 
+            buf += 8;
             if (!png_read_plte_into_buf(buf, rpng->palette, entries))
                goto error;
 
             rpng->has_plte = true;
          }
          break;
+      case PNG_CHUNK_tRNS:
+         {
+            if (rpng->has_idat)
+               goto error;
 
+            if (rpng->ihdr.color_type == PNG_IHDR_COLOR_PLT)
+               {
+               /* we should compare with the number of palette entries */
+                  if (chunk.size > 256)
+				      goto error;
+
+				  buf += 8;
+                  if (!png_read_trns_into_buf(buf, rpng->palette, chunk.size))
+				      goto error;
+               }
+
+             /* TODO: support colorkey in grayscale and truecolor images */
+             rpng->has_trns = true;
+         }
+		 break;
       case PNG_CHUNK_IDAT:
          if (!(rpng->has_ihdr) || rpng->has_iend || (rpng->ihdr.color_type == PNG_IHDR_COLOR_PLT && !(rpng->has_plte)))
             goto error;
