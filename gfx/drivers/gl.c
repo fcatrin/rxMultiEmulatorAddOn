@@ -59,7 +59,7 @@
 
 #include "../video_shader_driver.h"
 
-#ifdef HAVE_NANOVG
+#ifdef HAVE_VKEY
 #include <gfx/nanovg/nanovg.h>
 #include <gfx/nanovg/nanovg_gl.h>
 #include <input/vkey/vkey.h>
@@ -2040,6 +2040,7 @@ static bool gl_frame(void *data, const void *frame,
 
    glViewport(0, 0, width, height);
 
+#ifdef HAVE_VKEY
    nvgBeginFrame(vg, width, height, 1.0f);
    nvgSave(vg);
    int keyboard_height = height / 4;
@@ -2059,6 +2060,8 @@ static bool gl_frame(void *data, const void *frame,
    glDisable(GL_DITHER);
    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
    */
+
+#endif
 
    gfx_ctx_update_window_title(gl);
 
@@ -2872,10 +2875,12 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 
    gl_create_rewind_forward_textures(gl, settings->video.rewind_forward_path);
 
+#ifdef HAVE_VKEY
    if (vg == NULL) {
 	   vg = nvgCreateGLES2(NVG_ANTIALIAS);
 	   vkey_init(vg, settings->video.retrox_font_path, vkey_init_c64());
    }
+#endif
 
    gfx_ctx_input_driver(gl, input, input_data);
    
