@@ -1350,7 +1350,7 @@ static int16_t android_input_state(void *data,
         }
         break;
         case RETRO_DEVICE_KEYBOARD:
-       	   RARCH_LOG("state check for input %d = %s", id, "nonx");
+       	   //RARCH_LOG("state check for input %d = %s", id, "nonx");
        	break;
    }
 
