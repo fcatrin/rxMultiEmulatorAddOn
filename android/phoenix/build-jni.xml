@@ -3,11 +3,11 @@
 <property file="../../../retrox.properties"/>
 
 <target name="build-jni">
-    <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+    <exec executable="${ndk.dir}/ndk-build" failonerror="true" dir="jni"/>
 </target>
 
 <target name="clean">
-    <exec executable="${ndk.dir}/ndk-build" failonerror="true">
+    <exec executable="${ndk.dir}/ndk-build" failonerror="true" dir="jni">
         <arg value="clean"/>
     </exec>
 </target>
