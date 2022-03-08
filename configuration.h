@@ -319,6 +319,8 @@ typedef struct settings
    char cheat_settings_path[PATH_MAX_LENGTH];
    char input_remapping_directory[PATH_MAX_LENGTH];
 
+   bool input_display_hotplug;
+
    char resampler_directory[PATH_MAX_LENGTH];
    char game_code[PATH_MAX_LENGTH];
    char screenshot_directory[PATH_MAX_LENGTH];

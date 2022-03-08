@@ -1532,6 +1532,8 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_BOOL_BASE(conf, settings, multimedia.builtin_mediaplayer_enable, "builtin_mediaplayer_enable");
    CONFIG_GET_BOOL_BASE(conf, settings, multimedia.builtin_imageviewer_enable, "builtin_imageviewer_enable");
 
+   CONFIG_GET_BOOL_BASE(conf, settings, input_display_hotplug, "input_display_hotplug");
+
    config_get_path(conf, "libretro_info_path", settings->libretro_info_path, sizeof(settings->libretro_info_path));
 
    config_get_path(conf, "core_options_path", settings->core_options_path, sizeof(settings->core_options_path));

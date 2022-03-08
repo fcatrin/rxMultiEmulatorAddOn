@@ -1108,9 +1108,11 @@ static void handle_hotplug(android_input_t *android,
 	   RARCH_LOG("Current gamepad %d: %s (%s)", i+1, android->pad_states[i].name, android->pad_states[i].descriptor);
    }
 
-   char msg[1000];
-   sprintf(msg, "%s is Player %d", device_name, port+1);
-   android_toast(msg);
+   if (settings->input_display_hotplug) {
+	   char msg[1000];
+	   sprintf(msg, "%s is Player %d", device_name, port+1);
+	   android_toast(msg);
+   }
 
 }
 
