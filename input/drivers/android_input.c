@@ -1258,47 +1258,58 @@ static int16_t android_input_state(void *data,
 {
    android_input_t *android = (android_input_t*)data;
 
-   struct android_app *android_app = (struct android_app*)g_android;
-   if (android_app->is_mame_menu_request) {
-		android_app->is_mame_menu_request = false;
-		android->mame_trigger_state_l2 = true;
-		android->mame_trigger_state_r2 = true;
-   }
 
-   if (android_app->is_mame_service_request) {
-		android_app->is_mame_service_request = false;
-		android->mame_trigger_state_l3 = true;
-		android->mame_trigger_state_r3 = true;
-   }
+   if (idx != RETRO_DEVICE_INDEX_ANALOG_BUTTON) {
+	   struct android_app *android_app = (struct android_app*)g_android;
 
-   if (device == RETRO_DEVICE_JOYPAD || device == RETRO_DEVICE_ANALOG) {
-	   if (id == RETRO_DEVICE_ID_JOYPAD_L2 &&
-			   (android->trigger_state[port][0] || android->mame_trigger_state_l2)) {
-		   android->mame_trigger_state_l2 = false;
-		   return true;
+	   if (android_app->is_mame_menu_request) {
+			android_app->is_mame_menu_request = false;
+			android->mame_trigger_state_l2 = true;
+			android->mame_trigger_state_r2 = true;
 	   }
-	   if (id == RETRO_DEVICE_ID_JOYPAD_R2 &&
-			   (android->trigger_state[port][1] || android->mame_trigger_state_r2)) {
-		   android->mame_trigger_state_r2 = false;
-		   return true;
+
+	   if (android_app->is_mame_service_request) {
+			android_app->is_mame_service_request = false;
+			android->mame_trigger_state_l3 = true;
+			android->mame_trigger_state_r3 = true;
 	   }
-	   if (id == RETRO_DEVICE_ID_JOYPAD_L3 && (android->mame_trigger_state_l3)) {
-		   android->mame_trigger_state_l2 = false;
-		   return true;
-	   }
-	   if (id == RETRO_DEVICE_ID_JOYPAD_R2 && (android->mame_trigger_state_r3)) {
-		   android->mame_trigger_state_r3 = false;
-		   return true;
+
+	   if (device == RETRO_DEVICE_JOYPAD || device == RETRO_DEVICE_ANALOG) {
+		   if (id == RETRO_DEVICE_ID_JOYPAD_L2 &&
+				   (android->trigger_state[port][0] || android->mame_trigger_state_l2)) {
+			   android->mame_trigger_state_l2 = false;
+			   return true;
+		   }
+		   if (id == RETRO_DEVICE_ID_JOYPAD_R2 &&
+				   (android->trigger_state[port][1] || android->mame_trigger_state_r2)) {
+			   android->mame_trigger_state_r2 = false;
+			   return true;
+		   }
+		   if (id == RETRO_DEVICE_ID_JOYPAD_L3 && (android->mame_trigger_state_l3)) {
+			   android->mame_trigger_state_l2 = false;
+			   return true;
+		   }
+		   if (id == RETRO_DEVICE_ID_JOYPAD_R2 && (android->mame_trigger_state_r3)) {
+			   android->mame_trigger_state_r3 = false;
+			   return true;
+		   }
 	   }
    }
 
    switch (device)
    {
-      case RETRO_DEVICE_JOYPAD:
-         return input_joypad_pressed(android->joypad, port, binds[port], id);
-      case RETRO_DEVICE_ANALOG:
-         return input_joypad_analog(android->joypad, port, idx, id,
-               binds[port]);
+      case RETRO_DEVICE_JOYPAD: {
+    	  return input_joypad_pressed(android->joypad, port, binds[port], id);
+      }
+
+      case RETRO_DEVICE_ANALOG: {
+    	  if (idx == RETRO_DEVICE_INDEX_ANALOG_BUTTON) {
+    		  if (id == RETRO_DEVICE_ID_JOYPAD_L2) return android->analog_state[port][8];
+    		  if (id == RETRO_DEVICE_ID_JOYPAD_R2) return android->analog_state[port][9];
+    	  }
+
+    	  return input_joypad_analog(android->joypad, port, idx, id, binds[port]);
+      }
       case RETRO_DEVICE_POINTER:
          switch (id)
          {
