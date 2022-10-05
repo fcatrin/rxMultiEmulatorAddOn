@@ -1976,17 +1976,12 @@ static bool gl_frame(void *data, const void *frame,
    }
 #endif
 
-   gl->tex_info.tex           = gl->texture[gl->tex_index];
-   gl->tex_info.input_size[0] = frame_width;
-   gl->tex_info.input_size[1] = frame_height;
-   gl->tex_info.tex_size[0]   = gl->tex_w;
-   gl->tex_info.tex_size[1]   = gl->tex_h;
-
    glClear(GL_COLOR_BUFFER_BIT);
 
    bool has_bg_live   = settings->video.live_background_enable;
    bool has_bg_static = settings->video.background_enable;
    if (has_bg_live || has_bg_static) {
+
 	   gl_save_render_context(gl);
 	   if (has_bg_live) {
 		  gl_render_background_live(gl, frame_width, frame_height);
@@ -1996,6 +1991,12 @@ static bool gl_frame(void *data, const void *frame,
 	   gl_render_border(gl, gl->vp.width, gl->vp.height);
 	   gl_restore_render_context(gl);
    }
+
+   gl->tex_info.tex           = gl->texture[gl->tex_index];
+   gl->tex_info.input_size[0] = frame_width;
+   gl->tex_info.input_size[1] = frame_height;
+   gl->tex_info.tex_size[0]   = gl->tex_w;
+   gl->tex_info.tex_size[1]   = gl->tex_h;
 
    gl->shader->set_params(gl,
          frame_width, frame_height,
@@ -3711,6 +3712,7 @@ static void gl_render_background_static(void *data)
    gl->coords.tex_coord = tex_coords;
    gl->coords.color     = gl->white_color_ptr;
 
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
 
