@@ -75,6 +75,8 @@ static struct NVGcontext* vg;
 #define GL_SYNC_FLUSH_COMMANDS_BIT        0x00000001
 #endif
 
+GLint saved_framebuffer;
+
 /* Used for the last pass when rendering to the back buffer. */
 static const GLfloat vertexes_flipped[] = {
    0, 1,
@@ -338,7 +340,7 @@ static void gl_disable_client_arrays(gl_t *gl)
 void cocoagl_bind_game_view_fbo(void);
 #define gl_bind_backbuffer() cocoagl_bind_game_view_fbo()
 #else
-#define gl_bind_backbuffer() glBindFramebuffer(RARCH_GL_FRAMEBUFFER, 0)
+#define gl_bind_backbuffer() glBindFramebuffer(RARCH_GL_FRAMEBUFFER, 0); saved_framebuffer = 0
 #endif
 
 static INLINE GLenum min_filter_to_mag(GLenum type)
@@ -1251,6 +1253,7 @@ static INLINE void gl_start_frame_fbo(gl_t *gl)
 {
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    glBindFramebuffer(RARCH_GL_FRAMEBUFFER, gl->fbo[0]);
+   saved_framebuffer = gl->fbo[0];
 
    gl_set_viewport(gl, gl->fbo_rect[0].img_width,
          gl->fbo_rect[0].img_height, true, false);
@@ -1418,7 +1421,7 @@ static void gl_frame_fbo(gl_t *gl, uint64_t frame_count,
    if (gl->shader->mipmap_input(gl->fbo_pass + 1))
       glGenerateMipmap(GL_TEXTURE_2D);
 
-   glClear(GL_COLOR_BUFFER_BIT);
+   // glClear(GL_COLOR_BUFFER_BIT);
    gl_set_viewport(gl, width, height, false, true);
 
    gl->shader->set_params(gl,
@@ -2011,12 +2014,12 @@ static bool gl_frame(void *data, const void *frame,
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
-
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
 #endif
+
+   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
 
    gl_set_prev_texture(gl, &gl->tex_info);
 
@@ -3533,6 +3536,8 @@ static void gl_restore_render_context(gl_t *gl) {
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 
    gl->shader->use(gl, 1);
+
+   glBindFramebuffer(GL_FRAMEBUFFER, saved_framebuffer);
 }
 
 static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
