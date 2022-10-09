@@ -2033,8 +2033,6 @@ static bool gl_frame(void *data, const void *frame,
       gl_frame_fbo(gl, frame_count, &gl->tex_info);
 #endif
 
-   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
-
    gl_set_prev_texture(gl, &gl->tex_info);
 
 #if defined(HAVE_MENU)
@@ -2055,6 +2053,8 @@ static bool gl_frame(void *data, const void *frame,
    if (gl->overlay_enable)
       gl_render_overlay(gl);
 #endif
+
+   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
 
    glViewport(0, 0, width, height);
 
@@ -3583,8 +3583,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    video_driver_get_size(&width, &height);
 
    int icon_size = height / 8;
-   int margin_x = 56;
-   int margin_y = 48;
+   int margin_x = width / 34;
+   int margin_y = height / 22;
 
    GLfloat y = height - margin_y - icon_size;
 
