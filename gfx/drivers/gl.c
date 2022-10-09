@@ -76,6 +76,8 @@ static struct NVGcontext* vg;
 #endif
 
 GLint saved_framebuffer;
+int known_vp_width;
+int known_vp_height;
 
 /* Used for the last pass when rendering to the back buffer. */
 static const GLfloat vertexes_flipped[] = {
@@ -1421,14 +1423,17 @@ static void gl_frame_fbo(gl_t *gl, uint64_t frame_count,
    if (gl->shader->mipmap_input(gl->fbo_pass + 1))
       glGenerateMipmap(GL_TEXTURE_2D);
 
-   // glClear(GL_COLOR_BUFFER_BIT);
    gl_set_viewport(gl, width, height, false, true);
+   // glClear(GL_COLOR_BUFFER_BIT);
 
    gl->shader->set_params(gl,
          prev_rect->img_width, prev_rect->img_height, 
          prev_rect->width, prev_rect->height, 
          gl->vp.width, gl->vp.height, (unsigned int)frame_count, 
          tex_info, gl->prev_info, fbo_tex_info, fbo_tex_info_cnt);
+
+   known_vp_width  = gl->vp.width;
+   known_vp_height = gl->vp.height;
 
    gl->coords.vertex = gl->vertex_ptr;
 
@@ -1991,7 +1996,16 @@ static bool gl_frame(void *data, const void *frame,
 	   } else if (has_bg_static) {
 		  gl_render_background_static(gl);
 	   }
-	   gl_render_border(gl, gl->vp.width, gl->vp.height);
+
+	   // only single pass shaders can use gl->vp at this point
+	   // multi pass shaders get the viewport size only in the last pass
+	   if (!gl->fbo_inited) {
+		   known_vp_width  = gl->vp.width;
+		   known_vp_height = gl->vp.height;
+	   }
+
+	   if (known_vp_width && known_vp_height)
+		   gl_render_border(gl, known_vp_width, known_vp_height);
 	   gl_restore_render_context(gl);
    }
 
@@ -2697,6 +2711,9 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
 
    win_width  = video->width;
    win_height = video->height;
+
+   known_vp_width  = 0;
+   known_vp_height = 0;
 
    if (video->fullscreen && (win_width == 0) && (win_height == 0))
    {
@@ -3592,6 +3609,7 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    if (!gl)
       return;
 
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
    glEnable(GL_BLEND);
 
    /* Ensure that we reset the attrib array. */
@@ -3679,7 +3697,7 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-   // now draw to background fiting screen
+   // now draw to background fitting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
    int offset = 64;
