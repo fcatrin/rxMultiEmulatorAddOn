@@ -1,0 +1,266 @@
+diff --git a/audio/audio_dsp_filter.c b/audio/audio_dsp_filter.c
+index 2f1a4ca..0f21a8f 100644
+--- a/audio/audio_dsp_filter.c
++++ b/audio/audio_dsp_filter.c
+@@ -242,7 +242,7 @@ rarch_dsp_filter_t *rarch_dsp_filter_new(
+ #if !defined(HAVE_FILTERS_BUILTIN) && defined(HAVE_DYLIB)
+    fill_pathname_basedir(basedir, filter_config, sizeof(basedir));
+ 
+-   plugs = dir_list_new(basedir, EXT_EXECUTABLES, false);
++   plugs = dir_list_new(basedir, EXT_EXECUTABLES, false, false);
+    if (!plugs)
+       goto error;
+ #endif
+diff --git a/dir_list_special.c b/dir_list_special.c
+index 9fdcb9c..2c86021 100644
+--- a/dir_list_special.c
++++ b/dir_list_special.c
+@@ -24,6 +24,7 @@ struct string_list *dir_list_new_special(const char *input_dir, enum dir_list_ty
+    const char *dir   = NULL;
+    const char *exts  = NULL;
+    bool include_dirs = false;
++   bool recursive    = false;
+ 
+    global_t                *global = global_get_ptr();
+    settings_t *settings = config_get_ptr();
+@@ -44,6 +45,7 @@ struct string_list *dir_list_new_special(const char *input_dir, enum dir_list_ty
+       case DIR_LIST_SHADERS:
+          dir  = settings->video.shader_dir;
+          exts = "cg|cgp|glsl|glslp";
++         recursive = true;
+          break;
+       case DIR_LIST_DATABASES:
+          dir  = settings->content_database;
+@@ -58,5 +60,5 @@ struct string_list *dir_list_new_special(const char *input_dir, enum dir_list_ty
+          return NULL;
+    }
+ 
+-   return dir_list_new(dir, exts, include_dirs);
++   return dir_list_new(dir, exts, include_dirs, recursive);
+ }
+diff --git a/frontend/frontend_salamander.c b/frontend/frontend_salamander.c
+index b026c31..b8f609d 100644
+--- a/frontend/frontend_salamander.c
++++ b/frontend/frontend_salamander.c
+@@ -42,7 +42,7 @@ static void find_first_libretro_core(char *first_file,
+    RARCH_LOG("Searching for valid libretro implementation in: \"%s\".\n",
+          dir);
+ 
+-   list = dir_list_new(dir, ext, false);
++   list = dir_list_new(dir, ext, false, false);
+    if (!list)
+    {
+       RARCH_ERR("Couldn't read directory. Cannot infer default libretro core.\n");
+diff --git a/gfx/drivers_context/drm_egl_ctx.c b/gfx/drivers_context/drm_egl_ctx.c
+index ca64e8b..1d75843 100644
+--- a/gfx/drivers_context/drm_egl_ctx.c
++++ b/gfx/drivers_context/drm_egl_ctx.c
+@@ -444,7 +444,7 @@ static bool gfx_ctx_drm_egl_init(void *data)
+       return false;
+ 
+    drm->g_drm_fd   = -1;
+-   gpu_descriptors = dir_list_new("/dev/dri", NULL, false);
++   gpu_descriptors = dir_list_new("/dev/dri", NULL, false, false);
+ 
+ nextgpu:
+    free_drm_resources(drm);
+diff --git a/gfx/video_filter.c b/gfx/video_filter.c
+index 5df6588..c9c3f5d 100644
+--- a/gfx/video_filter.c
++++ b/gfx/video_filter.c
+@@ -396,7 +396,7 @@ rarch_softfilter_t *rarch_softfilter_new(const char *filter_config,
+ #if defined(HAVE_DYLIB)
+    fill_pathname_basedir(basedir, filter_config, sizeof(basedir));
+ 
+-   plugs = dir_list_new(basedir, EXT_EXECUTABLES, false);
++   plugs = dir_list_new(basedir, EXT_EXECUTABLES, false, false);
+    if (!plugs)
+    {
+       RARCH_ERR("[SoftFilter]: Could not build up string list...\n");
+diff --git a/input/input_autodetect.c b/input/input_autodetect.c
+index b0e72bd..8b1958c 100644
+--- a/input/input_autodetect.c
++++ b/input/input_autodetect.c
+@@ -183,12 +183,12 @@ static bool input_autoconfigure_joypad_from_conf_dir(
+    RARCH_LOG("Autoconfig: using path %s \n", path);
+ 
+    if (settings) {
+-      list = dir_list_new(path, "cfg", false);
++      list = dir_list_new(path, "cfg", false, false);
+       RARCH_LOG("Autoconfig: using path %s found:%d\n", path, !list ? 0 : list->size);
+    }
+ 
+    if (!list || !list->size) {
+-      list = dir_list_new(settings->input.autoconfig_dir, "cfg", false);
++      list = dir_list_new(settings->input.autoconfig_dir, "cfg", false, false);
+       RARCH_LOG("Autoconfig: using path %s found:%d\n", settings->input.autoconfig_dir,  !list ? 0 : list->size);
+    }
+    if(!list)
+diff --git a/libretro-common/file/dir_list.c b/libretro-common/file/dir_list.c
+index 38a512a..7902018 100644
+--- a/libretro-common/file/dir_list.c
++++ b/libretro-common/file/dir_list.c
+@@ -163,9 +163,6 @@ static int parse_dir_entry(const char *name, char *file_path,
+    if (!include_dirs && is_dir)
+       return 1;
+ 
+-   if (!strcmp(name, ".") || !strcmp(name, ".."))
+-      return 1;
+-
+    if (!is_compressed_file && !is_dir && ext_list && !supported_by_core)
+       return 1;
+ 
+@@ -190,6 +187,45 @@ static int parse_dir_entry(const char *name, char *file_path,
+    return 0;
+ }
+ 
++void dir_list_scan(const char *dir, struct string_list *list, bool recursive, bool include_dirs, struct string_list *ext_list) {
++   const struct dirent *entry = NULL;
++   DIR *directory = opendir(dir);
++
++   if (!directory)
++	  goto error;
++
++   while ((entry = readdir(directory)))
++   {
++	  int ret                         = 0;
++	  char file_path[PATH_MAX_LENGTH] = {0};
++	  const char *name                = entry->d_name;
++	  const char *file_ext            = path_get_extension(name);
++	  bool is_dir                     = false;
++
++	  if (!strcmp(name, ".") || !strcmp(name, ".."))
++			continue;
++
++	  fill_pathname_join(file_path, dir, name, sizeof(file_path));
++
++	  is_dir = dirent_is_directory(file_path, entry);
++
++	  ret = parse_dir_entry(name, file_path, is_dir,
++			include_dirs, list, ext_list, file_ext);
++
++	  if (ret == -1)
++		 goto error;
++
++	  if (is_dir && recursive) {
++		  dir_list_scan(file_path, list, recursive, include_dirs, ext_list);
++	  }
++
++   }
++
++error:
++   if (directory)
++	  closedir(directory);
++}
++
+ /**
+  * dir_list_new:
+  * @dir          : directory path.
+@@ -202,14 +238,11 @@ static int parse_dir_entry(const char *name, char *file_path,
+  * NULL in case of error. Has to be freed manually.
+  **/
+ struct string_list *dir_list_new(const char *dir,
+-      const char *ext, bool include_dirs)
++      const char *ext, bool include_dirs, bool recursive)
+ {
+ #ifdef _WIN32
+    WIN32_FIND_DATA ffd;
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+-#else
+-   DIR *directory = NULL;
+-   const struct dirent *entry = NULL;
+ #endif
+    char path_buf[PATH_MAX_LENGTH] = {0};
+    struct string_list *ext_list   = NULL;
+@@ -258,42 +291,12 @@ error:
+    if (hFind != INVALID_HANDLE_VALUE)
+       FindClose(hFind);
+ #else
+-   directory = opendir(dir);
+-   if (!directory)
+-      goto error;
+-
+-   while ((entry = readdir(directory)))
+-   {
+-      int ret                         = 0;
+-      char file_path[PATH_MAX_LENGTH] = {0};
+-      const char *name                = entry->d_name;
+-      const char *file_ext            = path_get_extension(name);
+-      bool is_dir                     = false;
+-
+-      fill_pathname_join(file_path, dir, name, sizeof(file_path));
+-
+-      is_dir = dirent_is_directory(file_path, entry);
+-
+-      ret = parse_dir_entry(name, file_path, is_dir,
+-            include_dirs, list, ext_list, file_ext);
+-
+-      if (ret == -1)
+-         goto error;
+-
+-      if (ret == 1)
+-         continue;
+-   }
+ 
+-   closedir(directory);
++   dir_list_scan(dir, list, recursive, include_dirs, ext_list);
+ 
+    string_list_free(ext_list);
+    return list;
+ 
+-error:
+-
+-   if (directory)
+-      closedir(directory);
+-
+ #endif
+    string_list_free(list);
+    string_list_free(ext_list);
+diff --git a/libretro-common/include/file/dir_list.h b/libretro-common/include/file/dir_list.h
+index 724fa3f..865b0e3 100644
+--- a/libretro-common/include/file/dir_list.h
++++ b/libretro-common/include/file/dir_list.h
+@@ -41,7 +41,7 @@ extern "C" {
+  * NULL in case of error. Has to be freed manually.
+  **/
+ struct string_list *dir_list_new(const char *dir, const char *ext,
+-      bool include_dirs);
++      bool include_dirs, bool recursive);
+ 
+ /**
+  * dir_list_sort:
+diff --git a/menu/menu_displaylist.c b/menu/menu_displaylist.c
+index eef24ca..ce13fbc 100644
+--- a/menu/menu_displaylist.c
++++ b/menu/menu_displaylist.c
+@@ -1510,7 +1510,7 @@ static void menu_displaylist_push_horizontal_menu_list_content(
+ {
+    unsigned j;
+    struct string_list *str_list =
+-      dir_list_new(path, info->supported_extensions, true);
++      dir_list_new(path, info->supported_extensions, true, false);
+ 
+    if (!str_list)
+       return;
+@@ -1961,7 +1961,7 @@ static int menu_displaylist_parse_generic(menu_displaylist_info_t *info, bool *n
+    else
+       str_list = dir_list_new(info->path,
+             filter_ext ? info->exts : NULL,
+-            true);
++            true, false);
+ 
+    if (hash_label == MENU_LABEL_SCAN_DIRECTORY)
+       menu_list_push(info->list,
+diff --git a/ui/drivers/cocoa/cocoatouch_browser.m b/ui/drivers/cocoa/cocoatouch_browser.m
+index 050c89b..c2652d4 100644
+--- a/ui/drivers/cocoa/cocoatouch_browser.m
++++ b/ui/drivers/cocoa/cocoatouch_browser.m
+@@ -541,7 +541,7 @@ static void file_action(enum file_action action, NSString* source, NSString* tar
+       NSString *sourceItem           = path.stringByDeletingLastPathComponent;  /* Parent item */
+       RAMenuItemBasic *parentItem    = [RAMenuItemBasic itemWithDescription:BOXSTRING("<Parent>") association:sourceItem.stringByDeletingLastPathComponent
+          action:^(id userdata){ [weakSelf moveInto:userdata]; } detail:NULL];
+-      struct string_list *contents   = dir_list_new([path stringByDeletingLastPathComponent].UTF8String, NULL, true);
++      struct string_list *contents   = dir_list_new([path stringByDeletingLastPathComponent].UTF8String, NULL, true, false);
+       NSMutableArray *items          = [NSMutableArray arrayWithObject:BOXSTRING("")];
+ 
+       [self.sections addObject:@[BOXSTRING(""), parentItem]];
