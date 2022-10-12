@@ -2217,6 +2217,11 @@ static void gl_free(void *data)
       font_driver->free(driver->font_osd_data);
    gl_shader_deinit(gl);
 
+   gl_deinit_border(gl);
+   gl_deinit_rewind_forward(gl);
+   gl_deinit_fbo_background(gl);
+   gl_deinit_background(gl);
+
 #ifndef NO_GL_FF_VERTEX
    gl_disable_client_arrays(gl);
 #endif
@@ -3068,18 +3073,6 @@ static bool gl_set_shader(void *data,
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
 #endif
 
-   if (settings->video.live_background_enable) {
-      gl_deinit_fbo_background(gl);
-      gl_deinit_border(gl);
-   }
-
-   if (settings->video.background_enable) {
-      gl_deinit_background(gl);
-      gl_deinit_border(gl);
-   }
-
-   gl_deinit_rewind_forward(gl);
-
    if (!gl->shader->init(gl, path))
    {
       bool ret = false;
@@ -3561,7 +3554,7 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->rewind_forward_inited)
       return;
 
    gl_save_render_context(gl);
@@ -3606,7 +3599,7 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    unsigned i;
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->border_inited)
       return;
 
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -3719,7 +3712,7 @@ static void gl_render_background_static(void *data)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->background_inited)
       return;
 
    video_driver_get_size(&width, &height);

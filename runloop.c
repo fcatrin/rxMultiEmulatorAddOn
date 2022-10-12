@@ -989,6 +989,30 @@ static bool rarch_main_cmd_get_state_menu_toggle_button_combo(
    return true;
 }
 
+static bool rarch_main_cmd_get_state_shader_next_button_combo (
+      retro_input_t input, retro_input_t trigger_input)
+{
+
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_START))
+	   return false;
+   if (!BIT64_GET(trigger_input, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+      return false;
+
+   return true;
+}
+
+static bool rarch_main_cmd_get_state_shader_prev_button_combo (
+      retro_input_t input, retro_input_t trigger_input)
+{
+
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_START))
+	  return false;
+   if (!BIT64_GET(trigger_input, RETRO_DEVICE_ID_JOYPAD_LEFT))
+      return false;
+      
+   return true;
+}
+
 static bool rarch_main_cmd_get_state_screenshot_button_combo (
       retro_input_t input)
 {
@@ -1047,8 +1071,10 @@ static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
    cmd->save_state_pressed          = BIT64_GET(trigger_input, RARCH_SAVE_STATE_KEY);
    cmd->load_state_pressed          = BIT64_GET(trigger_input, RARCH_LOAD_STATE_KEY);
    cmd->slowmotion_pressed          = BIT64_GET(input, RARCH_SLOWMOTION);
-   cmd->shader_next_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_NEXT);
-   cmd->shader_prev_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_PREV);
+   cmd->shader_next_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_NEXT) ||
+                                      rarch_main_cmd_get_state_shader_next_button_combo(input, trigger_input);
+   cmd->shader_prev_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_PREV) ||
+                                      rarch_main_cmd_get_state_shader_prev_button_combo(input, trigger_input);
    cmd->fastforward_pressed         = BIT64_GET(trigger_input, RARCH_FAST_FORWARD_KEY);
    cmd->hold_pressed                = BIT64_GET(input, RARCH_FAST_FORWARD_HOLD_KEY);
    cmd->old_hold_pressed            = BIT64_GET(old_input, RARCH_FAST_FORWARD_HOLD_KEY);
