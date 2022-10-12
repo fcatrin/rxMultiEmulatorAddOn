@@ -1067,6 +1067,38 @@ static bool event_update_system_info(struct retro_system_info *_info,
    return true;
 }
 
+static void load_shader_list(const char *list_file_path, struct string_list **file_list, struct string_list **name_list) {
+
+	*file_list = NULL;
+	*name_list = NULL;
+
+	FILE *fp = fopen(list_file_path, "r");
+	if (fp == NULL) return;
+
+	union string_list_elem_attr attr;
+	attr.i = 0;
+
+	*file_list = string_list_new();
+	*name_list = string_list_new();
+
+	char *line  = NULL;
+	ssize_t read;
+	size_t len = 0;
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+		struct string_list *parts = string_split(line, "|");
+		if (parts->size != 2) continue;
+
+		string_list_append(*file_list, parts->elems[0].data, attr);
+		string_list_append(*name_list, parts->elems[1].data, attr);
+
+		string_list_free(parts);
+	}
+
+	fclose(fp);
+	if (line) free(line);
+}
+
 /**
  * event_command:
  * @cmd                  : Event command index.
@@ -1535,9 +1567,11 @@ bool event_command(enum event_command cmd)
          if (!global)
             break;
 
-         dir_list_free(global->shader_dir.list);
-         global->shader_dir.list = NULL;
-         global->shader_dir.ptr  = 0;
+         string_list_free(global->shader_dir.file_list);
+         string_list_free(global->shader_dir.name_list);
+         global->shader_dir.file_list = NULL;
+         global->shader_dir.name_list = NULL;
+         global->shader_dir.ptr       = 0;
          break;
       case EVENT_CMD_SHADER_DIR_INIT:
          event_command(EVENT_CMD_SHADER_DIR_DEINIT);
@@ -1545,21 +1579,21 @@ bool event_command(enum event_command cmd)
          if (!*settings->video.shader_dir)
             return false;
 
-         global->shader_dir.list = dir_list_new_special(NULL, DIR_LIST_SHADERS);
+         load_shader_list(settings->video.shader_dir, &global->shader_dir.file_list, &global->shader_dir.name_list);
 
-         if (!global->shader_dir.list || global->shader_dir.list->size == 0)
+         if (!global->shader_dir.file_list || global->shader_dir.file_list->size == 0)
          {
             event_command(EVENT_CMD_SHADER_DIR_DEINIT);
             return false;
          }
 
          global->shader_dir.ptr  = 0;
-         dir_list_sort(global->shader_dir.list, false);
 
-         for (i = 0; i < global->shader_dir.list->size; i++)
-            RARCH_LOG("%s \"%s\"\n",
+         for (i = 0; i < global->shader_dir.file_list->size; i++)
+            RARCH_LOG("%s %s \"%s\"\n",
                   msg_hash_to_str(MSG_FOUND_SHADER),
-                  global->shader_dir.list->elems[i].data);
+				  global->shader_dir.name_list->elems[i].data,
+                  global->shader_dir.file_list->elems[i].data);
          break;
       case EVENT_CMD_SAVEFILES:
          event_save_files();

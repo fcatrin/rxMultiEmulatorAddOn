@@ -355,28 +355,30 @@ static void check_shader_dir(global_t *global,
    uint32_t ext_hash;
    char msg[PATH_MAX_LENGTH]   = {0};
    const char *shader          = NULL;
+   const char *name            = NULL;
    const char *ext             = NULL;
    enum rarch_shader_type type = RARCH_SHADER_NONE;
 
-   if (!global || !global->shader_dir.list)
+   if (!global || !global->shader_dir.file_list)
       return;
 
    if (pressed_next)
    {
       global->shader_dir.ptr = (global->shader_dir.ptr + 1) %
-         global->shader_dir.list->size;
+         global->shader_dir.file_list->size;
    }
    else if (pressed_prev)
    {
       if (global->shader_dir.ptr == 0)
-         global->shader_dir.ptr = global->shader_dir.list->size - 1;
+         global->shader_dir.ptr = global->shader_dir.file_list->size - 1;
       else
          global->shader_dir.ptr--;
    }
    else
       return;
 
-   shader   = global->shader_dir.list->elems[global->shader_dir.ptr].data;
+   shader   = global->shader_dir.file_list->elems[global->shader_dir.ptr].data;
+   name     = global->shader_dir.name_list->elems[global->shader_dir.ptr].data;
    ext      = path_get_extension(shader);
    ext_hash = msg_hash_calculate(ext);
 
@@ -394,12 +396,13 @@ static void check_shader_dir(global_t *global,
          return;
    }
 
-   snprintf(msg, sizeof(msg), "%s #%u: \"%s\".",
+   snprintf(msg, sizeof(msg), "%s #%u: %s",
          msg_hash_to_str(MSG_SHADER),
-         (unsigned)global->shader_dir.ptr, shader);
+         (unsigned)global->shader_dir.ptr, name);
    rarch_main_msg_queue_push(msg, 1, 120, true);
-   RARCH_LOG("%s \"%s\".\n",
+   RARCH_LOG("%s %s \"%s\".\n",
          msg_hash_to_str(MSG_APPLYING_SHADER),
+		 name,
          shader);
 
    if (!video_driver_set_shader(type, shader))
