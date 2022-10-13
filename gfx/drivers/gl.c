@@ -3028,7 +3028,6 @@ static void gl_update_tex_filter_frame(gl_t *gl)
 static bool gl_set_shader(void *data,
       enum rarch_shader_type type, const char *path)
 {
-	settings_t *settings = config_get_ptr();
 
 #if defined(HAVE_GLSL) || defined(HAVE_CG)
    gl_t *gl = (gl_t*)data;

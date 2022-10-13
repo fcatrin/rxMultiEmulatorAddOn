@@ -1099,6 +1099,15 @@ static void load_shader_list(const char *list_file_path, struct string_list **fi
 	if (line) free(line);
 }
 
+static int find_current_shader_index(struct string_list *file_list) {
+	settings_t *settings = config_get_ptr();
+
+	for(int i=0; i<file_list->size; i++) {
+		if (!strcmp(settings->video.shader_path, file_list->elems[i].data)) return i;
+	}
+	return 0;
+}
+
 /**
  * event_command:
  * @cmd                  : Event command index.
@@ -1587,13 +1596,15 @@ bool event_command(enum event_command cmd)
             return false;
          }
 
-         global->shader_dir.ptr  = 0;
+         global->shader_dir.ptr  = find_current_shader_index(global->shader_dir.file_list);
 
+         /*
          for (i = 0; i < global->shader_dir.file_list->size; i++)
             RARCH_LOG("%s %s \"%s\"\n",
                   msg_hash_to_str(MSG_FOUND_SHADER),
 				  global->shader_dir.name_list->elems[i].data,
                   global->shader_dir.file_list->elems[i].data);
+         */
          break;
       case EVENT_CMD_SAVEFILES:
          event_save_files();
