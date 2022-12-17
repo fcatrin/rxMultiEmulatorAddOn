@@ -97,11 +97,19 @@ static const GLfloat vertexes[] = {
    1, 1
 };
 
+
 static const GLfloat tex_coords[] = {
    0, 0,
    1, 0,
    0, 1,
    1, 1
+};
+
+static const GLfloat tex_coords_rotated[] = {
+   0, 1,
+   0, 0,
+   1, 1,
+   1, 0
 };
 
 static const GLfloat white_color[] = {
@@ -3724,7 +3732,7 @@ static void gl_render_background_static(void *data)
 
    gl->coords.vertex    = vertexes_flipped;
    gl->coords.vertices  = 4;
-   gl->coords.tex_coord = tex_coords;
+   gl->coords.tex_coord = gl->rotation ? tex_coords_rotated : tex_coords;
    gl->coords.color     = gl->white_color_ptr;
 
    gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
