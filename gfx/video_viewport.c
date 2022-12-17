@@ -110,11 +110,21 @@ void video_viewport_set_core(void)
          (float)geom->base_width / geom->base_height;
 
    float aspect = aspectratio_lut[ASPECT_RATIO_CORE].value;
-   if (settings->video.crt_mode && !settings->video.force_full && aspect < 1.0f) {
-	   aspectratio_lut[ASPECT_RATIO_CUSTOM].value = aspect; // save original aspect ratio
-	   aspectratio_lut[ASPECT_RATIO_CORE].value = aspect * 4.0f/3.0f;
-	   RARCH_LOG("crt is vertical. update aspect ratio coming from core %f -> %f", aspect, aspectratio_lut[ASPECT_RATIO_CORE].value);
+   RARCH_LOG("aspect ratio from core: %f", aspect);
+   if (settings->video.force_4_3) {  // use only vertical / horizontal info to force 4:3 or 3:4
+	   aspect = aspect < 1.0f ? (3.0f/4.0f) : (4.0f/3.0f);
+	   RARCH_LOG("aspect ratio forced to 4:3 / 3:4 => %f", aspect);
    }
+   if (settings->video.wide_vertical && aspect < 1.0f) { // make vertical mode a bit wider if requested
+	   aspect = 0.875f;
+	   RARCH_LOG("vertical aspect ratio made wider: %f", aspect);
+   }
+   if (settings->video.crt_mode && aspect < 1.0f) { // expand vertical mode, it will be stretched by the CRT
+	   aspectratio_lut[ASPECT_RATIO_CUSTOM].value = aspect; // save original aspect ratio
+	   aspect = aspect * 4.0f/3.0f;
+	   RARCH_LOG("crt is vertical. update aspect ratio from %f to %f", aspect, aspectratio_lut[ASPECT_RATIO_CORE].value);
+   }
+   aspectratio_lut[ASPECT_RATIO_CORE].value = aspect;
 }
 
 /**
