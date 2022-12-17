@@ -461,6 +461,7 @@ static void config_set_defaults(void)
    settings->video.monitor_index         = monitor_index;
    settings->video.fullscreen_x          = fullscreen_x;
    settings->video.fullscreen_y          = fullscreen_y;
+   settings->video.crt_mode              = false;
    settings->video.disable_composition   = disable_composition;
    settings->video.vsync                 = vsync;
    settings->video.hard_sync             = hard_sync;
@@ -1253,6 +1254,7 @@ static bool config_load_file(const char *path, bool set_defaults)
    CONFIG_GET_BOOL_BASE(conf, settings, video.disable_composition, "video_disable_composition");
    CONFIG_GET_BOOL_BASE(conf, settings, video.vsync, "video_vsync");
    CONFIG_GET_BOOL_BASE(conf, settings, video.hard_sync, "video_hard_sync");
+   CONFIG_GET_BOOL_BASE(conf, settings, video.crt_mode, "video_crt_mode");
 
 #ifdef HAVE_MENU
 #ifdef HAVE_THREADS
