@@ -3,3 +3,4 @@
 /libs/*/*.so
 /obj
 /jni/modules/*.so
+/build
