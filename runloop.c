@@ -355,28 +355,30 @@ static void check_shader_dir(global_t *global,
    uint32_t ext_hash;
    char msg[PATH_MAX_LENGTH]   = {0};
    const char *shader          = NULL;
+   const char *name            = NULL;
    const char *ext             = NULL;
    enum rarch_shader_type type = RARCH_SHADER_NONE;
 
-   if (!global || !global->shader_dir.list)
+   if (!global || !global->shader_dir.file_list)
       return;
 
    if (pressed_next)
    {
       global->shader_dir.ptr = (global->shader_dir.ptr + 1) %
-         global->shader_dir.list->size;
+         global->shader_dir.file_list->size;
    }
    else if (pressed_prev)
    {
       if (global->shader_dir.ptr == 0)
-         global->shader_dir.ptr = global->shader_dir.list->size - 1;
+         global->shader_dir.ptr = global->shader_dir.file_list->size - 1;
       else
          global->shader_dir.ptr--;
    }
    else
       return;
 
-   shader   = global->shader_dir.list->elems[global->shader_dir.ptr].data;
+   shader   = global->shader_dir.file_list->elems[global->shader_dir.ptr].data;
+   name     = global->shader_dir.name_list->elems[global->shader_dir.ptr].data;
    ext      = path_get_extension(shader);
    ext_hash = msg_hash_calculate(ext);
 
@@ -394,12 +396,13 @@ static void check_shader_dir(global_t *global,
          return;
    }
 
-   snprintf(msg, sizeof(msg), "%s #%u: \"%s\".",
+   snprintf(msg, sizeof(msg), "%s #%u: %s",
          msg_hash_to_str(MSG_SHADER),
-         (unsigned)global->shader_dir.ptr, shader);
+         (unsigned)global->shader_dir.ptr, name);
    rarch_main_msg_queue_push(msg, 1, 120, true);
-   RARCH_LOG("%s \"%s\".\n",
+   RARCH_LOG("%s %s \"%s\".\n",
          msg_hash_to_str(MSG_APPLYING_SHADER),
+		 name,
          shader);
 
    if (!video_driver_set_shader(type, shader))
@@ -989,6 +992,30 @@ static bool rarch_main_cmd_get_state_menu_toggle_button_combo(
    return true;
 }
 
+static bool rarch_main_cmd_get_state_shader_next_button_combo (
+      retro_input_t input, retro_input_t trigger_input)
+{
+
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_START))
+	   return false;
+   if (!BIT64_GET(trigger_input, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+      return false;
+
+   return true;
+}
+
+static bool rarch_main_cmd_get_state_shader_prev_button_combo (
+      retro_input_t input, retro_input_t trigger_input)
+{
+
+   if (!BIT64_GET(input, RETRO_DEVICE_ID_JOYPAD_START))
+	  return false;
+   if (!BIT64_GET(trigger_input, RETRO_DEVICE_ID_JOYPAD_LEFT))
+      return false;
+      
+   return true;
+}
+
 static bool rarch_main_cmd_get_state_screenshot_button_combo (
       retro_input_t input)
 {
@@ -1047,8 +1074,10 @@ static void rarch_main_cmd_get_state(event_cmd_state_t *cmd,
    cmd->save_state_pressed          = BIT64_GET(trigger_input, RARCH_SAVE_STATE_KEY);
    cmd->load_state_pressed          = BIT64_GET(trigger_input, RARCH_LOAD_STATE_KEY);
    cmd->slowmotion_pressed          = BIT64_GET(input, RARCH_SLOWMOTION);
-   cmd->shader_next_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_NEXT);
-   cmd->shader_prev_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_PREV);
+   cmd->shader_next_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_NEXT) ||
+                                      rarch_main_cmd_get_state_shader_next_button_combo(input, trigger_input);
+   cmd->shader_prev_pressed         = BIT64_GET(trigger_input, RARCH_SHADER_PREV) ||
+                                      rarch_main_cmd_get_state_shader_prev_button_combo(input, trigger_input);
    cmd->fastforward_pressed         = BIT64_GET(trigger_input, RARCH_FAST_FORWARD_KEY);
    cmd->hold_pressed                = BIT64_GET(input, RARCH_FAST_FORWARD_HOLD_KEY);
    cmd->old_hold_pressed            = BIT64_GET(old_input, RARCH_FAST_FORWARD_HOLD_KEY);

@@ -135,8 +135,9 @@ public final class UserPreferences
 	public static void updateConfigFile(Activity ctx)
 	{
 		String path = getDefaultConfigPath(ctx);
-		 File f = new File(path);
-		 if (f.exists()) f.delete();  // start with clean config
+		File f = new File(path);
+		 
+		if (f.exists()) f.delete();  // start with clean config
          
 		ConfigFile config = new ConfigFile(path);
 
@@ -167,6 +168,12 @@ public final class UserPreferences
 						Log.d("AspectRatio", "" + o.getDouble("video_aspect_ratio"));
 						config.setBoolean("video_force_aspect", true);
 						config.setDouble("video_aspect_ratio", o.getDouble("video_aspect_ratio"));
+						continue;
+					}
+					
+					// convert relative path into absolute path
+					if (key.equals("libretro_path")) {
+						config.setString("libretro_path", coreDir + "/" + o.getString("libretro_path"));
 						continue;
 					}
 

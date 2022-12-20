@@ -235,7 +235,8 @@ typedef struct global
 
    struct
    {
-      struct string_list *list;
+      struct string_list *file_list;
+      struct string_list *name_list;
       size_t ptr;
    } shader_dir;
 

@@ -507,6 +507,8 @@ void init_video(void)
    video_driver_set_aspect_ratio_value(
       aspectratio_lut[settings->video.aspect_ratio_idx].value);
 
+   RARCH_LOG("video fullscreen:%s crt_mode:%s", settings->video.fullscreen ? "true":"false", settings->video.crt_mode ? "true":"false");
+
    if (settings->video.fullscreen)
    {
       width  = settings->video.fullscreen_x;
@@ -524,6 +526,29 @@ void init_video(void)
       else
          width  = roundf(geom->base_width   * settings->video.scale);
       height = roundf(geom->base_height * settings->video.scale);
+   }
+
+   RARCH_LOG("force aspect (%s) uses geom->base_height:%u driver aspect ratio:%f video scale:%f => width:%u height:%u",
+		   settings->video.force_aspect ? "true":"false",
+				   geom->base_height,
+				   video_driver_get_aspect_ratio(),
+				   settings->video.scale,
+				   width, height);
+
+   RARCH_LOG("NOT force aspect (%s) uses geom->base_width:%u geom->base_height:%u video scale:%f => width:%u height:%u",
+		   !settings->video.force_aspect ? "true":"false",
+				   geom->base_width,
+				   geom->base_height,
+				   settings->video.scale,
+				   width, height);
+
+   if (settings->video.crt_mode && aspectratio_lut[ASPECT_RATIO_CUSTOM].value >= 1.0f) {
+	   RARCH_LOG("crt is horizontal. Use full screen");
+	   width  = settings->video.fullscreen_x;
+	   height = settings->video.fullscreen_y;
+	   settings->video.fullscreen = true;
+	   settings->video.force_aspect = false;
+	   settings->video.force_full = true;
    }
 
    if (width && height)

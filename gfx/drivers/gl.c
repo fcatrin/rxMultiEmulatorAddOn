@@ -75,6 +75,10 @@ static struct NVGcontext* vg;
 #define GL_SYNC_FLUSH_COMMANDS_BIT        0x00000001
 #endif
 
+GLint saved_framebuffer;
+int known_vp_width;
+int known_vp_height;
+
 /* Used for the last pass when rendering to the back buffer. */
 static const GLfloat vertexes_flipped[] = {
    0, 1,
@@ -93,11 +97,19 @@ static const GLfloat vertexes[] = {
    1, 1
 };
 
+
 static const GLfloat tex_coords[] = {
    0, 0,
    1, 0,
    0, 1,
    1, 1
+};
+
+static const GLfloat tex_coords_rotated[] = {
+   0, 1,
+   0, 0,
+   1, 1,
+   1, 0
 };
 
 static const GLfloat white_color[] = {
@@ -338,7 +350,7 @@ static void gl_disable_client_arrays(gl_t *gl)
 void cocoagl_bind_game_view_fbo(void);
 #define gl_bind_backbuffer() cocoagl_bind_game_view_fbo()
 #else
-#define gl_bind_backbuffer() glBindFramebuffer(RARCH_GL_FRAMEBUFFER, 0)
+#define gl_bind_backbuffer() glBindFramebuffer(RARCH_GL_FRAMEBUFFER, 0); saved_framebuffer = 0
 #endif
 
 static INLINE GLenum min_filter_to_mag(GLenum type)
@@ -1251,6 +1263,7 @@ static INLINE void gl_start_frame_fbo(gl_t *gl)
 {
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
    glBindFramebuffer(RARCH_GL_FRAMEBUFFER, gl->fbo[0]);
+   saved_framebuffer = gl->fbo[0];
 
    gl_set_viewport(gl, gl->fbo_rect[0].img_width,
          gl->fbo_rect[0].img_height, true, false);
@@ -1418,14 +1431,17 @@ static void gl_frame_fbo(gl_t *gl, uint64_t frame_count,
    if (gl->shader->mipmap_input(gl->fbo_pass + 1))
       glGenerateMipmap(GL_TEXTURE_2D);
 
-   glClear(GL_COLOR_BUFFER_BIT);
    gl_set_viewport(gl, width, height, false, true);
+   // glClear(GL_COLOR_BUFFER_BIT);
 
    gl->shader->set_params(gl,
          prev_rect->img_width, prev_rect->img_height, 
          prev_rect->width, prev_rect->height, 
          gl->vp.width, gl->vp.height, (unsigned int)frame_count, 
          tex_info, gl->prev_info, fbo_tex_info, fbo_tex_info_cnt);
+
+   known_vp_width  = gl->vp.width;
+   known_vp_height = gl->vp.height;
 
    gl->coords.vertex = gl->vertex_ptr;
 
@@ -1976,26 +1992,36 @@ static bool gl_frame(void *data, const void *frame,
    }
 #endif
 
-   gl->tex_info.tex           = gl->texture[gl->tex_index];
-   gl->tex_info.input_size[0] = frame_width;
-   gl->tex_info.input_size[1] = frame_height;
-   gl->tex_info.tex_size[0]   = gl->tex_w;
-   gl->tex_info.tex_size[1]   = gl->tex_h;
-
    glClear(GL_COLOR_BUFFER_BIT);
 
    bool has_bg_live   = settings->video.live_background_enable;
    bool has_bg_static = settings->video.background_enable;
    if (has_bg_live || has_bg_static) {
+
 	   gl_save_render_context(gl);
 	   if (has_bg_live) {
 		  gl_render_background_live(gl, frame_width, frame_height);
 	   } else if (has_bg_static) {
 		  gl_render_background_static(gl);
 	   }
-	   gl_render_border(gl, gl->vp.width, gl->vp.height);
+
+	   // only single pass shaders can use gl->vp at this point
+	   // multi pass shaders get the viewport size only in the last pass
+	   if (!gl->fbo_inited) {
+		   known_vp_width  = gl->vp.width;
+		   known_vp_height = gl->vp.height;
+	   }
+
+	   if (known_vp_width && known_vp_height)
+		   gl_render_border(gl, known_vp_width, known_vp_height);
 	   gl_restore_render_context(gl);
    }
+
+   gl->tex_info.tex           = gl->texture[gl->tex_index];
+   gl->tex_info.input_size[0] = frame_width;
+   gl->tex_info.input_size[1] = frame_height;
+   gl->tex_info.tex_size[0]   = gl->tex_w;
+   gl->tex_info.tex_size[1]   = gl->tex_h;
 
    gl->shader->set_params(gl,
          frame_width, frame_height,
@@ -2009,8 +2035,6 @@ static bool gl_frame(void *data, const void *frame,
    gl->shader->set_mvp(gl, &gl->mvp);
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
 
 #ifdef HAVE_FBO
    if (gl->fbo_inited)
@@ -2037,6 +2061,8 @@ static bool gl_frame(void *data, const void *frame,
    if (gl->overlay_enable)
       gl_render_overlay(gl);
 #endif
+
+   gl_render_rewind_forward(gl, gl->vp.width, gl->vp.height);
 
    glViewport(0, 0, width, height);
 
@@ -2198,6 +2224,11 @@ static void gl_free(void *data)
    if (font_driver && driver->font_osd_data)
       font_driver->free(driver->font_osd_data);
    gl_shader_deinit(gl);
+
+   gl_deinit_border(gl);
+   gl_deinit_rewind_forward(gl);
+   gl_deinit_fbo_background(gl);
+   gl_deinit_background(gl);
 
 #ifndef NO_GL_FF_VERTEX
    gl_disable_client_arrays(gl);
@@ -2694,6 +2725,9 @@ static void *gl_init(const video_info_t *video, const input_driver_t **input, vo
    win_width  = video->width;
    win_height = video->height;
 
+   known_vp_width  = 0;
+   known_vp_height = 0;
+
    if (video->fullscreen && (win_width == 0) && (win_height == 0))
    {
       win_width  = gl->full_x;
@@ -3002,7 +3036,6 @@ static void gl_update_tex_filter_frame(gl_t *gl)
 static bool gl_set_shader(void *data,
       enum rarch_shader_type type, const char *path)
 {
-	settings_t *settings = config_get_ptr();
 
 #if defined(HAVE_GLSL) || defined(HAVE_CG)
    gl_t *gl = (gl_t*)data;
@@ -3046,18 +3079,6 @@ static bool gl_set_shader(void *data,
    gl_deinit_fbo(gl);
    glBindTexture(GL_TEXTURE_2D, gl->texture[gl->tex_index]);
 #endif
-
-   if (settings->video.live_background_enable) {
-      gl_deinit_fbo_background(gl);
-      gl_deinit_border(gl);
-   }
-
-   if (settings->video.background_enable) {
-      gl_deinit_background(gl);
-      gl_deinit_border(gl);
-   }
-
-   gl_deinit_rewind_forward(gl);
 
    if (!gl->shader->init(gl, path))
    {
@@ -3532,13 +3553,15 @@ static void gl_restore_render_context(gl_t *gl) {
    glViewport(gl->vp.x, gl->vp.y, gl->vp.width, gl->vp.height);
 
    gl->shader->use(gl, 1);
+
+   glBindFramebuffer(GL_FRAMEBUFFER, saved_framebuffer);
 }
 
 static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->rewind_forward_inited)
       return;
 
    gl_save_render_context(gl);
@@ -3560,8 +3583,8 @@ static void gl_render_rewind_forward(void *data, int vp_width, int vp_height)
    video_driver_get_size(&width, &height);
 
    int icon_size = height / 8;
-   int margin_x = 56;
-   int margin_y = 48;
+   int margin_x = width / 34;
+   int margin_y = height / 22;
 
    GLfloat y = height - margin_y - icon_size;
 
@@ -3583,9 +3606,10 @@ static void gl_render_border(void *data, int vp_width, int vp_height)
    unsigned i;
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->border_inited)
       return;
 
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
    glEnable(GL_BLEND);
 
    /* Ensure that we reset the attrib array. */
@@ -3673,7 +3697,7 @@ static void gl_render_background_live(void *data, int frame_width, int frame_hei
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-   // now draw to background fiting screen
+   // now draw to background fitting screen
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
    int offset = 64;
@@ -3695,7 +3719,7 @@ static void gl_render_background_static(void *data)
 {
    unsigned width, height;
    gl_t *gl = (gl_t*)data;
-   if (!gl)
+   if (!gl || !gl->background_inited)
       return;
 
    video_driver_get_size(&width, &height);
@@ -3708,9 +3732,10 @@ static void gl_render_background_static(void *data)
 
    gl->coords.vertex    = vertexes_flipped;
    gl->coords.vertices  = 4;
-   gl->coords.tex_coord = tex_coords;
+   gl->coords.tex_coord = gl->rotation ? tex_coords_rotated : tex_coords;
    gl->coords.color     = gl->white_color_ptr;
 
+   gl->shader->use(gl, GL_SHADER_STOCK_BLEND);
    gl->shader->set_coords(&gl->coords);
    gl->shader->set_mvp(gl, &gl->mvp);
 

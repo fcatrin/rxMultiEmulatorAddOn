@@ -94,6 +94,7 @@ void video_viewport_set_square_pixel(unsigned width, unsigned height)
  **/
 void video_viewport_set_core(void)
 {
+   settings_t *settings = config_get_ptr();
    struct retro_system_av_info *av_info = 
       video_viewport_get_system_av_info();
    struct retro_game_geometry *geom = &av_info->geometry;
@@ -107,6 +108,23 @@ void video_viewport_set_core(void)
    else
       aspectratio_lut[ASPECT_RATIO_CORE].value = 
          (float)geom->base_width / geom->base_height;
+
+   float aspect = aspectratio_lut[ASPECT_RATIO_CORE].value;
+   RARCH_LOG("aspect ratio from core: %f", aspect);
+   if (settings->video.force_4_3) {  // use only vertical / horizontal info to force 4:3 or 3:4
+	   aspect = aspect < 1.0f ? (3.0f/4.0f) : (4.0f/3.0f);
+	   RARCH_LOG("aspect ratio forced to 4:3 / 3:4 => %f", aspect);
+   }
+   if (settings->video.wide_vertical && aspect < 1.0f) { // make vertical mode a bit wider if requested
+	   aspect = 0.875f;
+	   RARCH_LOG("vertical aspect ratio made wider: %f", aspect);
+   }
+   if (settings->video.crt_mode && aspect < 1.0f) { // expand vertical mode, it will be stretched by the CRT
+	   aspectratio_lut[ASPECT_RATIO_CUSTOM].value = aspect; // save original aspect ratio
+	   aspect = aspect * 4.0f/3.0f;
+	   RARCH_LOG("crt is vertical. update aspect ratio from %f to %f", aspect, aspectratio_lut[ASPECT_RATIO_CORE].value);
+   }
+   aspectratio_lut[ASPECT_RATIO_CORE].value = aspect;
 }
 
 /**
