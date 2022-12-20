@@ -1,11 +1,13 @@
 package com.retroarch.browser.retroactivity;
 
+import android.app.NativeActivity;
+
 import com.retroarch.browser.preferences.util.UserPreferences;
 
 /**
  * Class which provides common methods for RetroActivity related classes.
  */
-public class RetroActivityCommon extends RetroActivityLocation
+public class RetroActivityCommon extends NativeActivity
 {
 	
 	@Override

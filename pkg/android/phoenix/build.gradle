@@ -27,6 +27,10 @@ android {
 }
 
 dependencies {
-    // implementation project(path: ':appcompat')
-    // implementation project(path: ':googleplay')
+    implementation ('androidx.legacy:legacy-support-v4:1.0.0')
+    implementation ('retrox:utils.android:1.0.0') {changing = true}
+    implementation ('xtvapps:priv.android:1.0.0') {changing = true}
+    implementation ('xtvapps:core.android:1.0.0') {changing = true}
+    implementation ('xtvapps:core:1.0.0') {changing = true}
+    implementation 'androidx.fragment:fragment:1.4.1'
 }

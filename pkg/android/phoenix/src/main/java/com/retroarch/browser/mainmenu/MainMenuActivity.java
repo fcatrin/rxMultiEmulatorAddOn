@@ -2,6 +2,8 @@ package com.retroarch.browser.mainmenu;
 
 import java.io.File;
 
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 import retrobox.v2.retroarch.R;
 import com.retroarch.browser.preferences.util.UserPreferences;
 
@@ -10,8 +12,6 @@ import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 
 /**
  * {@link PreferenceActivity} subclass that provides all of the

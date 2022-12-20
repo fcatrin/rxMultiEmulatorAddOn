@@ -11,11 +11,12 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
-import retrobox.utils.RetroBoxDialog;
+import retrox.utils.android.RetroXDialogs;
 import retrobox.v2.retroarch.R;
 import xtvapps.core.Callback;
+import xtvapps.core.FileUtils;
 import xtvapps.core.SimpleCallback;
-import xtvapps.core.Utils;
+import xtvapps.core.CoreUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,7 +150,7 @@ public class RetroBoxWrapper extends Activity {
 		
 		long dstTimestamp = 0;
 		if (timestampFile.exists()) {
-			dstTimestamp = Utils.str2l(Utils.loadString(timestampFile));
+			dstTimestamp = CoreUtils.str2l(FileUtils.loadString(timestampFile));
 		}
 		
 		long srcTimestamp = srcFile.lastModified();
@@ -159,9 +160,9 @@ public class RetroBoxWrapper extends Activity {
 		File dstFileTemp = new File(dstFile.getAbsolutePath() + ".tmp");
 		try {
 			Log.d(LOGTAG, "Updating core " + srcFile.getAbsolutePath() + " -> " + dstFile.getAbsolutePath());
-			Utils.copyFile(srcFile, dstFileTemp);
+			FileUtils.copyFile(srcFile, dstFileTemp);
 			dstFileTemp.renameTo(dstFile);
-			Utils.saveString(timestampFile, String.valueOf(srcTimestamp));
+			FileUtils.saveString(timestampFile, String.valueOf(srcTimestamp));
 		} catch (IOException e) {
 			dstFile.delete();
 			timestampFile.delete();
@@ -203,7 +204,7 @@ public class RetroBoxWrapper extends Activity {
 	}
 	
 	private void displayError(String errorMessage) {
-		RetroBoxDialog.showAlert(this, errorMessage, new SimpleCallback(){
+		RetroXDialogs.message(this, errorMessage, new SimpleCallback(){
 
 			@Override
 			public void onFinally() {

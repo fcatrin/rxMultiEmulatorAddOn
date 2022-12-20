@@ -2,12 +2,6 @@ package com.retroarch.browser.retroactivity;
 
 import java.util.List;
 
-import com.retroarch.browser.preferences.util.UserPreferences;
-
-import retrobox.utils.ImmersiveModeSetter;
-import retrobox.utils.R;
-import retrobox.utils.RetroBoxUtils;
-import retrobox.vinput.Mapper;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.NativeActivity;
@@ -19,7 +13,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.Toast;
+
+import retrobox.v2.retroarch.R;
+import retrox.utils.android.ImmersiveModeSetter;
+import retrox.utils.android.RetroXUtils;
+import retrox.utils.android.vinput.Mapper;
 
 public final class RetroActivityFuture extends NativeActivity {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
@@ -33,7 +31,7 @@ public final class RetroActivityFuture extends NativeActivity {
 		super.onCreate(savedInstanceState);
 		
 		String userName = getIntent().getStringExtra("username");
-		RetroBoxUtils.initExceptionHandler(this, "rxMultiEmulator", userName);
+		RetroXUtils.initExceptionHandler(this, "rxMultiEmulator", userName);
 	}
 
 	@Override

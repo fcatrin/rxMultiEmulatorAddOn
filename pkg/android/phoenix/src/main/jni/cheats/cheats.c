@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <retro_miscellaneous.h>
 #include <cheats.h>
-#include "../../../frontend/drivers/com_retroarch_browser_retroactivity_RetroActivityFuture.h"
+#include "../../../../../../frontend/drivers/com_retroarch_browser_retroactivity_RetroActivityFuture.h"
 
 cheat_manager_t *cheat_manager;
 

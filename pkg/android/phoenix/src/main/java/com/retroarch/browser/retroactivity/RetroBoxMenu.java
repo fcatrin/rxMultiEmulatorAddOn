@@ -2,41 +2,31 @@ package com.retroarch.browser.retroactivity;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import com.retroarch.browser.NativeInterface;
-
-import retrobox.content.SaveStateInfo;
-import retrobox.utils.GamepadInfoDialog;
-import retrobox.utils.ListOption;
-import retrobox.utils.RetroBoxDialog;
-import retrobox.utils.RetroBoxUtils;
-import retrobox.utils.SaveStateSelectorAdapter;
 import retrobox.v2.retroarch.R;
-import retrobox.vinput.Mapper;
-import xtvapps.core.AndroidFonts;
+import retrox.utils.android.GamepadInfoDialog;
+import retrox.utils.android.RetroXDialogs;
+import retrox.utils.android.RetroXUtils;
+import retrox.utils.android.SaveStateSelectorAdapter;
+import retrox.utils.android.content.SaveStateInfo;
+import retrox.utils.android.vinput.Mapper;
 import xtvapps.core.Callback;
+import xtvapps.core.CoreUtils;
+import xtvapps.core.ListOption;
 import xtvapps.core.SimpleCallback;
-import xtvapps.core.Utils;
-import xtvapps.core.content.KeyValue;
+import xtvapps.core.android.AndroidFonts;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.GridView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class RetroBoxMenu extends Activity {
@@ -56,11 +46,11 @@ public class RetroBoxMenu extends Activity {
 
 		setContentView(R.layout.retrobox_window);
 		
-		AndroidFonts.setViewFont(findViewById(R.id.txtDialogActionTitle), RetroBoxUtils.FONT_DEFAULT_M);
-		AndroidFonts.setViewFont(findViewById(R.id.txtDialogListTitle), RetroBoxUtils.FONT_DEFAULT_M);
+		AndroidFonts.setViewFont(findViewById(R.id.txtDialogActionTitle), RetroXUtils.FONT_DEFAULT_M);
+		AndroidFonts.setViewFont(findViewById(R.id.txtDialogListTitle), RetroXUtils.FONT_DEFAULT_M);
 		
-        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoTop), RetroBoxUtils.FONT_DEFAULT_M);
-        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoBottom), RetroBoxUtils.FONT_DEFAULT_M);
+        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoTop), RetroXUtils.FONT_DEFAULT_M);
+        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoBottom), RetroXUtils.FONT_DEFAULT_M);
 
         Intent intent = getIntent();
         
@@ -86,11 +76,11 @@ public class RetroBoxMenu extends Activity {
 	
 	private int getMameVersion() {
         String sMameVersion = getIntent().getStringExtra("MAME");
-        if (!Utils.isEmptyString(sMameVersion) && sMameVersion.length() >= 4) {
+        if (!CoreUtils.isEmptyString(sMameVersion) && sMameVersion.length() >= 4) {
         	sMameVersion = sMameVersion.substring(sMameVersion.length() - 4);
         }
         
-        return Utils.str2i(sMameVersion, 2001);
+        return CoreUtils.str2i(sMameVersion, 2001);
 	}
 	
 	private void uiMainMenu() {
@@ -129,10 +119,9 @@ public class RetroBoxMenu extends Activity {
         options.add(new ListOption("help", getString(R.string.emu_opt_help)));
         options.add(new ListOption("quit", getString(R.string.emu_opt_quit)));
 		
-		RetroBoxDialog.showListDialog(this, getString(R.string.emu_opt_title), options, new Callback<KeyValue>(){
+		RetroXDialogs.select(this, getString(R.string.emu_opt_title), options, new Callback<String>(){
 			@Override
-			public void onResult(KeyValue result) {
-				String key = result.getKey();
+			public void onResult(String key) {
 				if (key.equals("save")) {
 					uiSelectSaveState(RetroActivityFuture.RESULT_SAVE_ID);
 					return;
@@ -202,11 +191,11 @@ public class RetroBoxMenu extends Activity {
 					getCheatFileNameShort(cheatFile),
 					active ? "Active" : null));
 		}
-		RetroBoxDialog.showListDialog(this, "Cheat files", options, new Callback<KeyValue>(){
+		RetroXDialogs.select(this, "Cheat files", options, new Callback<String>(){
 
 			@Override
-			public void onResult(KeyValue result) {
-				int index = Utils.str2i(result.getKey());
+			public void onResult(String key) {
+				int index = CoreUtils.str2i(key);
 				File cheatFile = cheatFiles.get(index);
 
 				uiManageCheats(cheatFile);
@@ -233,10 +222,10 @@ public class RetroBoxMenu extends Activity {
 					cheatStatus[i] ? "On":"Off"));
 		}
 		
-		RetroBoxDialog.showListDialog(this, "Cheats from " + getCheatFileNameShort(cheatFile), options, new Callback<KeyValue>(){
+		RetroXDialogs.select(this, "Cheats from " + getCheatFileNameShort(cheatFile), options, new Callback<String>(){
 			@Override
-			public void onResult(KeyValue result) {
-				int index = Utils.str2i(result.getKey());
+			public void onResult(String key) {
+				int index = CoreUtils.str2i(key);
 				boolean enabled = !cheatStatus[index];
 				RetroActivityFuture.cheatsEnable(index, enabled);
 				
@@ -273,11 +262,11 @@ public class RetroBoxMenu extends Activity {
 					getString(R.string.emu_disk_insert).replace("{n}", String.valueOf(disk))));
 		}
 		
-		RetroBoxDialog.showListDialog(this, getString(R.string.emu_disk_select), options, new Callback<KeyValue>(){
+		RetroXDialogs.select(this, getString(R.string.emu_disk_select), options, new Callback<String>(){
 
 			@Override
-			public void onResult(KeyValue result) {
-				int disk = Utils.str2i(result.getKey());
+			public void onResult(String key) {
+				int disk = CoreUtils.str2i(key);
 				if (disk>0) {
 					saveOptionId(RetroActivityFuture.RESULT_DISK_INSERT_ID, disk - 1);
 				}
@@ -318,7 +307,7 @@ public class RetroBoxMenu extends Activity {
 			}
 		}
 		
-		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(this, list, 
+		final SaveStateSelectorAdapter adapter = new SaveStateSelectorAdapter(this, list,
 				RetroActivityFuture.saveSlot);
 		
 		Callback<Integer> callback = new Callback<Integer>() {
@@ -332,7 +321,7 @@ public class RetroBoxMenu extends Activity {
 				if (!invalidSlot) {
 					RetroActivityFuture.saveSlot = index;
 					saveOptionId(optionId);
-					RetroBoxDialog.cancelDialog(RetroBoxMenu.this);
+					RetroXDialogs.cancelDialog(RetroBoxMenu.this);
 				}
 			}
 
@@ -348,12 +337,12 @@ public class RetroBoxMenu extends Activity {
 						getString(R.string.emu_slot_save_title) :
 						getString(R.string.emu_slot_load_title);
 		
-		RetroBoxDialog.showSaveStatesDialog(this, title, adapter, callback);
+		RetroXDialogs.showSaveStatesDialog(this, title, adapter, callback);
 	}
 
 	
     protected void uiHelp() {
-		RetroBoxDialog.showGamepadDialogIngame(this, gamepadInfoDialog, Mapper.hasGamepads(), new SimpleCallback() {
+		RetroXDialogs.showGamepadDialogIngame(this, gamepadInfoDialog, Mapper.hasGamepads(), new SimpleCallback() {
 			@Override
 			public void onResult() {
 				finish();
@@ -368,13 +357,13 @@ public class RetroBoxMenu extends Activity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (RetroBoxDialog.onKeyDown(this, keyCode, event)) return true;
+		if (RetroXDialogs.onKeyDown(this, keyCode, event)) return true;
 		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		if (RetroBoxDialog.onKeyUp(this, keyCode, event)) return true;
+		if (RetroXDialogs.onKeyUp(this, keyCode, event)) return true;
 		return super.onKeyUp(keyCode, event);
 	}
 	
@@ -382,5 +371,4 @@ public class RetroBoxMenu extends Activity {
     	Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-	
 }

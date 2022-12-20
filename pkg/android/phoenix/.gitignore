@@ -4,3 +4,4 @@
 /obj
 /jni/modules/*.so
 /build
+/release
