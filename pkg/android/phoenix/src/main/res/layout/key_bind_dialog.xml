@@ -8,8 +8,6 @@
         android:id="@+id/key_bind_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/key_bind_title"
-        android:layout_below="@+id/key_bind_title"
         android:ems="10"
         android:inputType="text" >
 
