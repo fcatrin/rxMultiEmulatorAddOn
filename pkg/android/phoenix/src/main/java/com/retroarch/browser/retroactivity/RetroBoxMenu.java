@@ -12,17 +12,25 @@ import retrox.utils.android.RetroXUtils;
 import retrox.utils.android.SaveStateSelectorAdapter;
 import retrox.utils.android.content.SaveStateInfo;
 import retrox.utils.android.vinput.Mapper;
+import xtvapps.core.AppContext;
+import xtvapps.core.AsyncExecutor;
 import xtvapps.core.Callback;
 import xtvapps.core.CoreUtils;
 import xtvapps.core.ListOption;
+import xtvapps.core.Logger;
 import xtvapps.core.SimpleCallback;
 import xtvapps.core.android.AndroidFonts;
+import xtvapps.core.android.AndroidLogger;
+import xtvapps.core.android.AndroidStandardDialogs;
+import xtvapps.core.android.AndroidUIThreadExecutor;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
@@ -43,6 +51,10 @@ public class RetroBoxMenu extends Activity {
 		
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+		AppContext.asyncExecutor = new AsyncExecutor(new AndroidUIThreadExecutor(new Handler()));
+		AppContext.logger = new AndroidLogger();
+		AppContext.dialogFactory = new AndroidStandardDialogs();
 
 		setContentView(R.layout.retrobox_window);
 		
