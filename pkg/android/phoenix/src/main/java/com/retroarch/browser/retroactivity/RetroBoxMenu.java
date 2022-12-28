@@ -354,7 +354,7 @@ public class RetroBoxMenu extends Activity {
 
 	
     protected void uiHelp() {
-		RetroXDialogs.showGamepadDialogIngame(this, gamepadInfoDialog, Mapper.hasGamepads(), new SimpleCallback() {
+		RetroXDialogs.showGamepadDialogIngame(this, gamepadInfoDialog, new SimpleCallback() {
 			@Override
 			public void onResult() {
 				finish();
