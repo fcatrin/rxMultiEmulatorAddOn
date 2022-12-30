@@ -7,17 +7,16 @@ import java.util.Locale;
 
 import retrobox.v2.retroarch.R;
 import retrox.utils.android.GamepadInfoDialog;
+import retrox.utils.android.ListOptionAdapter;
 import retrox.utils.android.RetroXDialogs;
 import retrox.utils.android.RetroXUtils;
 import retrox.utils.android.SaveStateSelectorAdapter;
 import retrox.utils.android.content.SaveStateInfo;
-import retrox.utils.android.vinput.Mapper;
 import xtvapps.core.AppContext;
 import xtvapps.core.AsyncExecutor;
 import xtvapps.core.Callback;
 import xtvapps.core.CoreUtils;
 import xtvapps.core.ListOption;
-import xtvapps.core.Logger;
 import xtvapps.core.SimpleCallback;
 import xtvapps.core.android.AndroidFonts;
 import xtvapps.core.android.AndroidLogger;
@@ -32,9 +31,12 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class RetroBoxMenu extends Activity {
@@ -43,6 +45,7 @@ public class RetroBoxMenu extends Activity {
 	
 	static List<File> cheatFiles = new ArrayList<File>();
 	static File activeCheatFile = null;
+	static boolean isCRT = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,16 +60,32 @@ public class RetroBoxMenu extends Activity {
 		AppContext.dialogFactory = new AndroidStandardDialogs();
 
 		setContentView(R.layout.retrobox_window);
-		
-		AndroidFonts.setViewFont(findViewById(R.id.txtDialogActionTitle), RetroXUtils.FONT_DEFAULT_M);
-		AndroidFonts.setViewFont(findViewById(R.id.txtDialogListTitle), RetroXUtils.FONT_DEFAULT_M);
-		
-        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoTop), RetroXUtils.FONT_DEFAULT_M);
-        AndroidFonts.setViewFont(findViewById(R.id.txtGamepadInfoBottom), RetroXUtils.FONT_DEFAULT_M);
 
-        Intent intent = getIntent();
-        
-        gamepadInfoDialog = new GamepadInfoDialog(this);
+		Intent intent = getIntent();
+
+		isCRT = intent.getBooleanExtra("isCRT", false);
+
+		int titleViewResourceIds[] = {R.id.txtDialogActionTitle, R.id.txtDialogListTitle};
+		int titleFontSize = isCRT ? intent.getIntExtra("rx_dialog_title_size", 0) : 0;
+		for(int titleViewResourceId : titleViewResourceIds) {
+			setTextViewFont(titleViewResourceId, RetroXUtils.FONT_DEFAULT_M, titleFontSize);
+		}
+
+		int textViewResourceIds[] = {R.id.txtGamepadInfoTop, R.id.txtGamepadInfoBottom};
+		int textFontSize = isCRT ? intent.getIntExtra("rx_dialog_text_size", 0) : 0;
+		for(int textViewResourceId : textViewResourceIds) {
+			setTextViewFont(textViewResourceId, RetroXUtils.FONT_DEFAULT_M, textFontSize);
+		}
+
+		ListOptionAdapter.setViewCustomizer(new ListOptionAdapter.ViewCustomizer() {
+			@Override
+			public void customize(TextView textView, TextView valueView) {
+				setTextViewFont(textView, RetroXUtils.FONT_DEFAULT_M, textFontSize);
+				setTextViewFont(valueView, RetroXUtils.FONT_DEFAULT_M, textFontSize);
+			}
+		});
+
+		gamepadInfoDialog = new GamepadInfoDialog(this);
         gamepadInfoDialog.loadFromIntent(intent);
 
         if (cheatFiles.size() == 0 && intent.hasExtra("CHEATS")) {
@@ -77,7 +96,19 @@ public class RetroBoxMenu extends Activity {
         		cheatFiles.add(new File(cheatFileName));
         	}
         }
-        
+	}
+
+	private void setTextViewFont(int resourceId, String fontName, int fontSize) {
+		View view = findViewById(resourceId);
+		if (!(view instanceof TextView)) return;
+
+		TextView textView = (TextView)view;
+		setTextViewFont(textView, fontName, fontSize);
+	}
+
+	private void setTextViewFont(TextView textView, String fontName, int fontSize) {
+		AndroidFonts.setViewFont(textView, fontName);
+		if (fontSize != 0) textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize);
 	}
 
 	@Override
@@ -352,7 +383,6 @@ public class RetroBoxMenu extends Activity {
 		RetroXDialogs.showSaveStatesDialog(this, title, adapter, callback);
 	}
 
-	
     protected void uiHelp() {
 		RetroXDialogs.showGamepadDialogIngame(this, gamepadInfoDialog, new SimpleCallback() {
 			@Override
@@ -362,7 +392,6 @@ public class RetroBoxMenu extends Activity {
 		});
     }
 
-	
 	private SharedPreferences getPreferences() {
 		return getSharedPreferences("RetroBoxMenu", Context.MODE_PRIVATE);
 	}
