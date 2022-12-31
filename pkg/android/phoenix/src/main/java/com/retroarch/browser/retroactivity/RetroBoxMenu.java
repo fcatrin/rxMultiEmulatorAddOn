@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import retrobox.v2.retroarch.R;
 import retrox.utils.android.GamepadInfoDialog;
+import retrox.utils.android.GamepadLayoutManager;
 import retrox.utils.android.ListOptionAdapter;
 import retrox.utils.android.RetroXDialogs;
 import retrox.utils.android.RetroXUtils;
@@ -34,6 +35,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -55,15 +57,27 @@ public class RetroBoxMenu extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-		AppContext.asyncExecutor = new AsyncExecutor(new AndroidUIThreadExecutor(new Handler()));
-		AppContext.logger = new AndroidLogger();
-		AppContext.dialogFactory = new AndroidStandardDialogs();
-
 		setContentView(R.layout.retrobox_window);
 
 		Intent intent = getIntent();
+		setThemedFonts(intent);
 
+		gamepadInfoDialog = new GamepadInfoDialog(this);
+        gamepadInfoDialog.loadFromIntent(intent);
+
+        if (cheatFiles.size() == 0 && intent.hasExtra("CHEATS")) {
+        	String[] cheatFileNames = intent.getStringArrayExtra("CHEATS");
+        	for(String cheatFileName : cheatFileNames) {
+        		if (cheatFileName.toLowerCase(Locale.US).contains("retroarch rumbles")) continue;
+        		
+        		cheatFiles.add(new File(cheatFileName));
+        	}
+        }
+	}
+
+	private void setThemedFonts(Intent intent) {
 		isCRT = intent.getBooleanExtra("isCRT", false);
+		GamepadLayoutManager.isCRT = isCRT;
 
 		int titleViewResourceIds[] = {R.id.txtDialogActionTitle, R.id.txtDialogListTitle};
 		int titleFontSize = isCRT ? intent.getIntExtra("rx_dialog_title_size", 0) : 0;
@@ -77,6 +91,16 @@ public class RetroBoxMenu extends Activity {
 			setTextViewFont(textViewResourceId, RetroXUtils.FONT_DEFAULT_M, textFontSize);
 		}
 
+		int gamepadButtonFontSize = (int)(textFontSize * 0.8f);
+		ViewGroup gamepadFrame = findViewById(R.id.gamepadDialogFrame);
+		for(int i=0; i<gamepadFrame.getChildCount(); i++) {
+			View view = gamepadFrame.getChildAt(i);
+			if (!(view instanceof TextView)) continue;;
+
+			TextView textView = (TextView) view;
+			setTextViewFont(textView, RetroXUtils.FONT_DEFAULT_B, gamepadButtonFontSize);
+		}
+
 		ListOptionAdapter.setViewCustomizer(new ListOptionAdapter.ViewCustomizer() {
 			@Override
 			public void customize(TextView textView, TextView valueView) {
@@ -84,18 +108,6 @@ public class RetroBoxMenu extends Activity {
 				setTextViewFont(valueView, RetroXUtils.FONT_DEFAULT_M, textFontSize);
 			}
 		});
-
-		gamepadInfoDialog = new GamepadInfoDialog(this);
-        gamepadInfoDialog.loadFromIntent(intent);
-
-        if (cheatFiles.size() == 0 && intent.hasExtra("CHEATS")) {
-        	String[] cheatFileNames = intent.getStringArrayExtra("CHEATS");
-        	for(String cheatFileName : cheatFileNames) {
-        		if (cheatFileName.toLowerCase(Locale.US).contains("retroarch rumbles")) continue;
-        		
-        		cheatFiles.add(new File(cheatFileName));
-        	}
-        }
 	}
 
 	private void setTextViewFont(int resourceId, String fontName, int fontSize) {

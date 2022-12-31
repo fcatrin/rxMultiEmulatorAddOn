@@ -18,6 +18,11 @@ import retrobox.v2.retroarch.R;
 import retrox.utils.android.ImmersiveModeSetter;
 import retrox.utils.android.RetroXUtils;
 import retrox.utils.android.vinput.Mapper;
+import xtvapps.core.AppContext;
+import xtvapps.core.AsyncExecutor;
+import xtvapps.core.android.AndroidLogger;
+import xtvapps.core.android.AndroidStandardDialogs;
+import xtvapps.core.android.AndroidUIThreadExecutor;
 
 public final class RetroActivityFuture extends NativeActivity {
 	private static final int REQUEST_CODE_OPTIONS = 0x9292;
@@ -29,7 +34,11 @@ public final class RetroActivityFuture extends NativeActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
+		AppContext.asyncExecutor = new AsyncExecutor(new AndroidUIThreadExecutor(new Handler()));
+		AppContext.logger = new AndroidLogger();
+		AppContext.dialogFactory = new AndroidStandardDialogs();
+
 		String userName = getIntent().getStringExtra("username");
 		RetroXUtils.initExceptionHandler(this, "rxMultiEmulator", userName);
 	}
