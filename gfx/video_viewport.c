@@ -119,10 +119,15 @@ void video_viewport_set_core(void)
 	   aspect = 0.875f;
 	   RARCH_LOG("vertical aspect ratio made wider: %f", aspect);
    }
-   if (settings->video.crt_mode && aspect < 1.0f) { // expand vertical mode, it will be stretched by the CRT
+   if (settings->video.crt_mode) { // expand vertical mode, it will be stretched by the CRT
 	   aspectratio_lut[ASPECT_RATIO_CUSTOM].value = aspect; // save original aspect ratio
-	   aspect = aspect * 4.0f/3.0f;
-	   RARCH_LOG("crt is vertical. update aspect ratio from %f to %f", aspect, aspectratio_lut[ASPECT_RATIO_CORE].value);
+       if (aspect < 1.0f) {
+          aspect = aspect * 4.0f / 3.0f;
+          RARCH_LOG("crt is vertical. update aspect ratio from %f to %f", aspect,
+                    aspectratio_lut[ASPECT_RATIO_CORE].value);
+       } else {
+          RARCH_LOG("crt is horizontal. should stretch %f to fullscreen", aspect);
+       }
    }
    aspectratio_lut[ASPECT_RATIO_CORE].value = aspect;
 }
