@@ -78,18 +78,21 @@ public class RetroBoxMenu extends Activity {
 	private void setThemedFonts(Intent intent) {
 		isCRT = intent.getBooleanExtra("isCRT", false);
 		GamepadLayoutManager.isCRT = isCRT;
+		SaveStateSelectorAdapter.isCRT = isCRT;
 
-		int titleViewResourceIds[] = {R.id.txtDialogActionTitle, R.id.txtDialogListTitle};
+		int titleViewResourceIds[] = {R.id.txtDialogActionTitle, R.id.txtDialogListTitle, R.id.txtDialogSaveStatesTitle};
 		int titleFontSize = isCRT ? intent.getIntExtra("rx_dialog_title_size", 0) : 0;
 		for(int titleViewResourceId : titleViewResourceIds) {
 			setTextViewFont(titleViewResourceId, RetroXUtils.FONT_DEFAULT_M, titleFontSize);
 		}
 
-		int textViewResourceIds[] = {R.id.txtGamepadInfoTop, R.id.txtGamepadInfoBottom};
+		int textViewResourceIds[] = {R.id.txtGamepadInfoTop, R.id.txtGamepadInfoBottom,
+			R.id.txtDialogSaveStatesSlot, R.id.txtDialogSaveStatesInfo, R.id.btnSaveStateCancel};
 		int textFontSize = isCRT ? intent.getIntExtra("rx_dialog_text_size", 0) : 0;
 		for(int textViewResourceId : textViewResourceIds) {
 			setTextViewFont(textViewResourceId, RetroXUtils.FONT_DEFAULT_M, textFontSize);
 		}
+		SaveStateSelectorAdapter.shotFontSize = (int)(textFontSize * 0.7f);
 
 		int gamepadButtonFontSize = (int)(textFontSize * 0.8f);
 		ViewGroup gamepadFrame = findViewById(R.id.gamepadDialogFrame);
