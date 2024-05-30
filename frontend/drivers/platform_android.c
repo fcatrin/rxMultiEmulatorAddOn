@@ -351,6 +351,15 @@ void ANativeActivity_onCreate(ANativeActivity* activity,
    (void)savedStateSize;
 
    RARCH_LOG("Creating Native Activity: %p\n", activity);
+#ifdef __arm__
+    char arch_name[] = "ARM 32-bit";
+#elif __aarch64__
+    char arch_name[] = "ARM 64-bit";
+#else
+    char arch_name[] = "Unknown";
+#endif
+    RARCH_LOG("Architecture: %s", arch_name);
+
    activity->callbacks->onDestroy = onDestroy;
    activity->callbacks->onStart = onStart;
    activity->callbacks->onResume = onResume;

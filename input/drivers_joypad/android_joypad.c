@@ -26,9 +26,15 @@ static bool android_joypad_init(void *data)
 {
    engine_handle_dpad         = engine_handle_dpad_default;
 
-   if ((dlopen("/system/lib/libandroid.so", RTLD_LOCAL | RTLD_LAZY)) == 0)
+#if defined (__aarch64__) || defined(__x86_64__)
+    char libandroid_path[] = "/system/lib64/libandroid.so";
+#else
+    char libandroid_path[] = "/system/lib/libandroid.so";
+#endif
+
+   if ((dlopen(libandroid_path, RTLD_LOCAL | RTLD_LAZY)) == 0)
    {
-      RARCH_WARN("Unable to open libandroid.so\n");
+      RARCH_WARN("Unable to open %s", libandroid_path);
       return true;
    }
 
