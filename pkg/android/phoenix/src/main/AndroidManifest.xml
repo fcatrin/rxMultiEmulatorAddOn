@@ -1,8 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="retrobox.v2.retroarch"
-    android:sharedUserId="psychoworld.retrobox.v2"
-    android:versionCode="12276"
-    android:versionName="1.2.2-76">
+    android:sharedUserId="psychoworld.retrobox.v2">
     
     <uses-feature android:glEsVersion="0x00020000" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
@@ -33,7 +30,7 @@
             <meta-data android:name="android.app.lib_name" android:value="retroarch-activity" />
             <meta-data android:name="android.app.func_name" android:value="ANativeActivity_onCreate" />
             <intent-filter>
-                <action android:name="retrobox.v2.retroarch.future" />
+                <action android:name="@string/action_name_main" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 		</activity>
@@ -46,7 +43,7 @@
            android:exported="true"
            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:excludeFromRecents="true" >
             <intent-filter>
-                <action android:name="retrobox.v2.retroarch" />
+                <action android:name="@string/action_name_wrapper" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

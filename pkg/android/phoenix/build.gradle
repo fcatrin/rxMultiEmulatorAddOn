@@ -1,25 +1,61 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    namespace 'retrobox.v2.retroarch'
+
+    flavorDimensions = ["arch"]
+
     compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 31
-        ndk {
-            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
+
+        versionCode 12277
+        versionName "1.2.2-77"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    signingConfigs {
+        configDefault {
+            keyAlias SIGN_DEFAULT_KEY_ALIAS
+            keyPassword SIGN_DEFAULT_PASWORD
+            storeFile file(SIGN_DEFAULT_STORE_FILE)
+            storePassword SIGN_DEFAULT_STORE_PASSWORD
+        }
+    }
+
+    productFlavors {
+        arch64 {
+            dimension "arch"
+            applicationId "retrobox.v2.retroarch"
+            ndk {
+                abiFilters 'x86', 'arm64-v8a'
+            }
+        }
+
+        arch32 {
+            dimension "arch"
+            applicationId "retrobox.v2.retroarch32"
+            ndk {
+                abiFilters 'x86', 'armeabi-v7a'
+            }
         }
     }
 
     buildTypes {
         release {
+            productFlavors.arch32.signingConfig signingConfigs.configDefault
+            productFlavors.arch64.signingConfig signingConfigs.configDefault
             minifyEnabled false
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+
     externalNativeBuild {
         ndkBuild {
             path file('src/main/jni/Android.mk')

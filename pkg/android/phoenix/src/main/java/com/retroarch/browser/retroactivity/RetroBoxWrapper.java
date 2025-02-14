@@ -25,9 +25,6 @@ import com.retroarch.browser.preferences.util.UserPreferences;
 
 public class RetroBoxWrapper extends Activity {
 	private static final String LOGTAG = RetroBoxWrapper.class.getSimpleName();
-	
-	private static final String RETROARCH_FUTURE = "retrobox.v2.retroarch.future";
-	private static final String RETROARCH_PAST = "retrobox.v2.retroarch.past";
 	private static final String KEY_SIGNATURE = "signature";
 
 	private static RetroBoxWrapper instance;
@@ -108,7 +105,7 @@ public class RetroBoxWrapper extends Activity {
 		UserPreferences.updateConfigFile(RetroBoxWrapper.this);
 
 		Intent intent = new Intent();
-		intent.setAction(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? RETROARCH_FUTURE : RETROARCH_PAST);
+		intent.setAction(getString(R.string.action_name_main));
 		intent.putExtra("CONFIGFILE", UserPreferences.getDefaultConfigPath(RetroBoxWrapper.this));
 
 		intent.fillIn(getIntent(), 0);
